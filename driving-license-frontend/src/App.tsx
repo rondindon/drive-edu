@@ -6,12 +6,6 @@ import Login from './pages/Login';
 import AdminAddQuestion from './components/AdminAddQuestion';
 
 function App() {
-  const [userRole, setUserRole] = useState<string | null>(null);
-
-  useEffect(() => {
-    const role = localStorage.getItem('role'); // This should be set upon login
-    setUserRole(role);
-  }, []);
   
   return (
     <Routes>
@@ -33,7 +27,7 @@ function App() {
     <Route path="/register" element={<Register />} />
     <Route
           path="/admin/add-question"
-          element={userRole === 'ADMIN' ? <AdminAddQuestion /> : <Navigate to="/login" />}
+          element={localStorage.getItem('role') === 'ADMIN' ? <AdminAddQuestion /> : <Navigate to="/login" />}
     />
     <Route path="/login" element={<Login />} />
     {/* <Route path="/login" element={<Login />} />

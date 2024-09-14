@@ -21,8 +21,8 @@ const Login: React.FC = () => {
     const { data: userData, error: userError } = await supabase
       .from('User')
       .select('role')
-      .eq('id', data.session?.user.id)
-      .single();
+      .eq('email', email)
+      .single()
 
     if (userError) {
       setMessage(`Failed to fetch user role: ${userError.message}`);
