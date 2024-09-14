@@ -1,0 +1,84 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id             Int        @id @default(autoincrement())
+  email          String     @unique
+  password       String
+  role           String     @default("USER")
+  tests          Test[]     // Relation to Tests
+  badges         Badge[]    // Relation to earned Badges
+  wrongAnswers   WrongAnswer[] // Relation to Wrong Answers
+
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
+}
+
+model Question {
+  id             Int        @id @default(autoincrement())
+  group          String     // Driving license group (A, B, BE, etc.)
+  category       String     // Question category (e.g., road signs)
+  text           String     // Question text
+  options        String[]   // Multiple-choice options
+  correctAnswer  String     // Correct answer
+  imageUrl       String?    // URL for any associated image (optional)
+  difficulty     String     // Difficulty (easy, medium, hard)
+  explanation    String     // Explanation for the correct answer
+
+  wrongAnswers   WrongAnswer[] // Relation to Wrong Answers
+
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
+}
+
+model Test {
+  id             Int        @id @default(autoincrement())
+  userId         Int        // Foreign key linking to User
+  group          String     // Group (e.g., A, B, BE)
+  score          Float      // User's score for the test
+  totalQuestions Int        // Number of questions in the test
+  timeTaken      Int        // Time spent on the test (in seconds)
+  isPassed       Boolean    // Whether the user passed or not
+
+  user           User       @relation(fields: [userId], references: [id])
+
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
+}
+
+model WrongAnswer {
+  id             Int        @id @default(autoincrement())
+  userId         Int        // Foreign key linking to User
+  questionId     Int        // Foreign key linking to Question
+  attempts       Int        // Number of incorrect attempts
+
+  user           User       @relation(fields: [userId], references: [id])
+  question       Question   @relation(fields: [questionId], references: [id])
+
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
+}
+
+model Badge {
+  id             Int        @id @default(autoincrement())
+  userId         Int        // Foreign key linking to User
+  title          String     // Badge title (e.g., "Road Signs Master")
+  description    String     // Badge description (e.g., "Completed 10 tests without errors")
+
+  user           User       @relation(fields: [userId], references: [id])
+
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
+}
