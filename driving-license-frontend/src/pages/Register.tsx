@@ -1,17 +1,17 @@
 import React, { useState } from 'react';
 import { supabase } from '../services/supabase';
+import { AuthError, User } from '@supabase/supabase-js';
 
-const Register = () => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [message, setMessage] = useState('');
+const Register: React.FC = () => {
+  const [email, setEmail] = useState<string>('');
+  const [password, setPassword] = useState<string>('');
+  const [message, setMessage] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     try {
-      // Supabase sign-up request
-      const { data, error } = await supabase.auth.signUp({
+      const { data, error }: { data: { user: User | null }; error: AuthError | null } = await supabase.auth.signUp({
         email,
         password,
       });
@@ -21,8 +21,8 @@ const Register = () => {
       } else if (data.user) {
         setMessage('User registered successfully! Please check your email for verification.');
 
-        // After successful registration, notify the backend to create the user in the database
-        await fetch('http://localhost:4444/register', {
+        // After successful registration, notify the backend to add the user to the Prisma User table
+        await fetch('http://localhost:4444/api/user', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

@@ -1,11 +1,11 @@
+// src/routes.ts
 import { Router } from 'express';
-import { register, login, getQuestions, submitTest } from './controllers';
+import { handleNewUser } from './controllers/userController';
+import { createQuestion, isAdmin } from './controllers/adminController';
 
-const router = Router();
+const router: Router = Router();
 
-router.post('/register', register);
-router.post('/login', login);
-router.get('/questions', getQuestions);
-router.post('/test/submit', submitTest);
+router.post('/user', handleNewUser);
+router.post('/admin/questions', isAdmin, createQuestion);
 
 export default router;
