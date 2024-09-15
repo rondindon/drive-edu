@@ -27,14 +27,15 @@ model User {
 
 model Question {
   id             Int        @id @default(autoincrement())
-  group          String     // Driving license group (A, B, BE, etc.)
+  groups         String[]    // Driving license group (A, B, BE, etc.)
   category       String     // Question category (e.g., road signs)
   text           String     // Question text
   options        String[]   // Multiple-choice options
   correctAnswer  String     // Correct answer
   imageUrl       String?    // URL for any associated image (optional)
   difficulty     String     // Difficulty (easy, medium, hard)
-  explanation    String     // Explanation for the correct answer
+  explanation    String?     // Explanation for the correct answer
+  points         Int
 
   wrongAnswers   WrongAnswer[] // Relation to Wrong Answers
 
