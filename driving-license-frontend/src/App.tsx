@@ -4,6 +4,7 @@ import { Navigate, Route, Routes } from 'react-router-dom';
 import Register from './pages/Register';
 import Login from './pages/Login';
 import AdminAddQuestion from './components/AdminAddQuestion';
+import QuestionDetails from './components/QuestionDetails';
 
 function App() {
   
@@ -29,6 +30,7 @@ function App() {
           path="/admin/add-question"
           element={localStorage.getItem('role') === 'ADMIN' ? <AdminAddQuestion /> : <Navigate to="/login" />}
     />
+    <Route path="/question/:id" element={<QuestionDetails />} />
     <Route path="/login" element={<Login />} />
     {/* <Route path="/login" element={<Login />} />
     <Route path="/test" element={<Test />} /> */}
