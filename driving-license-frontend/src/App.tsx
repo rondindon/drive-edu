@@ -1,4 +1,3 @@
-import React, { useEffect, useState } from 'react';
 import './App.css';
 import { Navigate, Route, Routes } from 'react-router-dom';
 import Register from './pages/Register';
@@ -14,6 +13,11 @@ function App() {
     <Route path="/" element={<LandingPage />} />
     <Route path="/question/:id" element={<QuestionDetails />} />
     <Route path="/login" element={<Login />} />
+    <Route
+          path="/admin/add-question"
+          element={localStorage.getItem('role') === 'ADMIN' ? <AdminAddQuestion /> : <Navigate to="/login" />}
+    />
+
     {/* <Route path="/login" element={<Login />} />
     <Route path="/test" element={<Test />} /> */}
   </Routes>
