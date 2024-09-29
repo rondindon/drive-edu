@@ -9,11 +9,11 @@ async function addQuestions() {
       {
         "groups": ["C", "CE", "D", "DE"],
         "category": "Pravidlá cestnej premávky",
-        "text": "Vodič je povinný bezodkladne vypnúť motor, a ak je na vykurovanie vozidla použité nezávislé kúrenie, vypnúť aj toto kúrenie, ak",
+        "text": "Ak sa na vozovke nachádza súvislá snehová vrstva, ľad alebo námraza a v období od 15. novembra do 31. marca môže vodič motorového vozidla kategórie M2, M3, N2 a N3 použiť takéto vozidlo v cestnej premávke, len ak",
         "options": [
-          "zastavil na parkovisku.",
-          "pri jazde v tuneli vznikne porucha vozidla, pre ktorú sa toto vozidlo stane nepojazdným.",
-          "zastavil vozidlo pred železničným priecestím, kde sa dáva výstraha dvoma červenými striedavo prerušovanými svetlami priecestného zabezpečovacieho zariadenia."
+          "je držiteľom medzinárodnej poisťovacej karty.",
+          "je toto vybavené aspoň na jednej z hnacích náprav pneumatikami na jazdu na snehu označené horským symbolom alebo pneumatikami s označením „M+S“, „M.S“ alebo „M&S“.",
+          "je toto vybavené na všetkých nápravách zimnými pneumatikami."
         ],
         "correctAnswer": "B",
         "difficulty": "medium",
@@ -21,13 +21,13 @@ async function addQuestions() {
         "imageUrl": ""
       },
       {
-        "groups": ["A", "BE", "C", "CE", "D", "DE"],
+        "groups": ["D", "DE"],
         "category": "Pravidlá cestnej premávky",
-        "text": "Vodič po zastavení vozidla je povinný bezodkladne vypnúť motor, a ak je na vykurovanie vozidla použité nezávislé kúrenie, vypnúť aj toto kúrenie, ak",
+        "text": "Ak sa na vozovke nachádza súvislá snehová vrstva, ľad alebo námraza a v období od 15. novembra do 31. marca môže vodič motorového vozidla kategórie M2 a M3 použiť takéto vozidlo v cestnej premávke, len ak",
         "options": [
-          "pri jazde vozidla v tuneli vznikne porucha vozidla, pre ktorú sa toto vozidlo stane nepojazdným.",
-          "vodič zastavil na parkovisku.",
-          "zastavil vozidlo pred železničným priecestím, kde sa dáva výstraha dvoma červenými striedavo prerušovanými svetlami priecestného zabezpečovacieho zariadenia."
+          "je toto vybavené aspoň na jednej z hnacích náprav pneumatikami na jazdu na snehu označené horským symbolom alebo pneumatikami s označením „M+S“, „M.S“ alebo „M&S“.",
+          "je toto vybavené na všetkých nápravách zimnými pneumatikami.",
+          "je držiteľom medzinárodnej poisťovacej karty."
         ],
         "correctAnswer": "A",
         "difficulty": "medium",
@@ -35,48 +35,33 @@ async function addQuestions() {
         "imageUrl": ""
       },
       {
-        "groups": ["A", "BE", "C", "CE", "D", "DE"],
+        "groups": ["C", "CE"],
         "category": "Pravidlá cestnej premávky",
-        "text": "Ak pri jazde vozidla v tuneli vznikne porucha vozidla, pre ktorú sa toto vozidlo stane nepojazdným, alebo ak vznikne dopravná nehoda vrátane požiaru, je vodič po zastavení vozidla povinný bezodkladne",
+        "text": "Ak sa na vozovke nachádza súvislá snehová vrstva, ľad alebo námraza a v období od 15. novembra do 31. marca môže vodič motorového vozidla kategórie N2 a N3 použiť takéto vozidlo v cestnej premávke, len ak",
         "options": [
-          "zariadiť odtiahnutie vozidla z tunela.",
-          "opustiť tunel a dopravnú nehodu oznámiť najbližšiemu policajtovi.",
-          "vykonať vhodné opatrenia, aby nebola ohrozená bezpečnosť cestnej premávky v tuneli; ak to okolnosti vyžadujú, je oprávnený zastavovať iné vozidlá."
+          "je toto vybavené na všetkých nápravách zimnými pneumatikami.",
+          "je držiteľom medzinárodnej poisťovacej karty.",
+          "je toto vybavené aspoň na jednej z hnacích náprav pneumatikami na jazdu na snehu označené horským symbolom alebo pneumatikami s označením „M+S“, „M.S“ alebo „M&S“."
         ],
         "correctAnswer": "C",
-        "difficulty": "hard",
-        "points": 3,
-        "imageUrl": ""
-      },
-      {
-        "groups": ["A", "BE", "C", "CE", "D", "DE"],
-        "category": "Pravidlá cestnej premávky",
-        "text": "Ak pri jazde vozidla v tuneli vznikne porucha vozidla, pre ktorú sa toto vozidlo stane nepojazdným, alebo ak vznikne dopravná nehoda vrátane požiaru, je vodič po zastavení vozidla povinný bezodkladne",
-        "options": [
-          "zariadiť odtiahnutie vozidla z tunela.",
-          "oznámiť telefonicky alebo iným vhodným spôsobom zastavenie vozidla v tuneli osobe vykonávajúcej dohľad nad prevádzkou tunela.",
-          "opustiť tunel a dopravnú nehodu oznámiť najbližšiemu príslušníkovi obecnej polície."
-        ],
-        "correctAnswer": "B",
         "difficulty": "medium",
         "points": 3,
         "imageUrl": ""
       },
       {
-        "groups": ["A", "BE", "C", "CE", "D", "DE"],
+        "groups": ["BE", "C", "CE"],
         "category": "Pravidlá cestnej premávky",
-        "text": "Osoby prepravované vo vozidle sa môžu pohybovať po vozovke v tuneli len",
+        "text": "Vodič vozidla je pred jazdou povinný",
         "options": [
-          "po pravej krajnici.",
-          "v súvislosti so zaistením bezpečnosti cestnej premávky, ak majú na sebe reflexný bezpečnostný odev.",
-          "v čase od 00.00 hod. do 04.00 hod."
+          "odstrániť z vozidla ľad a sneh; na prepravovaný náklad vodič nie je povinný brať ohľad.",
+          "namontovať na vozidlo zimné pneumatiky.",
+          "odstrániť z vozidla a z nákladu kusy ľadu a snehu, ktoré by sa počas jazdy mohli uvoľniť."
         ],
-        "correctAnswer": "B",
-        "difficulty": "medium",
+        "correctAnswer": "C",
+        "difficulty": "easy",
         "points": 3,
         "imageUrl": ""
       }
-    
     ]
     
     
