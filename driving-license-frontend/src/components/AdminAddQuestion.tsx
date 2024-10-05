@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 const AdminAddQuestion: React.FC = () => {
   const allGroups = ['A', 'B', 'BE', 'C', 'CE', 'D', 'DE', 'T']; // List of available groups
   const categories = [
-    { name: 'Pravidlá cestnej premávky', points: 3 },
+    // { name: 'Pravidlá cestnej premávky', points: 3 },
     { name: 'Uplatňovanie pravidiel prednosti v jazde a rýchlostné obmedzenia', points: 3 },
     { name: 'Dopravné značky a dopravné zariadenia', points: 2 },
     { name: 'Dopravné situácie na križovatkách', points: 4 },
