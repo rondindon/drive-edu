@@ -15,7 +15,7 @@ interface Question {
 }
 
 const QuestionDetails: React.FC = () => {
-  const { id } = useParams<{ id: string }>(); // Get the question ID from the URL
+  const { id } = useParams<{ id: string }>();
   const [question, setQuestion] = useState<Question | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
