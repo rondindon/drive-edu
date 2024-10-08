@@ -59,11 +59,11 @@ const QuestionDetails: React.FC = () => {
       <p><strong>Groups:</strong> {question.groups.join(', ')}</p>
       <p><strong>Text:</strong> {question.text}</p>
       <p><strong>Options:</strong></p>
-      <ul>
+      <ol type="A">
         {question.options.map((option, index) => (
           <li key={index}>{option}</li>
         ))}
-      </ul>
+      </ol>
       <p><strong>Correct Answer:</strong> {question.correctAnswer}</p>
       {question.imageUrl && (
         <div>
