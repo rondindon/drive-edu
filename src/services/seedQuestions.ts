@@ -7,52 +7,63 @@ async function addQuestions() {
     data:
     [
       {
-        "groups": ["A"],
-        "category": "Pravidlá cestnej premávky",
-        "text": "Smie vodič motocykla stáť v obytnej zóne?",
+        "groups": ["C", "CE"],
+        "category": "Uplatňovanie pravidiel prednosti v jazde a rýchlostné obmedzenia",
+        "text": "Akou rýchlosťou môže jazdiť najviac vodič nákladného automobilu v obytnej zóne?",
         "options": [
-          "Nie, ak dopravnou značkou nie je určené inak.",
-          "Nie, ani vtedy ak to umožňuje dopravná značka.",
-          "Áno."
-        ],
-        "correctAnswer": "A",
-        "difficulty": "easy",
-        "points": 3,
-        "imageUrl": ""
-      },
-      {
-        "groups": ["A"],
-        "category": "Pravidlá cestnej premávky",
-        "text": "Smie vodič motocykla zastaviť v obytnej zóne?",
-        "options": [
-          "Áno.",
-          "Nie.",
-          "Iba vtedy, ak to umožňuje dopravná značka."
-        ],
-        "correctAnswer": "A",
-        "difficulty": "easy",
-        "points": 3,
-        "imageUrl": ""
-      },
-      {
-        "groups": ["A"],
-        "category": "Pravidlá cestnej premávky",
-        "text": "Smie vodič motocykla stáť v školskej zóne?",
-        "options": [
-          "Nie.",
-          "Len, ak je to dovolené dopravnou značkou.",
-          "Áno, ak tým nie je obmedzený pohyb chodcov."
+            "30 km/h.",
+            "Vjazd nákladných vozidiel do obytnej zóny je zakázaný.",
+            "20 km/h."
         ],
         "correctAnswer": "C",
         "difficulty": "medium",
         "points": 3,
         "imageUrl": ""
-      }
+    },
+    {
+        "groups": ["C", "CE"],
+        "category": "Uplatňovanie pravidiel prednosti v jazde a rýchlostné obmedzenia",
+        "text": "Akou rýchlosťou môže jazdiť vodič nákladného automobilu v obytnej zóne?",
+        "options": [
+            "Najmenej 30 km/h.",
+            "Najviac 20 km/h.",
+            "Vjazd nákladných vozidiel do obytnej zóny je zakázaný."
+        ],
+        "correctAnswer": "B",
+        "difficulty": "medium",
+        "points": 3,
+        "imageUrl": ""
+    },
+    {
+        "groups": ["D", "DE"],
+        "category": "Uplatňovanie pravidiel prednosti v jazde a rýchlostné obmedzenia",
+        "text": "Akou rýchlosťou môže jazdiť najviac vodič autobusu v obytnej zóne?",
+        "options": [
+            "20 km/h.",
+            "Vjazd autobusom do obytnej zóny je zakázaný.",
+            "30 km/h."
+        ],
+        "correctAnswer": "A",
+        "difficulty": "medium",
+        "points": 3,
+        "imageUrl": ""
+    },
+    {
+        "groups": ["D", "DE"],
+        "category": "Uplatňovanie pravidiel prednosti v jazde a rýchlostné obmedzenia",
+        "text": "Akou rýchlosťou môže jazdiť vodič autobusu v obytnej zóne?",
+        "options": [
+            "Najviac 20 km/h.",
+            "Najmenej 30 km/h.",
+            "Vjazd autobusom do obytnej zóny je zakázaný."
+        ],
+        "correctAnswer": "A",
+        "difficulty": "medium",
+        "points": 3,
+        "imageUrl": ""
+    }
+    
     ]
-    
-    
-    
-    
   });
 
   console.log('Questions added successfully');
