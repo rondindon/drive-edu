@@ -7,7 +7,7 @@ const AdminAddQuestion: React.FC = () => {
     // { name: 'Uplatňovanie pravidiel prednosti v jazde a rýchlostné obmedzenia', points: 3 },
     // { name: 'Dopravné značky a dopravné zariadenia', points: 2 },
     // { name: 'Dopravné situácie na križovatkách', points: 4 },
-    { name: 'Všeobecné pravidlá správania sa v prípade dopravnej nehody', points: 2 },
+    // { name: 'Všeobecné pravidlá správania sa v prípade dopravnej nehody', points: 2 },
     { name: 'Teória vedenia vozidla', points: 2 },
     { name: 'Predpisy týkajúce sa dokladov požadovaných v prípade používania vozidla a organizácia času v doprave', points: 1 },
     { name: 'Podmienky prevádzky vozidiel v premávke na pozemných komunikáciách', points: 1 },
