@@ -26,7 +26,6 @@ const AdminAddQuestion: React.FC = () => {
   const [explanation, setExplanation] = useState<string>('');
   const [message, setMessage] = useState<string | null>(null);
 
-  // Function to toggle the group selection
   const toggleGroupSelection = (group: string) => {
     setGroups((prevGroups) =>
       prevGroups.includes(group)
