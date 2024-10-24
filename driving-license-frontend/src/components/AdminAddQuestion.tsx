@@ -36,12 +36,12 @@ const AdminAddQuestion: React.FC = () => {
 
   // Function to select all groups
   const selectAllGroups = () => {
-    setGroups(allGroups); // Select all groups
+    setGroups(allGroups);
   };
 
   // Function to deselect all groups
   const deselectAllGroups = () => {
-    setGroups([]); // Clear all selections
+    setGroups([]);
   };
 
   // Update points when category changes
