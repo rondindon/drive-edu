@@ -17,7 +17,7 @@ const AdminAddQuestion: React.FC = () => {
 
   const [groups, setGroups] = useState<string[]>([]);
   const [category, setCategory] = useState<string>('');
-  const [points, setPoints] = useState<number>(0); // Points for the selected category
+  const [points, setPoints] = useState<number>(0);
   const [text, setText] = useState<string>('');
   const [options, setOptions] = useState<string[]>(['', '', '']);
   const [correctAnswer, setCorrectAnswer] = useState<string>('A');
