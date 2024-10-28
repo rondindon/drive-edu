@@ -29,17 +29,15 @@ const AdminAddQuestion: React.FC = () => {
   const toggleGroupSelection = (group: string) => {
     setGroups((prevGroups) =>
       prevGroups.includes(group)
-        ? prevGroups.filter((g) => g !== group) // If already selected, deselect
-        : [...prevGroups, group] // Otherwise, add to the selection
+        ? prevGroups.filter((g) => g !== group)
+        : [...prevGroups, group]
     );
   };
 
-  // Function to select all groups
-  const selectAllGroups = () => {
+    const selectAllGroups = () => {
     setGroups(allGroups);
   };
 
-  // Function to deselect all groups
   const deselectAllGroups = () => {
     setGroups([]);
   };
