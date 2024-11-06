@@ -42,7 +42,6 @@ const AdminAddQuestion: React.FC = () => {
     setGroups([]);
   };
 
-  // Update points when category changes
   useEffect(() => {
     const selectedCategory = categories.find((cat) => cat.name === category);
     if (selectedCategory) {
