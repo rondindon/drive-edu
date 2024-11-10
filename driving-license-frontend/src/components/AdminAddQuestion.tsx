@@ -11,7 +11,7 @@ const AdminAddQuestion: React.FC = () => {
     // { name: 'Teória vedenia vozidla', points: 2 },
     // { name: 'Predpisy týkajúce sa dokladov požadovaných v prípade používania vozidla a organizácia času v doprave', points: 1 },
     // { name: 'Podmienky prevádzky vozidiel v premávke na pozemných komunikáciách', points: 1 },
-    { name: 'Zásady bezpečnej jazdy', points: 3 },
+    // { name: 'Zásady bezpečnej jazdy', points: 3 },
     { name: 'Konštrukcia vozidiel a ich údržba', points: 1 },
   ];
 
