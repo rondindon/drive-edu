@@ -63,7 +63,7 @@ const AdminAddQuestion: React.FC = () => {
         body: JSON.stringify({
           groups,
           category,
-          points, // Include points based on the selected category
+          points,
           text,
           options,
           correctAnswer,
