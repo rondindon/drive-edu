@@ -78,7 +78,6 @@ const AdminAddQuestion: React.FC = () => {
 
       if (response.ok) {
         setMessage('Question added successfully!');
-        // Reset form fields
         setGroups([]);
         setCategory('');
         setText('');
