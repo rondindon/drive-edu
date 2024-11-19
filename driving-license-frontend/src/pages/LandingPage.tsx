@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import Viewer from '../components/3DViewer';
 
 const LandingPage: React.FC = () => {
   const allGroups = ['A', 'B', 'BE', 'C', 'CE', 'D', 'DE', 'T']; // Available groups
@@ -38,6 +39,11 @@ const LandingPage: React.FC = () => {
           </option>
         ))}
       </select>
+
+      {/* 3D Viewer */}
+      <div style={{ marginTop: '20px' }}>
+        <Viewer group={selectedGroup} />
+      </div>
 
       <br />
 
