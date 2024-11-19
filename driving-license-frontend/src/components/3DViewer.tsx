@@ -13,21 +13,24 @@ const models: { [key: string]: string } = {
   // Add more groups and their corresponding model paths
 };
 
-const Model = ({ url }: { url: string }) => {
+const Model = ({ url, rotation }: { url: string; rotation: [number, number, number] }) => {
   const gltf = useGLTF(url); // Load the GLTF model
-  return <primitive object={gltf.scene} scale={1.5} />;
+  return <primitive object={gltf.scene} rotation={rotation} scale={1.5} />;
 };
 
 const Viewer: React.FC<Props> = ({ group }) => {
   const containerRef = useRef<HTMLDivElement>(null);
-  const [position, setPosition] = useState({ x: 0, y: 0 });
+  const [rotation, setRotation] = useState<[number, number, number]>([0, 0, 0]); // Initial rotation
 
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
     if (containerRef.current) {
       const rect = containerRef.current.getBoundingClientRect();
       const x = ((e.clientX - rect.left) / rect.width) * 2 - 1; // Normalized X (-1 to 1)
-      const y = -((e.clientY - rect.top) / rect.height) * 2 + 1; // Normalized Y (-1 to 1)
-      setPosition({ x, y });
+      const y = ((e.clientY - rect.top) / rect.height) * 2 - 1; // Normalized Y (-1 to 1)
+
+      // Reverse the Y-axis effect and map cursor to rotation
+      const newRotation: [number, number, number] = [y * Math.PI / 8, x * Math.PI / 2, 0];
+      setRotation(newRotation);
     }
   };
 
@@ -45,16 +48,19 @@ const Viewer: React.FC<Props> = ({ group }) => {
     >
       {group in models ? (
         <Suspense fallback={<p>Loading 3D model...</p>}>
-            <Canvas>
+          <Canvas
+            camera={{
+              position: [0, 50, 500], // Same initial position as before
+              fov: 30, // Field of view
+            }}
+          >
             <ambientLight intensity={0.5} />
             <directionalLight position={[2, 2, 2]} />
-            <Model url={models[group]} />
-            {/* Move the model based on cursor position */}
-            <mesh position={[position.x * 5, position.y * 5, 0]}>
-                <sphereGeometry args={[0.1, 32, 32]} />
-                <meshStandardMaterial color="blue" />
-            </mesh>
-            </Canvas>
+            <group position={[0, -50, 0]} scale={1.2}>
+              {/* Pass rotation to the model */}
+              <Model url={models[group]} rotation={rotation} />
+            </group>
+          </Canvas>
         </Suspense>
       ) : (
         <p>No model available for the selected group.</p>
