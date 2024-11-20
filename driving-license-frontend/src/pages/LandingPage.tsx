@@ -21,7 +21,7 @@ const LandingPage: React.FC = () => {
 
   return (
     <div style={{ padding: '20px', textAlign: 'center' }}>
-      <h1>Driving License Test</h1>
+      <h1 className='text-4xl font-bold'>Driving License Test</h1>
       <p>Select your group to begin the test:</p>
 
       {/* {/* Group selection dropdown */}
