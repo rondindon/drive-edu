@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import Viewer from '../components/3DViewer';
+import Viewer from '../components/ui/3DViewer';
 
 const LandingPage: React.FC = () => {
   const allGroups = ['A', 'B', 'BE', 'C', 'CE', 'D', 'DE', 'T']; // Available groups
