@@ -1,13 +1,22 @@
 import React from "react";
-import { Button } from "./button";
+import { useLocation } from "react-router-dom";
+import { Button } from "./ui/button";
 import {
   DropdownMenu,
   DropdownMenuTrigger,
   DropdownMenuContent,
   DropdownMenuItem,
-} from "./dropdown-menu";
+} from "./ui/dropdown-menu";
 
 const Navbar: React.FC = () => {
+  const location = useLocation();
+
+  // Helper function to check if a link is active
+  const isActive = (path: string) =>
+    location.pathname === path
+      ? "text-main-green font-semibold"
+      : "text-secondary-lightGray hover:text-main-green transition-colors";
+
   return (
     <header className="w-full bg-main-darkBlue shadow-md">
       <nav className="container mx-auto flex items-center justify-between py-4 px-6">
@@ -18,17 +27,14 @@ const Navbar: React.FC = () => {
 
         {/* Links */}
         <div className="hidden md:flex space-x-6">
-          <a
-            href="/"
-            className="text-secondary-lightGray hover:text-main-green transition-colors"
-          >
+          <a href="/" className={isActive("/")}>
             Home
           </a>
-          <a
-            href="/about"
-            className="text-secondary-lightGray hover:text-main-green transition-colors"
-          >
+          <a href="/about" className={isActive("/about")}>
             About
+          </a>
+          <a href="/contact" className={isActive("/contact")}>
+            Contact
           </a>
         </div>
 

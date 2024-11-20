@@ -57,3 +57,12 @@
     @apply font-sans antialiased bg-background text-foreground;
   }
 }
+
+@keyframes gradientMove {
+  0% {
+    background-position: 0%;
+  }
+  100% {
+    background-position: 100%;
+  }
+}
