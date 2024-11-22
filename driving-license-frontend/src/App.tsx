@@ -1,6 +1,4 @@
 import { Route, Routes, Navigate } from 'react-router-dom';
-import { AnimatePresence } from "framer-motion";
-import Register from './pages/Register';
 import Login from './pages/Login';
 import AdminAddQuestion from './components/AdminAddQuestion';
 import QuestionDetails from './components/QuestionDetails';
@@ -13,7 +11,6 @@ function App() {
       <>
 
       <Navbar />
-      <AnimatePresence>
       <Routes>
 
         <Route path="/" element={<LandingPage />} />
@@ -28,7 +25,6 @@ function App() {
         <Route path="/test" element={<Test />} /> */}
       </Routes>
 
-    </AnimatePresence>
     </>
   );
 }

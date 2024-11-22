@@ -1,49 +1,65 @@
-import React, { useRef, useState, useEffect } from 'react';
-import { Canvas } from '@react-three/fiber';
-import { useGLTF } from '@react-three/drei';
-import { Suspense } from 'react';
+import React, { useRef, useState, useEffect } from "react";
+import { Canvas } from "@react-three/fiber";
+import { useGLTF } from "@react-three/drei";
+import { Suspense } from "react";
 
 interface Props {
-  group: string;
+  group: string | null; // Group can be null or string
 }
 
 const models: { [key: string]: string } = {
-  B: '/models/car.glb', // Path to car model
-  C: '/models/truck.glb', // Path to truck model
-  // Add more groups and their corresponding model paths
+  B: "/models/car.glb", // Path to car model
+  C: "/models/truck.glb", // Path to truck model
 };
 
 const Model = ({ url, rotation }: { url: string; rotation: [number, number, number] }) => {
-  const gltf = useGLTF(url); // Load the GLTF model
+  const gltf = useGLTF(url);
   return <primitive object={gltf.scene} rotation={rotation} scale={1.5} />;
 };
 
 const Viewer: React.FC<Props> = ({ group }) => {
   const containerRef = useRef<HTMLDivElement>(null);
-  const [rotation, setRotation] = useState<[number, number, number]>([0, 0, 0]); // Current rotation
-  const [targetRotation, setTargetRotation] = useState<[number, number, number]>([0, 0, 0]); // Target rotation
-  const [isMouseOver, setIsMouseOver] = useState(false); // Track if the mouse is over the div
-  const [spin, setSpin] = useState(0); // Spin angle for idle state
+  const [rotation, setRotation] = useState<[number, number, number]>([0, 0, 0]);
+  const [targetRotation, setTargetRotation] = useState<[number, number, number]>([0, 0, 0]);
+  const [isMouseOver, setIsMouseOver] = useState(false);
+  const [spinAngle, setSpinAngle] = useState(0);
+  const [isResetting, setIsResetting] = useState(false); // Track reset state
 
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (containerRef.current) {
+    if (containerRef.current && group && !isResetting) {
       const rect = containerRef.current.getBoundingClientRect();
-      const x = ((e.clientX - rect.left) / rect.width) * 2 - 1; // Normalized X (-1 to 1)
-      const y = ((e.clientY - rect.top) / rect.height) * 2 - 1; // Normalized Y (-1 to 1)
+      const x = (e.clientX - rect.left) / rect.width; // Normalized X (0 to 1)
+      const y = (e.clientY - rect.top) / rect.height; // Normalized Y (0 to 1)
 
-      const newTargetRotation: [number, number, number] = [y * Math.PI / 8, x * Math.PI / 2, 0];
+      // Amplify cursor influence for more noticeable movement
+      const newTargetRotation: [number, number, number] = [
+        (y - 0.5) * Math.PI / 2, // Tilt up/down (multiplied)
+        (x - 0.5) * Math.PI * 2, // Rotate left/right (multiplied)
+        0,
+      ];
       setTargetRotation(newTargetRotation);
     }
   };
 
   const handleMouseEnter = () => {
-    setIsMouseOver(true);
-    setTargetRotation([0, 0, 0]); // Reset to initial position first
+    if (group) {
+      setIsMouseOver(true);
+      setIsResetting(true); // Start resetting to initial position
+      setTargetRotation([0, 0, 0]); // Reset to initial position
+      setTimeout(() => setIsResetting(false), 300); // Allow for smooth reset
+    }
   };
 
   const handleMouseLeave = () => {
-    setIsMouseOver(false);
-    setTargetRotation([0, 0, 0]); // Reset to initial position
+    if (group) {
+      setIsMouseOver(false);
+      setIsResetting(true); // Start resetting to initial position
+      setTargetRotation([0, 0, 0]); // Reset to initial position
+      setTimeout(() => {
+        setIsResetting(false);
+        setSpinAngle(0); // Restart spin angle after reset
+      }, 300); // Allow for smooth reset
+    }
   };
 
   useEffect(() => {
@@ -51,9 +67,9 @@ const Viewer: React.FC<Props> = ({ group }) => {
 
     const smoothTransition = () => {
       setRotation((prevRotation) => {
-        const step = 0.03; // Smooth transition speed
+        const step = 0.1; // Smooth transition speed
         const [rx, ry, rz] = prevRotation;
-        const [tx, ty, tz] = isMouseOver ? targetRotation : [0, spin, 0];
+        const [tx, ty, tz] = targetRotation;
 
         const newRotation: [number, number, number] = [
           rx + (tx - rx) * step,
@@ -69,58 +85,56 @@ const Viewer: React.FC<Props> = ({ group }) => {
     animationFrame = requestAnimationFrame(smoothTransition);
 
     return () => cancelAnimationFrame(animationFrame);
-  }, [targetRotation, isMouseOver, spin]);
+  }, [targetRotation]);
 
   // Spin the model when idle
   useEffect(() => {
     let spinInterval: number;
-    if (!isMouseOver) {
+
+    if (!isMouseOver && group && !isResetting) {
       spinInterval = window.setInterval(() => {
-        setSpin((prevSpin) => (prevSpin + 0.01) % (2 * Math.PI)); // Increment spin angle
+        setSpinAngle((prevSpinAngle) => prevSpinAngle + 0.03); // Faster spin
+        setTargetRotation([0, spinAngle, 0]); // Update target rotation during idle spin
       }, 16); // ~60 FPS
-    } else {
-      setSpin(0); // Reset spin angle when mouse enters
     }
 
     return () => clearInterval(spinInterval);
-  }, [isMouseOver]);
+  }, [isMouseOver, group, isResetting, spinAngle]);
 
   return (
-    <div
-      ref={containerRef}
-      onMouseMove={handleMouseMove}
-      onMouseEnter={handleMouseEnter}
-      onMouseLeave={handleMouseLeave}
-      style={{
-        width: '100%',
-        height: '300px',
-        border: '1px solid black',
-        position: 'relative',
-        overflow: 'hidden',
-      }}
-    >
-      {group in models ? (
-        <Suspense fallback={<p>Loading 3D model...</p>}>
-          <Canvas
-            camera={{
-              position: [0, 50, 500], // Same initial position as before
-              fov: 30, // Field of view
-            }}
-          >
-            <ambientLight intensity={0.5} />
-            <directionalLight position={[2, 2, 2]} />
-            <group position={[0, -50, 0]} scale={1.2}>
-              {/* Pass rotation to the model */}
-              <Model
-                url={models[group]}
-                rotation={rotation} // Smoothly transitions based on hover state
-              />
-            </group>
-          </Canvas>
-        </Suspense>
-      ) : (
-        <p>No model available for the selected group.</p>
-      )}
+    <div>
+      <div
+        ref={containerRef}
+        onMouseMove={handleMouseMove}
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
+        style={{
+          width: "100%",
+          height: "300px",
+          border: "1px solid black",
+          position: "relative",
+          overflow: "hidden",
+        }}
+      >
+        {group && group in models ? (
+          <Suspense fallback={<p>Loading 3D model...</p>}>
+            <Canvas
+              camera={{
+                position: [0, 50, 500], // Camera position
+                fov: 30, // Field of view
+              }}
+            >
+              <ambientLight intensity={0.5} />
+              <directionalLight position={[2, 2, 2]} />
+              <group position={[0, -50, 0]} scale={1.2}>
+                <Model url={models[group]} rotation={rotation} />
+              </group>
+            </Canvas>
+          </Suspense>
+        ) : (
+          <p>Select a group to view the model.</p>
+        )}
+      </div>
     </div>
   );
 };
