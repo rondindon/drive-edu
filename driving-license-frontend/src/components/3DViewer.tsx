@@ -13,26 +13,32 @@ const models: { [key: string]: string } = {
   C: "/models/truck.glb", // Path to truck model
 };
 
-const getRandomColor = () => {
-  const color = new THREE.Color(Math.random(), Math.random(), Math.random()); // Generate random RGB color
-  console.log("[DEBUG] Generated Random Color:", color.getStyle());
-  return color;
+// Function to generate a shade of the default color
+const getShadeOfColor = (baseColor: THREE.Color): THREE.Color => {
+  const shade = baseColor.clone();
+  const lightnessVariation = Math.random() * 0.3 - 0.5; // Varies between -0.15 and +0.15
+  shade.offsetHSL(0, 0, lightnessVariation);
+  console.log("[DEBUG] Generated Shade of Color:", shade.getStyle());
+  return shade;
 };
 
 const Model = ({
   url,
   rotation,
+  currentColor,
   targetColor,
-  duration = 3000, // Color transition duration in milliseconds
+  duration = 1000, // Color transition duration in milliseconds
 }: {
   url: string;
   rotation: [number, number, number];
+  currentColor: THREE.Color;
   targetColor: THREE.Color;
   duration?: number;
 }) => {
   const gltf = useGLTF(url);
 
   useEffect(() => {
+    console.log("[DEBUG] Transition Start: currentColor", currentColor.getStyle());
     console.log("[DEBUG] Transition Start: targetColor", targetColor.getStyle());
 
     let startTime: number | null = null;
@@ -45,31 +51,20 @@ const Model = ({
       const elapsed = time - startTime;
       const progress = Math.min(elapsed / duration, 1); // Clamp progress to [0, 1]
 
+      // Interpolate color based on progress
+      const interpolatedColor = currentColor.clone().lerp(targetColor, progress);
+      console.log(
+        "[DEBUG] Transition Progress:",
+        progress.toFixed(2),
+        "| Interpolated Color:",
+        interpolatedColor.getStyle()
+      );
+
       gltf.scene.traverse((child) => {
         if ((child as THREE.Mesh).isMesh) {
           const mesh = child as THREE.Mesh;
           if (mesh.material) {
             const material = mesh.material as THREE.MeshStandardMaterial;
-
-            // Get the current color directly from the material
-            const currentColor = material.color.clone();
-            console.log(
-              "[DEBUG] Current Material Color:",
-              currentColor.getStyle(),
-              "| Target Color:",
-              targetColor.getStyle()
-            );
-
-            // Interpolate to the target color
-            const interpolatedColor = currentColor.lerp(targetColor, progress);
-            console.log(
-              "[DEBUG] Transition Progress:",
-              progress.toFixed(2),
-              "| Interpolated Color:",
-              interpolatedColor.getStyle()
-            );
-
-            // Apply the interpolated color back to the material
             material.color.copy(interpolatedColor);
           }
         }
@@ -78,11 +73,13 @@ const Model = ({
       // Continue the animation if not complete
       if (progress < 1) {
         requestAnimationFrame(updateColor);
+      } else {
+        console.log("[DEBUG] Transition Completed.");
       }
     };
 
     requestAnimationFrame(updateColor);
-  }, [targetColor, gltf, duration]);
+  }, [targetColor, currentColor, gltf, duration]);
 
   return <primitive object={gltf.scene} rotation={rotation} scale={1.5} />;
 };
@@ -92,6 +89,7 @@ const Viewer: React.FC<Props> = ({ group }) => {
   const [rotation, setRotation] = useState<[number, number, number]>([0, 0, 0]);
   const [targetRotation, setTargetRotation] = useState<[number, number, number]>([0, 0, 0]);
   const [isMouseOver, setIsMouseOver] = useState(false);
+  const [currentColor, setCurrentColor] = useState(new THREE.Color(1, 1, 1)); // Default white color
   const [targetColor, setTargetColor] = useState(new THREE.Color(1, 1, 1)); // Default target color
 
   const calculateContinuousAngle = (current: number, target: number): number => {
@@ -131,13 +129,16 @@ const Viewer: React.FC<Props> = ({ group }) => {
   const handleMouseEnter = () => {
     console.log("[DEBUG] Mouse Entered Div");
     setIsMouseOver(true);
-    setTargetColor(getRandomColor()); // Generate a new random color
+    setCurrentColor(targetColor.clone()); // Use the current progress color
+    setTargetColor(getShadeOfColor(new THREE.Color(1, 1, 1))); // Generate a shade of the default color
   };
 
   const handleMouseLeave = () => {
     console.log("[DEBUG] Mouse Left Div");
     setIsMouseOver(false);
+    setCurrentColor(targetColor.clone()); // Ensure transition starts from the current progress
     setTargetColor(new THREE.Color(1, 1, 1)); // Transition back to default white
+    setTargetRotation((prev) => [prev[0], prev[1], 0]); // Maintain the current rotation
   };
 
   useEffect(() => {
@@ -221,6 +222,7 @@ const Viewer: React.FC<Props> = ({ group }) => {
                 <Model
                   url={models[group]}
                   rotation={rotation}
+                  currentColor={currentColor}
                   targetColor={targetColor}
                 />
               </group>
