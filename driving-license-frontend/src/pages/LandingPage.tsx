@@ -21,7 +21,7 @@ const LandingPage: React.FC = () => {
 
   return (
     <div className="p-5 text-center bg-secondary-lightGray min-h-screen">
-      <h1 className="text-4xl font-bold text-main-darkBlue mb-4">
+      <h1 className="text-4xl font-bold text-main-darkBlue mb-4 font-bam">
         Driving License Test
       </h1>
       <p className="text-lg text-main-darkBlue mb-6">Select your group to begin the test:</p>

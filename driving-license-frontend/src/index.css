@@ -56,6 +56,13 @@
   body {
     @apply font-sans antialiased bg-background text-foreground;
   }
+  @font-face {
+    font-family: 'BAM';
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+    src: url(./fonts/bam/BasicallyAMono-Regular.ttf) format('truetype');
+  }
 }
 
 @keyframes gradientMove {
