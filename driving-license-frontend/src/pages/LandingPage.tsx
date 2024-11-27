@@ -16,49 +16,43 @@ const LandingPage: React.FC = () => {
     // For now, we'll just alert the user with the selected group.
     // Later, this can redirect to the test page with the questions.
     alert(`Starting test for group ${selectedGroup}`);
-    // Future functionality: navigate(/test/${selectedGroup});
+    // Future functionality: navigate(`/test/${selectedGroup}`);
   };
 
   return (
-    <div style={{ padding: '20px', textAlign: 'center' }}>
-      <h1 className='text-4xl font-bold'>Driving License Test</h1>
-      <p>Select your group to begin the test:</p>
+    <div className="p-5 text-center bg-secondary-lightGray min-h-screen">
+      <h1 className="text-4xl font-bold text-main-darkBlue mb-4">
+        Driving License Test
+      </h1>
+      <p className="text-lg text-main-darkBlue mb-6">Select your group to begin the test:</p>
 
-      {/* {/* Group selection dropdown */}
-      <select
-        value={selectedGroup}
-        onChange={(e) => setSelectedGroup(e.target.value)}
-        style={{ padding: '10px', fontSize: '16px', marginBottom: '20px' }}
-      >
-        <option value="" disabled>
-          Select a group
-        </option>
-        {allGroups.map((group) => (
-          <option key={group} value={group}>
-            Group {group}
+      {/* Group selection dropdown */}
+      <div className="mb-6">
+        <select
+          value={selectedGroup}
+          onChange={(e) => setSelectedGroup(e.target.value)}
+          className="p-2 text-base border border-secondary-lightGray rounded-md focus:outline-none focus:ring focus:ring-main-green"
+        >
+          <option value="" disabled>
+            Select a group
           </option>
-        ))}
-      </select>
-
-      {/* 3D Viewer */}
-      <div style={{ marginTop: '20px' }}>
-        <Viewer group={selectedGroup} />
+          {allGroups.map((group) => (
+            <option key={group} value={group}>
+              Group {group}
+            </option>
+          ))}
+        </select>
       </div>
 
-      <br />
+      {/* 3D Viewer */}
+      <div className="my-6">
+        <Viewer group={selectedGroup} />
+      </div>
 
       {/* Start test button */}
       <button
         onClick={handleStartTest}
-        style={{
-          padding: '10px 20px',
-          fontSize: '16px',
-          backgroundColor: '#4CAF50',
-          color: 'white',
-          border: 'none',
-          borderRadius: '5px',
-          cursor: 'pointer',
-        }}
+        className="px-6 py-3 text-base font-semibold text-white bg-main-green rounded-md shadow-md hover:bg-secondary-red transition-colors"
       >
         Start Test
       </button>
