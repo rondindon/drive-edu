@@ -4,6 +4,7 @@ import AdminAddQuestion from './components/AdminAddQuestion';
 import QuestionDetails from './components/QuestionDetails';
 import LandingPage from './pages/LandingPage';
 import Navbar from './components/Navbar';
+import CrossroadSimulator from './pages/CrossroadSimulator';
 
 function App() {
   
@@ -20,6 +21,7 @@ function App() {
               path="/admin/add-question"
               element={localStorage.getItem('role') === 'ADMIN' ? <AdminAddQuestion /> : <Navigate to="/login" />}
         />
+        <Route path="/simulator" element={<CrossroadSimulator />} />
       
         {/* <Route path="/login" element={<Login />} />
         <Route path="/test" element={<Test />} /> */}
