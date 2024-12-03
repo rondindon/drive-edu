@@ -1,7 +1,9 @@
-export type Car = {
+  export type Car = {
     id: string;
     color: string;
     position: { x: number; y: number };
+    blinker: 'left' | 'right' | 'off';
+    direction: 'north' | 'south' | 'east' | 'west'; // Restrict to these values
   };
   
   export type TrafficSign = {
@@ -24,26 +26,11 @@ export type Car = {
       name: 'Simple Crossroad (No Signs)',
       description: 'A simple crossroad with no signs. Yield to the right.',
       cars: [
-        { id: 'red', color: 'red', position: { x: 1, y: 2 } },
-        { id: 'blue', color: 'blue', position: { x: 0, y: 1 } },
-        { id: 'you', color: 'green', position: { x: 2, y: 1 } },
+        { id: 'red', color: 'red', position: { x: 50, y: 75 }, blinker: 'left', direction: 'west' },
+        { id: 'blue', color: 'blue', position: { x: 25, y: 50 }, blinker: 'right', direction: 'south' },
+        { id: 'you', color: 'green', position: { x: 75, y: 50 }, blinker: 'off', direction: 'north' },
       ],
       signs: [],
       rules: ['Yield to the right'],
-    },
-    {
-      id: 'crossroad2',
-      name: 'Crossroad with Stop Signs',
-      description: 'A crossroad where two roads have stop signs.',
-      cars: [
-        { id: 'red', color: 'red', position: { x: 1, y: 2 } },
-        { id: 'blue', color: 'blue', position: { x: 0, y: 1 } },
-        { id: 'you', color: 'green', position: { x: 2, y: 1 } },
-      ],
-      signs: [
-        { type: 'stop', position: { x: 0, y: 1 } },
-        { type: 'stop', position: { x: 1, y: 2 } },
-      ],
-      rules: ['Stop at stop signs, yield to other vehicles'],
     },
   ];  

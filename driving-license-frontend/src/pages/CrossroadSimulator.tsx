@@ -7,15 +7,23 @@ const CrossroadSimulator: React.FC = () => {
   const [selectedOrder, setSelectedOrder] = useState<string[]>([]);
 
   const handleCarClick = (carId: string) => {
-    if (!selectedOrder.includes(carId) && selectedOrder.length < selectedScenario.cars.length) {
-      setSelectedOrder((prev) => [...prev, carId]);
+    // Check if the car is already in the selected order
+    if (selectedOrder.includes(carId)) {
+      // Remove the car from the order
+      setSelectedOrder((prev) => prev.filter((id) => id !== carId));
+    } else {
+      // Add the car to the order if there's room
+      if (selectedOrder.length < selectedScenario.cars.length) {
+        setSelectedOrder((prev) => [...prev, carId]);
+      }
     }
   };
 
   const resetOrder = () => setSelectedOrder([]);
 
   const validateOrder = () => {
-    const correctOrder = ['blue', 'red', 'you']; // Example: Yield to the right
+    // Example validation logic
+    const correctOrder = ['blue', 'red', 'you']; // Adjust based on the scenario
     if (JSON.stringify(selectedOrder) === JSON.stringify(correctOrder)) {
       alert('Correct order!');
     } else {

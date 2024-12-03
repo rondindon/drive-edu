@@ -51,6 +51,9 @@ module.exports = {
         md: `calc(var(--radius) - 2px)`,
         sm: "calc(var(--radius) - 4px)",
       },
+      backgroundImage: {
+        'dashed-line': 'repeating-linear-gradient(to right, white 0%, white 30%, transparent 30%, transparent 60%)',
+      },
     },
   },
   plugins: [require("tailwindcss-animate")],
