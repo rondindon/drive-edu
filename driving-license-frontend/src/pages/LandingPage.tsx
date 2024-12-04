@@ -28,12 +28,13 @@ const LandingPage: React.FC = () => {
 
       {/* Group selection */}
       <Select onValueChange={(value) => setSelectedGroup(value)}>
-        <SelectTrigger className="w-60 transition-transform duration-300 hover:scale-105">
-          <SelectValue placeholder="Select a group" />
+        <SelectTrigger className="w-60 py-1 px-2 transition-all duration-300 hover:py-5 hover:px-4">
+          <SelectValue placeholder="Select a group"/>
         </SelectTrigger>
-        <SelectContent className="transition-opacity duration-300">
+
+        <SelectContent>
           {allGroups.map((group) => (
-            <SelectItem key={group} value={group} className="hover:bg-gray-100 transition-colors">
+            <SelectItem key={group} value={group} className="hover:bg-gray-100 transition-colors cursor-pointer">
               Group {group}
             </SelectItem>
           ))}
@@ -45,7 +46,7 @@ const LandingPage: React.FC = () => {
         {selectedGroup ? (
           <Viewer group={selectedGroup} />
         ) : (
-          <div className="text-main-darkBlue text-sm italic opacity-0 animate-fadeIn">
+          <div className="text-main-darkBlue text-sm italic animate-fadeIn">
             Please select a group to load the 3D Viewer.
           </div>
         )}

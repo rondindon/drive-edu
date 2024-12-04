@@ -1,46 +1,23 @@
 import React, { useState } from 'react';
-import { supabase } from '../services/supabase';
-import { AuthError, Session } from '@supabase/supabase-js';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 
 const Login: React.FC = () => {
   const [email, setEmail] = useState<string>('');
   const [password, setPassword] = useState<string>('');
   const [message, setMessage] = useState<string | null>(null);
+  const { login } = useAuth();
+  const navigate = useNavigate();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
 
     try {
-      const { data, error }: { data: { session: Session | null }; error: AuthError | null } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-
-      console.log(data)
-
-    const { data: userData, error: userError } = await supabase
-      .from('User')
-      .select('role')
-      .eq('email', email)
-      .single()
-
-    if (userError) {
-      setMessage(`Failed to fetch user role: ${userError.message}`);
-      return;
-    }
-
-      if (error) {
-        setMessage(`Login error: ${error.message}`);
-        console.log(userData)
-      } else if (data.session) {
-        setMessage('Login successful!');
-        localStorage.setItem('supabaseToken', data.session.access_token);
-        localStorage.setItem('role', userData.role);
-        console.log(userData)
-        // Handle successful login
-      }
-    } catch (err) {
-      setMessage(`Login failed: ${err}`);
+      await login(email, password);
+      setMessage('Login successful!');
+      navigate('/dashboard');
+    } catch (err: any) {
+      setMessage(`Login failed: ${err.message}`);
     }
   };
 

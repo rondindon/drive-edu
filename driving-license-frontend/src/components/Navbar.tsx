@@ -1,5 +1,5 @@
 import React from "react";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { Button } from "./ui/button";
 import {
   DropdownMenu,
@@ -7,17 +7,26 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
 } from "./ui/dropdown-menu";
-import Logout from "../pages/Logout";
-
+import { useAuth } from "../context/AuthContext"; // Import AuthContext to access user state
 
 const Navbar: React.FC = () => {
   const location = useLocation();
+  const navigate = useNavigate();
+  const { user, role, logout } = useAuth(); // Access user, role, and logout function from AuthContext
 
-  // Helper function to check if a link is active
   const isActive = (path: string) =>
     location.pathname === path
       ? "text-main-green font-semibold"
       : "text-secondary-lightGray hover:text-main-green transition-colors";
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+      navigate("/login"); // Redirect to login page after logout
+    } catch (err) {
+      console.error("Logout failed", err);
+    }
+  };
 
   return (
     <header className="w-full bg-main-darkBlue shadow-md">
@@ -48,26 +57,41 @@ const Navbar: React.FC = () => {
                 variant="outline"
                 className="bg-main-darkBlue border-main-green text-secondary-lightGray hover:bg-main-green hover:text-main-darkBlue transition-colors"
               >
-                Profile
+                {user ? `Welcome, ${user.email}` : "Profile"}
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent
               align="end"
               className="bg-main-darkBlue border border-main-green text-secondary-lightGray"
             >
-              <DropdownMenuItem className="hover:bg-main-green hover:text-main-darkBlue transition-colors">
-                <a href="/login" className="block w-full">
-                  Login
-                </a>
-              </DropdownMenuItem>
-              <DropdownMenuItem className="hover:bg-main-green hover:text-main-darkBlue transition-colors">
-                <a href="/register" className="block w-full">
-                  Register
-                </a>
-              </DropdownMenuItem>
-              <DropdownMenuItem className="hover:bg-main-green hover:text-main-darkBlue transition-colors">
-                <Logout />
-              </DropdownMenuItem>
+              {!user ? (
+                <>
+                  {/* If user is not logged in */}
+                  <DropdownMenuItem className="hover:bg-main-green hover:text-main-darkBlue transition-colors">
+                    <a href="/login" className="block w-full">
+                      Login
+                    </a>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem className="hover:bg-main-green hover:text-main-darkBlue transition-colors">
+                    <a href="/register" className="block w-full">
+                      Register
+                    </a>
+                  </DropdownMenuItem>
+                </>
+              ) : (
+                <>
+                  {/* If user is logged in */}
+                  <DropdownMenuItem className="hover:bg-main-green hover:text-main-darkBlue transition-colors">
+                    <span className="block w-full">Role: {role || "User"}</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={handleLogout}
+                    className="hover:bg-main-green hover:text-main-darkBlue transition-colors cursor-pointer"
+                  >
+                    Logout
+                  </DropdownMenuItem>
+                </>
+              )}
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
