@@ -29,12 +29,16 @@ const LandingPage: React.FC = () => {
       {/* Group selection */}
       <Select onValueChange={(value) => setSelectedGroup(value)}>
         <SelectTrigger className="w-60 py-1 px-2 transition-all duration-300 hover:py-5 hover:px-4">
-          <SelectValue placeholder="Select a group"/>
+          <SelectValue placeholder="Select a group" />
         </SelectTrigger>
 
         <SelectContent>
           {allGroups.map((group) => (
-            <SelectItem key={group} value={group} className="hover:bg-gray-100 transition-colors cursor-pointer">
+            <SelectItem
+              key={group}
+              value={group}
+              className="hover:bg-gray-100 transition-colors cursor-pointer"
+            >
               Group {group}
             </SelectItem>
           ))}
@@ -42,7 +46,11 @@ const LandingPage: React.FC = () => {
       </Select>
 
       {/* 3D Viewer */}
-      <div className="my-6 w-full flex justify-center">
+      <div
+        className={`my-6 w-full flex justify-center transition-transform duration-500 ${
+          selectedGroup ? 'scale-100 opacity-100 animate-scaleUp' : 'scale-95 opacity-50'
+        }`}
+      >
         {selectedGroup ? (
           <Viewer group={selectedGroup} />
         ) : (
