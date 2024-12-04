@@ -60,7 +60,7 @@ module.exports = {
           '100%': { opacity: 1 },
         },
         scaleUp: {
-          '0%': { transform: 'scale(0.6)', opacity: 0.8 },
+          '0%': { transform: 'scale(.96)', opacity: 0.8 },
           '100%': { transform: 'scale(1)', opacity: 1 },
         },
       },
