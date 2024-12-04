@@ -194,7 +194,7 @@ const Viewer: React.FC<Props> = ({ group }) => {
   }, [isMouseOver, group]);
 
   return (
-    <div className="flex items-center justify-center">
+    <div className="flex items-center justify-center w-full">
       <div
         ref={containerRef}
         onMouseMove={handleMouseMove}

@@ -47,12 +47,26 @@ module.exports = {
         bam: ['BAM', ...defaultTheme.fontFamily.sans],
       },
       borderRadius: {
-        lg: `var(--radius)`,
-        md: `calc(var(--radius) - 2px)`,
+        lg: "var(--radius)",
+        md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
       },
       backgroundImage: {
         'dashed-line': 'repeating-linear-gradient(to right, white 0%, white 30%, transparent 30%, transparent 60%)',
+      },
+      keyframes: {
+        fadeIn: {
+          '0%': { opacity: 0 },
+          '100%': { opacity: 1 },
+        },
+        scaleUp: {
+          '0%': { transform: 'scale(0.9)', opacity: 0.8 },
+          '100%': { transform: 'scale(1)', opacity: 1 },
+        },
+      },
+      animation: {
+        fadeIn: 'fadeIn 0.5s ease-in-out',
+        scaleUp: 'scaleUp 0.3s ease-in-out',
       },
     },
   },

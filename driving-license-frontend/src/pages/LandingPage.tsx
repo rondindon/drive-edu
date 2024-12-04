@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from '../components/ui/select';
 import Viewer from '../components/3DViewer';
 
 const LandingPage: React.FC = () => {
@@ -7,52 +8,54 @@ const LandingPage: React.FC = () => {
   const [selectedGroup, setSelectedGroup] = useState<string>(''); // Selected group
   const navigate = useNavigate(); // For navigation
 
-  // Makeshift start test function
   const handleStartTest = () => {
     if (!selectedGroup) {
       alert('Please select a group to start the test.');
       return;
     }
-    // For now, we'll just alert the user with the selected group.
-    // Later, this can redirect to the test page with the questions.
     alert(`Starting test for group ${selectedGroup}`);
     // Future functionality: navigate(`/test/${selectedGroup}`);
   };
 
   return (
-    <div className="p-5 text-center bg-secondary-lightGray min-h-screen">
+    <div className="p-5 text-center bg-secondary-lightGray min-h-screen flex flex-col items-center justify-center space-y-6 animate-fadeIn">
       <h1 className="text-4xl font-bold text-main-darkBlue mb-4 font-bam">
         Driving License Test
       </h1>
-      <p className="text-lg text-main-darkBlue mb-6">Select your group to begin the test:</p>
+      <p className="text-lg text-main-darkBlue transition-opacity duration-500 ease-in-out">
+        Select your group to begin the test:
+      </p>
 
-      {/* Group selection dropdown */}
-      <div className="mb-6">
-        <select
-          value={selectedGroup}
-          onChange={(e) => setSelectedGroup(e.target.value)}
-          className="p-2 text-base border border-secondary-lightGray rounded-md focus:outline-none focus:ring focus:ring-main-green"
-        >
-          <option value="" disabled>
-            Select a group
-          </option>
+      {/* Group selection */}
+      <Select onValueChange={(value) => setSelectedGroup(value)}>
+        <SelectTrigger className="w-60 transition-transform duration-300 hover:scale-105">
+          <SelectValue placeholder="Select a group" />
+        </SelectTrigger>
+        <SelectContent className="transition-opacity duration-300">
           {allGroups.map((group) => (
-            <option key={group} value={group}>
+            <SelectItem key={group} value={group} className="hover:bg-gray-100 transition-colors">
               Group {group}
-            </option>
+            </SelectItem>
           ))}
-        </select>
-      </div>
+        </SelectContent>
+      </Select>
 
       {/* 3D Viewer */}
-      <div className="my-6">
-        <Viewer group={selectedGroup} />
+      <div className="my-6 w-full flex justify-center">
+        {selectedGroup ? (
+          <Viewer group={selectedGroup} />
+        ) : (
+          <div className="text-main-darkBlue text-sm italic opacity-0 animate-fadeIn">
+            Please select a group to load the 3D Viewer.
+          </div>
+        )}
       </div>
 
       {/* Start test button */}
       <button
         onClick={handleStartTest}
-        className="px-6 py-3 text-base font-semibold text-white bg-main-green rounded-md shadow-md hover:bg-secondary-red transition-colors"
+        className="px-6 py-3 text-base font-semibold text-white bg-main-green rounded-md shadow-md hover:bg-secondary-red hover:scale-105 transition-transform transition-shadow duration-300 disabled:bg-gray-400 disabled:cursor-not-allowed"
+        disabled={!selectedGroup}
       >
         Start Test
       </button>
