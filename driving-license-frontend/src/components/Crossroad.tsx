@@ -24,7 +24,7 @@ const Crossroad: React.FC<CrossroadProps> = ({ scenario, onCarClick, selectedOrd
 
       {/* Vertical Road */}
       <div className="absolute left-1/2 top-0 h-full w-[15vh] bg-gray-400 transform -translate-x-1/2">
-        <div className="absolute left-1/2 top-0 h-full w-1 bg-white transform -translate-x-1/2 dashed"></div>
+        <div className="absolute left-1/2 top-0 h-full w-1 bg-white transform -translate-x-1/2 dashed-up"></div>
       </div>
 
       {/* Cars */}
@@ -34,7 +34,7 @@ const Crossroad: React.FC<CrossroadProps> = ({ scenario, onCarClick, selectedOrd
         return (
           <div
             key={car.id}
-            className={`absolute w-[12%] h-[8%] flex items-center justify-center`}
+            className={`absolute w-[12%] h-[8%] flex items-center justify-center cursor-pointer`}
             style={{
               top: `${car.position.x}%`,
               left: `${car.position.y}%`,

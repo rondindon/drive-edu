@@ -7,6 +7,8 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
 } from "./ui/dropdown-menu";
+import Logout from "../pages/Logout";
+
 
 const Navbar: React.FC = () => {
   const location = useLocation();
@@ -64,9 +66,7 @@ const Navbar: React.FC = () => {
                 </a>
               </DropdownMenuItem>
               <DropdownMenuItem className="hover:bg-main-green hover:text-main-darkBlue transition-colors">
-                <a href="/logout" className="block w-full">
-                  Logout
-                </a>
+                <Logout />
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
