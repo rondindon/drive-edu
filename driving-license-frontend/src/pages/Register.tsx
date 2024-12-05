@@ -9,6 +9,7 @@ import { Alert, AlertDescription, AlertTitle } from "../components/ui/alert";
 const Register: React.FC = () => {
   const [email, setEmail] = useState<string>("");
   const [password, setPassword] = useState<string>("");
+  const [username, setUsername] = useState<string>(""); // Add username state
   const [message, setMessage] = useState<string | null>(null);
   const [showAlert, setShowAlert] = useState<boolean>(false);
 
@@ -35,7 +36,7 @@ const Register: React.FC = () => {
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({ email }),
+          body: JSON.stringify({ email, username }), // Send username to backend
         });
       }
     } catch (err) {
@@ -79,6 +80,20 @@ const Register: React.FC = () => {
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-6">
+            <div>
+              <label htmlFor="username" className="block text-sm font-medium text-main-darkBlue">
+                Username
+              </label>
+              <Input
+                id="username"
+                type="text"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                placeholder="Enter your username"
+                required
+                className="transition-colors duration-200 focus:border-main-green focus:ring focus:ring-main-green"
+              />
+            </div>
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-main-darkBlue">
                 Email
