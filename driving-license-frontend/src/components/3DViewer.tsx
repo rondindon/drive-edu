@@ -213,7 +213,7 @@ const Viewer: React.FC<Props> = ({ group }) => {
             <Canvas
               camera={{
                 position: [0, 50, 500], // Camera position
-                fov: 30, // Field of view
+                fov: 35, // Field of view
               }}
             >
               <ambientLight intensity={0.5} />

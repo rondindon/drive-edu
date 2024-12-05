@@ -68,6 +68,9 @@ module.exports = {
         fadeIn: 'fadeIn 0.5s ease-in-out',
         scaleUp: 'scaleUp 0.5s ease-in-out',
       },
+      transitionProperty: {
+        all: "all",
+      },
     },
   },
   plugins: [require("tailwindcss-animate")],

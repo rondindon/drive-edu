@@ -57,7 +57,7 @@ const Navbar: React.FC = () => {
                 variant="outline"
                 className="bg-main-darkBlue border-main-green text-secondary-lightGray hover:bg-main-green hover:text-main-darkBlue transition-colors"
               >
-                {user ? `Welcome, ${user.email}` : "Profile"}
+                {user ? `Profile` : "Sign up"}
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent
@@ -69,7 +69,7 @@ const Navbar: React.FC = () => {
                   {/* If user is not logged in */}
                   <DropdownMenuItem className="hover:bg-main-green hover:text-main-darkBlue transition-colors">
                     <a href="/login" className="block w-full">
-                      Login
+                      Sign in
                     </a>
                   </DropdownMenuItem>
                   <DropdownMenuItem className="hover:bg-main-green hover:text-main-darkBlue transition-colors">
