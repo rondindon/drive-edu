@@ -7,12 +7,12 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
 } from "./ui/dropdown-menu";
-import { useAuth } from "../context/AuthContext"; // Import AuthContext to access user state
+import { useAuth } from "../context/AuthContext";
 
 const Navbar: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { user, role, logout } = useAuth(); // Access user, role, and logout function from AuthContext
+  const { user, role, username, logout } = useAuth();
 
   const isActive = (path: string) =>
     location.pathname === path
@@ -22,42 +22,34 @@ const Navbar: React.FC = () => {
   const handleLogout = async () => {
     try {
       await logout();
-      navigate("/login"); // Redirect to login page after logout
+      navigate("/login");
     } catch (err) {
       console.error("Logout failed", err);
     }
   };
 
+  console.log("User", role, username);
+
   return (
     <header className="w-full bg-main-darkBlue shadow-md">
       <nav className="container mx-auto flex items-center justify-between py-4 px-6">
-        {/* Logo */}
         <a href="/" className="text-xl font-bold text-secondary-lightGray">
           Driving Test App
         </a>
-
-        {/* Links */}
         <div className="hidden md:flex space-x-6">
-          <a href="/" className={isActive("/")}>
-            Home
-          </a>
-          <a href="/about" className={isActive("/about")}>
-            About
-          </a>
-          <a href="/contact" className={isActive("/contact")}>
-            Contact
-          </a>
+          <a href="/" className={isActive("/")}>Home</a>
+          <a href="/about" className={isActive("/about")}>About</a>
+          <a href="/contact" className={isActive("/contact")}>Contact</a>
         </div>
-
-        {/* Profile Dropdown */}
-        <div className="hidden md:block">
+        <div className="hidden md:flex items-center space-x-4">
+          {/* Profile Dropdown */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button
                 variant="outline"
                 className="bg-main-darkBlue border-main-green text-secondary-lightGray hover:bg-main-green hover:text-main-darkBlue transition-colors"
               >
-                {user ? `Profile` : "Sign up"}
+                {user ? username || "User" : "Sign up"}
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent
@@ -66,23 +58,17 @@ const Navbar: React.FC = () => {
             >
               {!user ? (
                 <>
-                  {/* If user is not logged in */}
                   <DropdownMenuItem className="hover:bg-main-green hover:text-main-darkBlue transition-colors">
-                    <a href="/login" className="block w-full">
-                      Sign in
-                    </a>
+                    <a href="/login" className="block w-full">Sign in</a>
                   </DropdownMenuItem>
                   <DropdownMenuItem className="hover:bg-main-green hover:text-main-darkBlue transition-colors">
-                    <a href="/register" className="block w-full">
-                      Register
-                    </a>
+                    <a href="/register" className="block w-full">Register</a>
                   </DropdownMenuItem>
                 </>
               ) : (
                 <>
-                  {/* If user is logged in */}
                   <DropdownMenuItem className="hover:bg-main-green hover:text-main-darkBlue transition-colors">
-                    <span className="block w-full">Role: {role || "User"}</span>
+                    <span>Role: {role || "User"}</span>
                   </DropdownMenuItem>
                   <DropdownMenuItem
                     onClick={handleLogout}
@@ -94,6 +80,17 @@ const Navbar: React.FC = () => {
               )}
             </DropdownMenuContent>
           </DropdownMenu>
+
+          {/* Admin Panel Button (visible if user is logged in) */}
+          {user && role === 'ADMIN' && (
+            <Button
+              variant="outline"
+              onClick={() => navigate("/admin")}
+              className="bg-main-darkBlue border-main-green text-secondary-lightGray hover:bg-main-green hover:text-main-darkBlue transition-colors"
+            >
+              Admin Panel
+            </Button>
+          )}
         </div>
       </nav>
     </header>

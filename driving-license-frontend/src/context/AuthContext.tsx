@@ -1,10 +1,10 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '../services/supabase';
-import { Session } from '@supabase/supabase-js';
 
 interface AuthContextProps {
-  user: any; // Replace `any` with the actual type for your user object
+  user: any; // Replace `any` with the actual user object type
   role: string | null;
+  username: string | null;
   login: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
 }
@@ -14,15 +14,20 @@ const AuthContext = createContext<AuthContextProps | undefined>(undefined);
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<any>(null);
   const [role, setRole] = useState<string | null>(null);
+  const [username, setUsername] = useState<string | null>(null);
+  const [isInitialized, setIsInitialized] = useState(false);
 
   useEffect(() => {
-    // Ensure we properly await the getSession call
+    // Restore user state from localStorage if a session exists
     const fetchSession = async () => {
-      const { data, error } = await supabase.auth.getSession();
+      const { data } = await supabase.auth.getSession();
       if (data.session) {
+        // User is logged in, restore from localStorage
         setUser(data.session.user);
         setRole(localStorage.getItem('role') || null);
+        setUsername(localStorage.getItem('username') || null);
       }
+      setIsInitialized(true);
     };
 
     fetchSession();
@@ -33,22 +38,28 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (error) throw error;
 
     const session = data.session;
-    const user = session?.user;
-
-    if (!user) throw new Error('No user found in session');
+    const currentUser = session?.user;
+    if (!currentUser) throw new Error('No user found in session');
 
     const { data: userData, error: userError } = await supabase
       .from('User')
-      .select('role')
+      .select('role, username')
       .eq('email', email)
       .single();
 
     if (userError) throw userError;
 
-    setUser(user);
+    setUser(currentUser);
     setRole(userData.role);
 
-    // Save user details to local storage
+    // Check if the new username differs from what we currently have
+    const storedUsername = localStorage.getItem('username');
+    if (userData.username !== storedUsername) {
+      setUsername(userData.username);
+      localStorage.setItem('username', userData.username);
+    }
+
+    // Always update role and token on login
     localStorage.setItem('supabaseToken', session.access_token);
     localStorage.setItem('role', userData.role);
   };
@@ -57,11 +68,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     await supabase.auth.signOut();
     setUser(null);
     setRole(null);
+    setUsername(null);
     localStorage.clear();
   };
 
+  if (!isInitialized) {
+    // Optionally render a loading spinner or null while checking session
+    return null;
+  }
+
   return (
-    <AuthContext.Provider value={{ user, role, login, logout }}>
+    <AuthContext.Provider value={{ user, role, username, login, logout }}>
       {children}
     </AuthContext.Provider>
   );
