@@ -15,6 +15,7 @@ import AdminDashboard from './pages/admin/AdminDashboard';
 // import AdminRequests from './pages/admin/AdminRequests';
 // import AdminReports from './pages/admin/AdminReports';
 import AdminQuestions from './pages/admin/questions/AdminQuestions';
+import AdminUsers from './pages/admin/users/AdminUsers';
 
 function App() {
   return (
@@ -38,7 +39,7 @@ function App() {
           }
         />
 
-        {/* <Route
+        <Route
           path="/admin/users"
           element={
             <ProtectedRoute allowedRoles={['ADMIN']}>
@@ -46,7 +47,7 @@ function App() {
             </ProtectedRoute>
           }
         />
-
+        {/* 
         <Route
           path="/admin/tests"
           element={
