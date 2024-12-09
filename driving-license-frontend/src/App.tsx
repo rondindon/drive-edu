@@ -9,12 +9,12 @@ import CrossroadSimulator from './pages/CrossroadSimulator';
 import ProtectedRoute from './components/ProtectedRoute';
 
 // Import Admin Pages
-import AdminDashboard from './pages/admin/AdminDashboard'; 
-// import AdminUsers from './pages/admin/users'; 
-// import AdminTests from './pages/admin/tests';
-// import AdminQuestions from './pages/admin/questions';
-// import AdminRequests from './pages/admin/requests';
-// import AdminReports from './pages/admin/reports';
+import AdminDashboard from './pages/admin/AdminDashboard';
+// import AdminUsers from './pages/admin/AdminUsers'; 
+// import AdminTests from './pages/admin/AdminTests';
+// import AdminRequests from './pages/admin/AdminRequests';
+// import AdminReports from './pages/admin/AdminReports';
+import AdminQuestions from './pages/admin/questions/AdminQuestions';
 
 function App() {
   return (
@@ -37,6 +37,7 @@ function App() {
             </ProtectedRoute>
           }
         />
+
         {/* <Route
           path="/admin/users"
           element={
@@ -45,6 +46,7 @@ function App() {
             </ProtectedRoute>
           }
         />
+
         <Route
           path="/admin/tests"
           element={
@@ -52,7 +54,8 @@ function App() {
               <AdminTests />
             </ProtectedRoute>
           }
-        />
+        /> */}
+
         <Route
           path="/admin/questions"
           element={
@@ -61,7 +64,8 @@ function App() {
             </ProtectedRoute>
           }
         />
-        <Route
+
+        {/* <Route
           path="/admin/requests"
           element={
             <ProtectedRoute allowedRoles={['ADMIN']}>
@@ -69,6 +73,7 @@ function App() {
             </ProtectedRoute>
           }
         />
+
         <Route
           path="/admin/reports"
           element={

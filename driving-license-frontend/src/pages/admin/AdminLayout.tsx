@@ -43,6 +43,7 @@ const AdminLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
               <NavLink
                 key={item.name}
                 to={item.href}
+                end={item.href === "/admin"} // Add this condition or hardcode it for just the Dashboard item.
                 className={({ isActive }) =>
                   `flex items-center space-x-2 px-2 py-2 rounded hover:bg-main-green hover:text-main-darkBlue transition-colors ${
                     isActive ? "bg-main-green text-main-darkBlue" : ""
@@ -54,9 +55,10 @@ const AdminLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
               </NavLink>
             ))}
           </nav>
+
         </div>
         <div className="p-4 border-t border-main-green">
-          <Button variant="outline" className="w-full" onClick={handleLogout}>
+          <Button variant="outline" className="w-full text-gray-400" onClick={handleLogout}>
             <LogOut className="mr-2 w-4 h-4" /> Logout
           </Button>
         </div>
