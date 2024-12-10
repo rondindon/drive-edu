@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from "react";
+// src/pages/admin/questions/AdminQuestions.tsx
+import React, { useState, useEffect, useCallback } from "react";
 import { Button } from "src/components/ui/button";
 import { Input } from "src/components/ui/input";
 import { Card } from "src/components/ui/card";
@@ -10,11 +11,10 @@ import {
 } from "src/components/ui/dropdown-menu";
 import { useAuth } from "src/context/AuthContext";
 import { useNavigate } from "react-router-dom";
-import AdminLayout from "src/pages/admin/AdminLayout";
 import AddEditQuestionDialog from "./AddEditQuestionDialog";
 import { MoreVertical } from "lucide-react";
 import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from "src/components/ui/select";
-import { Skeleton } from "src/components/ui/skeleton"; // Import Skeleton
+import { Skeleton } from "src/components/ui/skeleton";
 
 export interface Question {
   id?: number;
@@ -75,12 +75,31 @@ const AdminQuestions: React.FC = () => {
 
   const token = localStorage.getItem("supabaseToken");
 
-  const fetchQuestions = async (offsetVal = 0, cat = categoryFilter, diff = difficultyFilter, srch = search) => {
+  // Unique cache key based on current filters
+  const getCacheKey = () => {
+    return `adminQuestionsCache_${categoryFilter}_${difficultyFilter}_${search}`;
+  };
+
+  const fetchQuestions = useCallback(async (
+    offsetVal = 0,
+    cat = categoryFilter,
+    diff = difficultyFilter,
+    srch = search,
+    append = false,
+    fetchAll = false
+  ) => {
     setLoading(true);
     setError(null);
     const params = new URLSearchParams();
-    params.set("limit", limit.toString());
-    params.set("offset", offsetVal.toString());
+    
+    if (fetchAll) {
+      params.set("limit", '10000'); // Assuming 10,000 is sufficient to fetch all
+      params.set("offset", '0'); // Reset offset
+    } else {
+      params.set("limit", limit.toString());
+      params.set("offset", offsetVal.toString());
+    }
+
     if (cat && cat !== "All") params.set("category", cat);
     if (diff && diff !== "All") params.set("difficulty", diff);
     if (srch && srch.trim().length > 0) {
@@ -99,7 +118,7 @@ const AdminQuestions: React.FC = () => {
       }
       const data: Question[] = await response.json();
 
-      if (offsetVal === 0) {
+      if (fetchAll || offsetVal === 0) {
         setQuestions(data);
       } else {
         setQuestions(prev => [...prev, ...data]);
@@ -107,6 +126,8 @@ const AdminQuestions: React.FC = () => {
 
       if (data.length < limit) {
         setHasMore(false);
+      } else {
+        setHasMore(true);
       }
 
       setLoading(false);
@@ -115,39 +136,38 @@ const AdminQuestions: React.FC = () => {
       setError("Could not fetch questions. Please try again later.");
       setLoading(false);
     }
-  };
+  }, [categoryFilter, difficultyFilter, search, limit, token]);
 
+  // Load from cache or fetch data on mount and when filters change
   useEffect(() => {
-    const newOffset = 0;
-    setOffset(newOffset);
-    setHasMore(true);
-    fetchQuestions(newOffset, categoryFilter, difficultyFilter, search);
-  }, [categoryFilter, difficultyFilter, search]);
-
-  useEffect(() => {
-    const savedQuestions = localStorage.getItem("adminQuestions");
-    const savedOffset = localStorage.getItem("adminQuestionsOffset");
-    if (savedQuestions && savedOffset) {
-      const parsedQuestions = JSON.parse(savedQuestions) as Question[];
-      const parsedOffset = parseInt(savedOffset, 10);
-      if (parsedQuestions.length > 0 && !isNaN(parsedOffset)) {
-        setQuestions(parsedQuestions);
-        setOffset(parsedOffset);
-        setHasMore(parsedQuestions.length % 100 === 0);
-        setLoading(false);
-        return;
-      }
+    const savedCache = localStorage.getItem(getCacheKey());
+    if (savedCache) {
+      const { questions: savedQuestions, offset: savedOffset, hasMore: savedHasMore } = JSON.parse(savedCache);
+      setQuestions(savedQuestions);
+      setOffset(savedOffset);
+      setHasMore(savedHasMore);
+      setLoading(false);
+      return;
     }
-    fetchQuestions(0);
-  }, []);
-
-  useEffect(() => {
-    if (questions.length > 0) {
-      localStorage.setItem("adminQuestions", JSON.stringify(questions));
-      localStorage.setItem("adminQuestionsOffset", offset.toString());
+    // If no cache, fetch from server
+    if (categoryFilter !== "All") {
+      fetchQuestions(0, categoryFilter, difficultyFilter, search, false, true); // fetchAll = true
+    } else {
+      fetchQuestions(0);
     }
-  }, [questions, offset]);
+  }, [getCacheKey(), fetchQuestions, categoryFilter, difficultyFilter, search]);
 
+  // Save to cache whenever questions or pagination changes
+  useEffect(() => {
+    const cacheData = {
+      questions,
+      offset,
+      hasMore,
+    };
+    localStorage.setItem(getCacheKey(), JSON.stringify(cacheData));
+  }, [questions, offset, hasMore, getCacheKey()]);
+
+  // Update filteredQuestions based on current filters
   useEffect(() => {
     const sortedQuestions = [...questions].sort((a, b) => {
       const aId = a.id ?? 0;
@@ -171,9 +191,11 @@ const AdminQuestions: React.FC = () => {
   }, [questions, search, categoryFilter, difficultyFilter]);
 
   const loadMore = () => {
+    if (!hasMore) return;
+    if (categoryFilter !== "All") return; // Do not load more if a specific category is selected
     const newOffset = offset + limit;
     setOffset(newOffset);
-    fetchQuestions(newOffset);
+    fetchQuestions(newOffset, categoryFilter, difficultyFilter, search, true, false);
   };
 
   const handleAddNew = () => {
@@ -257,168 +279,165 @@ const AdminQuestions: React.FC = () => {
   // Render a full-section Skeleton while loading
   if (loading && questions.length === 0) {
     return (
-      <AdminLayout>
-        <div className="flex items-center justify-center h-full">
-          <Skeleton className="w-full h-3/4 rounded" />
-        </div>
-      </AdminLayout>
+      <div className="flex items-center justify-center h-full">
+        <Skeleton className="w-full h-3/4 rounded" />
+      </div>
     );
   }
 
   // Render error state
   if (error) {
     return (
-      <AdminLayout>
-        <div className="p-6 text-red-500">{error}</div>
-      </AdminLayout>
+      <div className="p-6 text-red-500">
+        {error}
+      </div>
     );
   }
 
   return (
-    <AdminLayout>
-      <div className="p-6 space-y-4">
-        <div className="flex justify-between items-center">
-          <h1 className="text-2xl font-bold">Questions</h1>
-          <Button
-            onClick={handleAddNew}
-            className="bg-main-green text-main-darkBlue hover:bg-main-green/90 text-white"
-          >
-            Add Question
-          </Button>
-        </div>
-
-        <div className="flex items-center space-x-4">
-          <Input
-            placeholder="Search questions..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="w-1/3"
-          />
-
-          {/* Category Filter */}
-          <div className="flex items-center space-x-2">
-            <span>Category:</span>
-            <Select value={categoryFilter} onValueChange={(val) => setCategoryFilter(val)}>
-              <SelectTrigger className="w-100">
-                <SelectValue placeholder="All" />
-              </SelectTrigger>
-              <SelectContent>
-                {categories.map((cat) => (
-                  <SelectItem key={cat} value={cat}>{cat}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* Difficulty Filter */}
-          <div className="flex items-center space-x-2">
-            <span>Difficulty:</span>
-            <Select
-              value={difficultyFilter}
-              onValueChange={(val) => setDifficultyFilter(val as 'easy'|'medium'|'hard'|'All')}
-            >
-              <SelectTrigger className="w-32">
-                <SelectValue placeholder="All" />
-              </SelectTrigger>
-              <SelectContent>
-                {difficultyOptions.map((diff) => (
-                  <SelectItem key={diff} value={diff}>{diff}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
-
-        <Card className="p-4">
-          <table className="w-full border-collapse text-left">
-            <thead>
-              <tr className="border-b border-main-green text-gray-800">
-                <th className="py-2">ID</th>
-                <th className="py-2">Text</th>
-                <th className="py-2">Category</th>
-                <th className="py-2">Difficulty</th>
-                <th className="py-2">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredQuestions.map((q) => (
-                <tr
-                  key={q.id}
-                  className="border-b border-gray-200 hover:bg-gray-50"
-                >
-                  <td className="py-2">{q.id}</td>
-                  <td className="py-2">
-                    <div className="flex items-center">
-                      {q.imageUrl && (
-                        <img
-                          src={q.imageUrl}
-                          alt="Question"
-                          className="w-16 h-auto mr-2 rounded pl-4"
-                        />
-                      )}
-                      <span className="pl-4">{q.text}</span>
-                    </div>
-                  </td>
-                  <td className="py-2 w-1/5">{q.category}</td>
-                  <td className="py-2">{q.difficulty}</td>
-                  <td className="py-2 text-right">
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" className="h-8 w-8 p-0">
-                          <MoreVertical />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => q.id && handleEdit(q)}>
-                          Edit
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          onClick={() => q.id && handleDelete(q.id)}
-                          className="text-red-500"
-                        >
-                          Delete
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </td>
-                </tr>
-              ))}
-              {filteredQuestions.length === 0 && !loading && (
-                <tr>
-                  <td colSpan={5} className="text-center py-4">
-                    No questions found.
-                  </td>
-                </tr>
-              )}
-              {/* Show skeleton if loading more */}
-              {loading && questions.length > 0 && (
-                <tr>
-                  <td colSpan={5} className="py-2">
-                    <Skeleton className="w-full h-6 rounded" />
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-
-          {/* Load More Button */}
-          {hasMore && (
-            <div className="mt-4 text-center">
-              {loading && questions.length > 0 ? (
-                <Skeleton className="mx-auto w-32 h-10 rounded" />
-              ) : (
-                <Button
-                  onClick={loadMore}
-                  className="bg-main-green text-main-darkBlue hover:bg-main-green/90 text-white"
-                >
-                  Load More
-                </Button>
-              )}
-            </div>
-          )}
-        </Card>
+    <>
+      <div className="flex justify-between items-center mb-4">
+        <h1 className="text-2xl font-bold">Questions</h1>
+        <Button
+          onClick={handleAddNew}
+          className="bg-main-green text-main-darkBlue hover:bg-main-green/90 text-white"
+        >
+          Add Question
+        </Button>
       </div>
 
+      <div className="flex items-center space-x-4 mb-4">
+        <Input
+          placeholder="Search questions..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="w-1/3"
+        />
+
+        {/* Category Filter */}
+        <div className="flex items-center space-x-2">
+          <span>Category:</span>
+          <Select value={categoryFilter} onValueChange={(val) => setCategoryFilter(val)}>
+            <SelectTrigger className="w-100">
+              <SelectValue placeholder="All" />
+            </SelectTrigger>
+            <SelectContent>
+              {categories.map((cat) => (
+                <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        {/* Difficulty Filter */}
+        <div className="flex items-center space-x-2">
+          <span>Difficulty:</span>
+          <Select
+            value={difficultyFilter}
+            onValueChange={(val) => setDifficultyFilter(val as 'easy' | 'medium' | 'hard' | 'All')}
+          >
+            <SelectTrigger className="w-32">
+              <SelectValue placeholder="All" />
+            </SelectTrigger>
+            <SelectContent>
+              {difficultyOptions.map((diff) => (
+                <SelectItem key={diff} value={diff}>{diff}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
+      <Card className="p-4">
+        <table className="w-full border-collapse text-left">
+          <thead>
+            <tr className="border-b border-main-green text-gray-800">
+              <th className="py-2 px-4">ID</th>
+              <th className="py-2 px-4">Text</th>
+              <th className="py-2 px-4">Category</th>
+              <th className="py-2 px-4">Difficulty</th>
+              <th className="py-2 px-4">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {filteredQuestions.map((q) => (
+              <tr
+                key={q.id}
+                className="border-b border-gray-200 hover:bg-gray-50"
+              >
+                <td className="py-2 px-4">{q.id}</td>
+                <td className="py-2 px-4">
+                  <div className="flex items-center">
+                    {q.imageUrl && (
+                      <img
+                        src={q.imageUrl}
+                        alt="Question"
+                        className="w-16 h-auto mr-2 rounded pl-4"
+                      />
+                    )}
+                    <span className="pl-4">{q.text}</span>
+                  </div>
+                </td>
+                <td className="py-2 px-4 w-1/5">{q.category}</td>
+                <td className="py-2 px-4">{q.difficulty}</td>
+                <td className="py-2 px-4 text-right">
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" className="h-8 w-8 p-0">
+                        <MoreVertical />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem onClick={() => q.id && handleEdit(q)}>
+                        Edit
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={() => q.id && handleDelete(q.id)}
+                        className="text-red-500"
+                      >
+                        Delete
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </td>
+              </tr>
+            ))}
+            {filteredQuestions.length === 0 && !loading && (
+              <tr>
+                <td colSpan={5} className="text-center py-4">
+                  No questions found.
+                </td>
+              </tr>
+            )}
+            {/* Show skeleton if loading more */}
+            {loading && questions.length > 0 && (
+              <tr>
+                <td colSpan={5} className="pt-2">
+                  <Skeleton className="w-full h-10 rounded" />
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+
+        {/* Load More Button */}
+        {hasMore && categoryFilter === "All" && (
+          <div className="mt-4 text-center">
+            {loading && questions.length > 0 ? (
+              <Skeleton className="mx-auto w-32 h-10 rounded" />
+            ) : (
+              <Button
+                onClick={loadMore}
+                className="bg-main-green text-main-darkBlue hover:bg-main-green/90 text-white"
+              >
+                Load More
+              </Button>
+            )}
+          </div>
+        )}
+      </Card>
+
+      {/* Add/Edit Question Dialog */}
       {openDialog && (
         <AddEditQuestionDialog
           open={openDialog}
@@ -427,7 +446,7 @@ const AdminQuestions: React.FC = () => {
           onSave={handleSave}
         />
       )}
-    </AdminLayout>
+    </>
   );
 };
 

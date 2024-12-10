@@ -1,11 +1,9 @@
+// src/pages/admin/AdminDashboard.tsx
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "src/components/ui/card";
 import { Button } from "src/components/ui/button";
 import { useNavigate } from "react-router-dom";
-
-// Replace these imports with actual icons/components from shadcn or Heroicons if integrated
 import { User, ClipboardList, ClipboardCheck, BarChart } from "lucide-react";
-import AdminLayout from "./AdminLayout";
 
 const AdminDashboard: React.FC = () => {
   const navigate = useNavigate();
@@ -17,8 +15,9 @@ const AdminDashboard: React.FC = () => {
   const pendingRequests = 45;
 
   return (
-    <AdminLayout>
-      <div className="p-6 grid gap-4 lg:grid-cols-4 sm:grid-cols-2 grid-cols-1">
+    <div className="space-y-6">
+      {/* Dashboard Cards */}
+      <div className="grid gap-4 lg:grid-cols-4 sm:grid-cols-2 grid-cols-1">
         <Card className="hover:shadow-lg transition">
           <CardHeader>
             <CardTitle className="flex items-center space-x-2">
@@ -68,22 +67,40 @@ const AdminDashboard: React.FC = () => {
         </Card>
       </div>
 
-      <div className="p-6">
+      {/* Quick Actions */}
+      <div>
         <h2 className="text-xl font-semibold mb-4">Quick Actions</h2>
-        <div className="flex space-x-4">
-          <Button onClick={() => navigate("/admin/users")}>Manage Users</Button>
-          <Button onClick={() => navigate("/admin/tests")} variant="outline">
+        <div className="flex flex-wrap gap-4">
+          <Button
+            onClick={() => navigate("/admin/users")}
+            className="bg-main-green text-main-darkBlue hover:bg-main-green/90"
+          >
+            Manage Users
+          </Button>
+          <Button
+            onClick={() => navigate("/admin/tests")}
+            variant="outline"
+            className="text-main-green hover:bg-main-green/10"
+          >
             Manage Tests
           </Button>
-          <Button onClick={() => navigate("/admin/questions")} variant="outline">
+          <Button
+            onClick={() => navigate("/admin/questions")}
+            variant="outline"
+            className="text-main-green hover:bg-main-green/10"
+          >
             Manage Questions
           </Button>
-          <Button onClick={() => navigate("/admin/requests")} variant="outline">
+          <Button
+            onClick={() => navigate("/admin/requests")}
+            variant="outline"
+            className="text-main-green hover:bg-main-green/10"
+          >
             Review Requests
           </Button>
         </div>
       </div>
-    </AdminLayout>
+    </div>
   );
 };
 

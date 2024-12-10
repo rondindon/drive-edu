@@ -1,3 +1,4 @@
+// src/pages/admin/users/AdminUsers.tsx
 import React, { useState, useEffect } from "react";
 import { Button } from "src/components/ui/button";
 import { Input } from "src/components/ui/input";
@@ -10,9 +11,9 @@ import {
 } from "src/components/ui/dropdown-menu";
 import { useAuth } from "src/context/AuthContext";
 import { useNavigate } from "react-router-dom";
-import AdminLayout from "src/pages/admin/AdminLayout";
 import { MoreVertical } from "lucide-react";
 import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from "src/components/ui/select";
+import { Skeleton } from "src/components/ui/skeleton"; // Import Skeleton
 
 interface User {
   id: number;
@@ -31,9 +32,11 @@ const AdminUsers: React.FC = () => {
   const { role } = useAuth();
   const navigate = useNavigate();
 
-  if (role !== "ADMIN") {
-    navigate("/login");
-  }
+  useEffect(() => {
+    if (role !== "ADMIN") {
+      navigate("/login");
+    }
+  }, [role, navigate]);
 
   const [search, setSearch] = useState("");
   const [users, setUsers] = useState<User[]>([]);
@@ -157,128 +160,131 @@ const AdminUsers: React.FC = () => {
     }
   };
 
+  // Render loading state
   if (loading && users.length === 0) {
     return (
-      <AdminLayout>
-        <div className="p-6"><Spinner /></div>
-      </AdminLayout>
+      <div className="flex items-center justify-center h-full p-6">
+        <Spinner />
+      </div>
     );
   }
 
+  // Render error state
   if (error) {
     return (
-      <AdminLayout>
-        <div className="p-6 text-red-500">{error}</div>
-      </AdminLayout>
+      <div className="p-6 text-red-500">
+        {error}
+      </div>
     );
   }
 
   return (
-    <AdminLayout>
-      <div className="p-6 space-y-4">
-        <h1 className="text-2xl font-bold">Users</h1>
+    <div className="p-6 space-y-4">
+      <h1 className="text-2xl font-bold">Users</h1>
 
-        <div className="flex items-center space-x-4">
-          <Input
-            placeholder="Search by email or username..."
-            value={search}
-            onChange={(e) => {setSearch(e.target.value);}}
-            className="w-1/3"
-          />
+      <div className="flex items-center space-x-4">
+        <Input
+          placeholder="Search by email or username..."
+          value={search}
+          onChange={(e) => { setSearch(e.target.value); }}
+          className="w-1/3"
+        />
 
-          <div className="flex items-center space-x-2">
-            <span>Role:</span>
-            <Select value={roleFilter} onValueChange={(val) => {setRoleFilter(val);}}>
-              <SelectTrigger className="w-32">
-                <SelectValue placeholder="All" />
-              </SelectTrigger>
-              <SelectContent>
-                {roleOptions.map((r) => (
-                  <SelectItem key={r} value={r}>{r}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
-
-        <Card className="p-4">
-          <table className="w-full border-collapse text-left">
-            <thead>
-              <tr className="border-b border-main-green text-gray-800">
-                <th className="py-2 px-4">ID</th>
-                <th className="py-2 px-4">Email</th>
-                <th className="py-2 px-4">Username</th>
-                <th className="py-2 px-4">Role</th>
-                <th className="py-2 px-4">CreatedAt</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredUsers.map((u) => (
-                <tr key={u.id} className="border-b border-gray-200 hover:bg-gray-50">
-                  <td className="py-2 px-4">{u.id}</td>
-                  <td className="py-2 px-4">{u.email}</td>
-                  <td className="py-2 px-4">{u.username || "No username"}</td>
-                  <td className="py-2 px-4">{u.role}</td>
-                  <td className="py-2 px-4">{new Date(u.createdAt).toLocaleString()}</td>
-                  <td className="py-2 px-4 text-right">
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" className="h-8 w-8 p-0">
-                          <MoreVertical />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        {roleOptions.filter((r) => r !== "All").map((r) => (
-                          r !== u.role ? (
-                            <DropdownMenuItem key={r} onClick={() => handleUpdateUserRole(u.id, r)}>
-                              Set role to {r}
-                            </DropdownMenuItem>
-                          ) : null
-                        ))}
-
-                        <DropdownMenuItem
-                          onClick={() => {
-                            const newUsername = window.prompt("Enter new username (leave empty to remove username):", u.username || "");
-                            if (newUsername !== null) {
-                              const trimmed = newUsername.trim();
-                              handleUpdateUserUsername(u.id, trimmed === "" ? null : trimmed);
-                            }
-                          }}
-                        >
-                          Set Username
-                        </DropdownMenuItem>
-
-                        <DropdownMenuItem
-                          onClick={() => handleDeleteUser(u.id)}
-                          className="text-red-500"
-                        >
-                          Delete
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </td>
-                </tr>
+        <div className="flex items-center space-x-2">
+          <span>Role:</span>
+          <Select value={roleFilter} onValueChange={(val) => { setRoleFilter(val); }}>
+            <SelectTrigger className="w-32">
+              <SelectValue placeholder="All" />
+            </SelectTrigger>
+            <SelectContent>
+              {roleOptions.map((r) => (
+                <SelectItem key={r} value={r}>{r}</SelectItem>
               ))}
-              {filteredUsers.length === 0 && (
-                <tr>
-                  <td colSpan={6} className="text-center py-4">
-                    No users found.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-
-          {hasMore && filteredUsers.length > 0 && (
-            <div className="mt-4 text-center">
-              <Button onClick={loadMore} className="bg-main-green text-main-darkBlue hover:bg-main-green/90">
-                Load More
-              </Button>
-            </div>
-          )}
-        </Card>
+            </SelectContent>
+          </Select>
+        </div>
       </div>
-    </AdminLayout>
+
+      <Card className="p-4">
+        <table className="w-full border-collapse text-left">
+          <thead>
+            <tr className="border-b border-main-green text-gray-800">
+              <th className="py-2 px-4">ID</th>
+              <th className="py-2 px-4">Email</th>
+              <th className="py-2 px-4">Username</th>
+              <th className="py-2 px-4">Role</th>
+              <th className="py-2 px-4">CreatedAt</th>
+              <th className="py-2 px-4">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {filteredUsers.map((u) => (
+              <tr key={u.id} className="border-b border-gray-200 hover:bg-gray-50">
+                <td className="py-2 px-4">{u.id}</td>
+                <td className="py-2 px-4">{u.email}</td>
+                <td className="py-2 px-4">{u.username || "No username"}</td>
+                <td className="py-2 px-4">{u.role}</td>
+                <td className="py-2 px-4">{new Date(u.createdAt).toLocaleString()}</td>
+                <td className="py-2 px-4 text-right">
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" className="h-8 w-8 p-0">
+                        <MoreVertical />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      {/* Update Role Options (excluding current role and 'All') */}
+                      {roleOptions.filter((r) => r !== "All" && r !== u.role).map((r) => (
+                        <DropdownMenuItem key={r} onClick={() => handleUpdateUserRole(u.id, r)}>
+                          Set role to {r}
+                        </DropdownMenuItem>
+                      ))}
+
+                      {/* Update Username */}
+                      <DropdownMenuItem
+                        onClick={() => {
+                          const newUsername = window.prompt("Enter new username (leave empty to remove username):", u.username || "");
+                          if (newUsername !== null) {
+                            const trimmed = newUsername.trim();
+                            handleUpdateUserUsername(u.id, trimmed === "" ? null : trimmed);
+                          }
+                        }}
+                      >
+                        Set Username
+                      </DropdownMenuItem>
+
+                      {/* Delete User */}
+                      <DropdownMenuItem
+                        onClick={() => handleDeleteUser(u.id)}
+                        className="text-red-500"
+                      >
+                        Delete
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </td>
+              </tr>
+            ))}
+            {filteredUsers.length === 0 && (
+              <tr>
+                <td colSpan={6} className="text-center py-4">
+                  No users found.
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+
+        {/* Load More Button */}
+        {hasMore && filteredUsers.length > 0 && (
+          <div className="mt-4 text-center">
+            <Button onClick={loadMore} className="bg-main-green text-main-darkBlue hover:bg-main-green/90">
+              Load More
+            </Button>
+          </div>
+        )}
+      </Card>
+    </div>
   );
 };
 

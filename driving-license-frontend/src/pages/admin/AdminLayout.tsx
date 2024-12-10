@@ -1,14 +1,23 @@
+// src/pages/admin/AdminLayout.tsx
 import React from "react";
-import { NavLink, useNavigate } from "react-router-dom";
-import { Button } from "../../components/ui/button"; // Adjust the import path as needed
-import { useAuth } from "../../context/AuthContext"; // Adjust the import path as needed
+import { NavLink, useNavigate, Outlet } from "react-router-dom";
+import { Button } from "src/components/ui/button";
+import { useAuth } from "src/context/AuthContext";
 
-// Example icons (use your own or from shadcn/ui icons)
-import { Home, Users, List, HelpCircle, FileText, BarChart2, LogOut } from "lucide-react";
+// Importing icons from lucide-react
+import {
+  Home,
+  Users,
+  List,
+  HelpCircle,
+  FileText,
+  BarChart2,
+  LogOut,
+} from "lucide-react";
 
-const AdminLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+const AdminLayout: React.FC = () => {
   const navigate = useNavigate();
-  const { logout, user, username, role } = useAuth();
+  const { logout, username, role } = useAuth();
 
   const handleLogout = async () => {
     await logout();
@@ -25,12 +34,21 @@ const AdminLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   ];
 
   return (
-    <div className="flex flex-1">
+    <div className="flex min-h-screen">
       {/* Sidebar */}
-      <aside className="w-64 bg-main-darkBlue text-secondary-lightGray flex flex-col flex-shrink-0">
+      <aside className="fixed top-0 left-0 w-64 h-screen bg-main-darkBlue text-secondary-lightGray flex flex-col">
         {/* Sidebar Header */}
-        <div className="p-4 font-bold text-xl border-b border-main-green">
-          Admin Panel
+        <div className="p-4 font-bold text-xl border-b border-main-green flex items-center justify-between">
+          <span>Admin Panel</span>
+          {/* Home Link */}
+          <NavLink
+            to="/"
+            className="flex items-center space-x-2 px-2 py-1 rounded hover:bg-main-green hover:text-main-darkBlue transition-colors"
+            aria-label="Home"
+          >
+            <Home className="w-5 h-5" />
+            <span className="text-sm">Home</span>
+          </NavLink>
         </div>
 
         {/* Sidebar Content */}
@@ -50,7 +68,7 @@ const AdminLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
                 to={item.href}
                 end={item.href === "/admin"}
                 className={({ isActive }) =>
-                  `flex items-center space-x-2 px-2 py-2 rounded hover:bg-main-green hover:text-main-darkBlue transition-colors ${
+                  `flex items-center space-x-2 px-3 py-2 rounded hover:bg-main-green hover:text-main-darkBlue transition-colors ${
                     isActive ? "bg-main-green text-main-darkBlue" : ""
                   }`
                 }
@@ -75,8 +93,8 @@ const AdminLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
       </aside>
 
       {/* Main Content Area */}
-      <main className="flex-1 overflow-auto p-4">
-        {children}
+      <main className="ml-64 flex-1 overflow-y-auto p-6">
+        <Outlet />
       </main>
     </div>
   );
