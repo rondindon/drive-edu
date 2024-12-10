@@ -1,6 +1,6 @@
 // src/routes.ts
 import { Router } from 'express';
-import { handleNewUser } from './controllers/userController';
+import { handleNewUser, updateUsername } from './controllers/userController';
 import { createQuestion, deleteQuestion, getAllQuestions, isAdmin, updateQuestion } from './controllers/adminController';
 import { getQuestionById } from './controllers/questionController';
 import { authenticate } from './middleware/auth';
@@ -14,6 +14,8 @@ router.get('/question/:id', getQuestionById);
 router.get('/admin/users', authenticate, isAdmin, getAllUsers);
 router.put('/admin/users/:id', authenticate, isAdmin, updateUser);
 router.delete('/admin/users/:id', authenticate, isAdmin, deleteUser);
+
+router.put('/users/update-username', authenticate, updateUsername);
 
 router.get('/admin/questions',authenticate,isAdmin, getAllQuestions);
 router.post('/admin/questions',authenticate, isAdmin, createQuestion);

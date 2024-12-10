@@ -16,10 +16,12 @@ import AdminDashboard from './pages/admin/AdminDashboard';
 // import AdminReports from './pages/admin/AdminReports';
 import AdminQuestions from './pages/admin/questions/AdminQuestions';
 import AdminUsers from './pages/admin/users/AdminUsers';
+import Profile from './pages/Profile';
 
 function App() {
   return (
     <>
+    <div className="flex flex-col min-h-screen">
       <Navbar />
       <Routes>
         {/* Public Routes */}
@@ -28,6 +30,15 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/simulator" element={<CrossroadSimulator />} />
+
+        <Route
+          path="/profile"
+          element={
+            <ProtectedRoute allowedRoles={['ADMIN','USER']}>
+              <Profile />
+            </ProtectedRoute>
+          }
+        />
 
         {/* Protected Routes for Admin Panel */}
         <Route
@@ -94,6 +105,7 @@ function App() {
           }
         />
       </Routes>
+      </div>
     </>
   );
 }

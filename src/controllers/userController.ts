@@ -38,3 +38,30 @@ export const handleNewUser = async (req: Request, res: Response): Promise<Respon
     return res.status(500).json({ error: error.message });
   }
 };
+
+export const updateUsername = async (req: Request, res: Response) => {
+  const { email, newUsername } = req.body;
+
+  if (!email || !newUsername) {
+    return res.status(400).json({ message: 'Email and new username are required' });
+  }
+
+  try {
+    console.log('Updating username for email:', email);
+
+    const updatedUser = await prisma.user.update({
+      where: { email: email },
+      data: { username: newUsername },
+    });
+
+    return res.status(200).json({ message: 'Username updated successfully', updatedUser });
+  } catch (error: any) {
+    if (error.code === 'P2025') {
+      // Prisma error for record not found
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    console.error(error);
+    return res.status(500).json({ message: 'Failed to update username' });
+  }
+};

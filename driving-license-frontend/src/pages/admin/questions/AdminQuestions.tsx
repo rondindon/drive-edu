@@ -14,6 +14,7 @@ import AdminLayout from "src/pages/admin/AdminLayout";
 import AddEditQuestionDialog from "./AddEditQuestionDialog";
 import { MoreVertical } from "lucide-react";
 import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from "src/components/ui/select";
+import { Skeleton } from "src/components/ui/skeleton"; // Import Skeleton
 
 export interface Question {
   id?: number;
@@ -27,8 +28,6 @@ export interface Question {
   difficulty: 'easy' | 'medium' | 'hard';
   explanation: string;
 }
-
-const Spinner: React.FC = () => <div>Loading...</div>;
 
 const categories = [
   "All",
@@ -50,9 +49,11 @@ const AdminQuestions: React.FC = () => {
   const { role } = useAuth();
   const navigate = useNavigate();
 
-  if (role !== "ADMIN") {
-    navigate("/login");
-  }
+  useEffect(() => {
+    if (role !== "ADMIN") {
+      navigate("/login");
+    }
+  }, [role, navigate]);
 
   const [search, setSearch] = useState("");
   const [questions, setQuestions] = useState<Question[]>([]);
@@ -83,12 +84,9 @@ const AdminQuestions: React.FC = () => {
     if (cat && cat !== "All") params.set("category", cat);
     if (diff && diff !== "All") params.set("difficulty", diff);
     if (srch && srch.trim().length > 0) {
-      // If you want server-side search, you'd also handle it in backend
-      // For now, if you rely on client-side search only, skip sending 'search' param
-      // If you do want server-side search, add a 'search' param and handle it in backend
       params.set("search", srch.trim());
     }
-  
+
     try {
       const response = await fetch(`http://localhost:4444/api/admin/questions?${params.toString()}`, {
         headers: {
@@ -100,18 +98,17 @@ const AdminQuestions: React.FC = () => {
         throw new Error("Failed to fetch questions");
       }
       const data: Question[] = await response.json();
-  
-      // If offsetVal == 0, replace questions, else append
+
       if (offsetVal === 0) {
         setQuestions(data);
       } else {
         setQuestions(prev => [...prev, ...data]);
       }
-  
+
       if (data.length < limit) {
         setHasMore(false);
       }
-  
+
       setLoading(false);
     } catch (err) {
       console.log(err);
@@ -119,14 +116,13 @@ const AdminQuestions: React.FC = () => {
       setLoading(false);
     }
   };
-  
+
   useEffect(() => {
     const newOffset = 0;
     setOffset(newOffset);
     setHasMore(true);
     fetchQuestions(newOffset, categoryFilter, difficultyFilter, search);
   }, [categoryFilter, difficultyFilter, search]);
-  
 
   useEffect(() => {
     const savedQuestions = localStorage.getItem("adminQuestions");
@@ -137,27 +133,22 @@ const AdminQuestions: React.FC = () => {
       if (parsedQuestions.length > 0 && !isNaN(parsedOffset)) {
         setQuestions(parsedQuestions);
         setOffset(parsedOffset);
-        // Determine if there's potentially more data:
         setHasMore(parsedQuestions.length % 100 === 0);
         setLoading(false);
-        return; 
+        return;
       }
     }
-    // No saved state, fetch initial batch
     fetchQuestions(0);
   }, []);
-  
+
   useEffect(() => {
-    // Save updated questions & offset when they change
     if (questions.length > 0) {
       localStorage.setItem("adminQuestions", JSON.stringify(questions));
       localStorage.setItem("adminQuestionsOffset", offset.toString());
     }
   }, [questions, offset]);
-  
 
   useEffect(() => {
-    // Sort questions numerically by ID before filtering
     const sortedQuestions = [...questions].sort((a, b) => {
       const aId = a.id ?? 0;
       const bId = b.id ?? 0;
@@ -263,16 +254,18 @@ const AdminQuestions: React.FC = () => {
     }
   };
 
+  // Render a full-section Skeleton while loading
   if (loading && questions.length === 0) {
     return (
       <AdminLayout>
-        <div className="p-6">
-          <Spinner />
+        <div className="flex items-center justify-center h-full">
+          <Skeleton className="w-full h-3/4 rounded" />
         </div>
       </AdminLayout>
     );
   }
 
+  // Render error state
   if (error) {
     return (
       <AdminLayout>
@@ -340,10 +333,11 @@ const AdminQuestions: React.FC = () => {
           <table className="w-full border-collapse text-left">
             <thead>
               <tr className="border-b border-main-green text-gray-800">
-                <th className="py-2 ">ID</th>
+                <th className="py-2">ID</th>
                 <th className="py-2">Text</th>
                 <th className="py-2">Category</th>
                 <th className="py-2">Difficulty</th>
+                <th className="py-2">Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -389,10 +383,18 @@ const AdminQuestions: React.FC = () => {
                   </td>
                 </tr>
               ))}
-              {filteredQuestions.length === 0 && (
+              {filteredQuestions.length === 0 && !loading && (
                 <tr>
                   <td colSpan={5} className="text-center py-4">
                     No questions found.
+                  </td>
+                </tr>
+              )}
+              {/* Show skeleton if loading more */}
+              {loading && questions.length > 0 && (
+                <tr>
+                  <td colSpan={5} className="py-2">
+                    <Skeleton className="w-full h-6 rounded" />
                   </td>
                 </tr>
               )}
@@ -400,11 +402,18 @@ const AdminQuestions: React.FC = () => {
           </table>
 
           {/* Load More Button */}
-          {hasMore && filteredQuestions.length > 0 && (
+          {hasMore && (
             <div className="mt-4 text-center">
-              <Button onClick={loadMore} className="bg-main-green text-main-darkBlue  hover:bg-main-green/90 text-white">
-                Load More
-              </Button>
+              {loading && questions.length > 0 ? (
+                <Skeleton className="mx-auto w-32 h-10 rounded" />
+              ) : (
+                <Button
+                  onClick={loadMore}
+                  className="bg-main-green text-main-darkBlue hover:bg-main-green/90 text-white"
+                >
+                  Load More
+                </Button>
+              )}
             </div>
           )}
         </Card>

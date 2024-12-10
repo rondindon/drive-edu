@@ -7,6 +7,7 @@ interface AuthContextProps {
   username: string | null;
   login: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
+  updateUsername: (newUsername: string) => void;
 }
 
 const AuthContext = createContext<AuthContextProps | undefined>(undefined);
@@ -18,11 +19,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isInitialized, setIsInitialized] = useState(false);
 
   useEffect(() => {
-    // Restore user state from localStorage if a session exists
     const fetchSession = async () => {
       const { data } = await supabase.auth.getSession();
       if (data.session) {
-        // User is logged in, restore from localStorage
         setUser(data.session.user);
         setRole(localStorage.getItem('role') || null);
         setUsername(localStorage.getItem('username') || null);
@@ -51,17 +50,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     setUser(currentUser);
     setRole(userData.role);
+    setUsername(userData.username);
 
-    // Check if the new username differs from what we currently have
-    const storedUsername = localStorage.getItem('username');
-    if (userData.username !== storedUsername) {
-      setUsername(userData.username);
-      localStorage.setItem('username', userData.username);
-    }
-
-    // Always update role and token on login
     localStorage.setItem('supabaseToken', session.access_token);
     localStorage.setItem('role', userData.role);
+    localStorage.setItem('username', userData.username);
   };
 
   const logout = async () => {
@@ -72,13 +65,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     localStorage.clear();
   };
 
+  const updateUsername = (newUsername: string) => {
+    setUsername(newUsername);
+    localStorage.setItem('username', newUsername);
+  };
+
   if (!isInitialized) {
-    // Optionally render a loading spinner or null while checking session
     return null;
   }
 
   return (
-    <AuthContext.Provider value={{ user, role, username, login, logout }}>
+    <AuthContext.Provider value={{ user, role, username, login, logout, updateUsername }}>
       {children}
     </AuthContext.Provider>
   );

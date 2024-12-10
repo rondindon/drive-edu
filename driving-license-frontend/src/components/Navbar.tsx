@@ -8,6 +8,7 @@ import {
   DropdownMenuItem,
 } from "./ui/dropdown-menu";
 import { useAuth } from "../context/AuthContext";
+import { User } from "lucide-react"; // Import user icon
 
 const Navbar: React.FC = () => {
   const location = useLocation();
@@ -47,9 +48,16 @@ const Navbar: React.FC = () => {
             <DropdownMenuTrigger asChild>
               <Button
                 variant="outline"
-                className="bg-main-darkBlue border-main-green text-secondary-lightGray hover:bg-main-green hover:text-main-darkBlue transition-colors"
+                className="bg-main-darkBlue border-main-green text-secondary-lightGray hover:bg-main-green hover:text-main-darkBlue transition-colors flex items-center space-x-2"
               >
-                {user ? username || "User" : "Sign up"}
+                {user ? (
+                  <>
+                    <span>{username || "User"}</span>
+                    <User className="w-4 h-4" />
+                  </>
+                ) : (
+                  "Sign up"
+                )}
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent
@@ -71,6 +79,12 @@ const Navbar: React.FC = () => {
                     <span>Role: {role || "User"}</span>
                   </DropdownMenuItem>
                   <DropdownMenuItem
+                    onClick={() => navigate("/profile")}
+                    className="hover:bg-main-green hover:text-main-darkBlue transition-colors cursor-pointer"
+                  >
+                    Profile
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
                     onClick={handleLogout}
                     className="hover:bg-main-green hover:text-main-darkBlue transition-colors cursor-pointer"
                   >
@@ -81,7 +95,7 @@ const Navbar: React.FC = () => {
             </DropdownMenuContent>
           </DropdownMenu>
 
-          {/* Admin Panel Button (visible if user is logged in) */}
+          {/* Admin Panel Button (visible if user is logged in and admin) */}
           {user && role === 'ADMIN' && (
             <Button
               variant="outline"
