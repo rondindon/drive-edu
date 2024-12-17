@@ -52,7 +52,7 @@ const Profile: React.FC = () => {
         <Card className="p-6 shadow-lg rounded-md flex items-center space-x-4">
           {/* Avatar */}
           <Avatar className="w-16 h-16">
-            <AvatarImage src={user?.avatarUrl || "https://github.com/shadcn.png"} alt={username || "Avatar"} />
+            <AvatarImage src={"https://github.com/shadcn.png"} alt={username || "Avatar"} />
             <AvatarFallback>{username?.charAt(0).toUpperCase() || "U"}</AvatarFallback>
           </Avatar>
           <div className="flex flex-col space-y-1">

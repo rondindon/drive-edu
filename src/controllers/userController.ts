@@ -1,9 +1,9 @@
-// src/controllers/userController.ts
 import { Request, Response } from 'express';
 import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
+// Existing handlers...
 export const handleNewUser = async (req: Request, res: Response): Promise<Response> => {
   const { email, username }: { email: string; username: string } = req.body;
 
@@ -36,6 +36,32 @@ export const handleNewUser = async (req: Request, res: Response): Promise<Respon
     return res.status(400).json({ message: "User already exists in the database." });
   } catch (error: any) {
     return res.status(500).json({ error: error.message });
+  }
+};
+
+// New handler for GET /api/user?email=...
+export const getUserByEmail = async (req: Request, res: Response): Promise<Response> => {
+  const email = req.query.email as string;
+
+  if (!email) {
+    return res.status(400).json({ error: 'Email query parameter is required.' });
+  }
+
+  try {
+    const user = await prisma.user.findUnique({
+      where: { email },
+    });
+
+    if (!user) {
+      return res.status(404).json({ error: 'User not found.' });
+    }
+
+    // Exclude sensitive fields if necessary
+    const { role, username } = user;
+    return res.status(200).json({ role, username });
+  } catch (error: any) {
+    console.error('Error fetching user:', error);
+    return res.status(500).json({ error: 'Internal server error.' });
   }
 };
 

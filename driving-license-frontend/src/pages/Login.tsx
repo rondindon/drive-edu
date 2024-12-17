@@ -1,3 +1,5 @@
+// src/pages/Login.tsx
+
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
@@ -5,13 +7,14 @@ import { Input } from "../components/ui/input";
 import { Button } from "../components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "../components/ui/alert";
+import { FcGoogle } from "react-icons/fc"; // Google icon for styling
 
 const Login: React.FC = () => {
   const [email, setEmail] = useState<string>("");
   const [password, setPassword] = useState<string>("");
   const [message, setMessage] = useState<string | null>(null);
   const [showAlert, setShowAlert] = useState<boolean>(false);
-  const { login, user } = useAuth();
+  const { login, loginWithGoogle, user } = useAuth();
   const navigate = useNavigate();
 
   // Redirect to home if the user is already logged in
@@ -27,15 +30,26 @@ const Login: React.FC = () => {
     try {
       await login(email, password);
       setMessage("Sign in successful!");
-      setShowAlert(true); // Show the alert
+      setShowAlert(true);
       setTimeout(() => {
-        setShowAlert(false); // Hide the alert after animation
-        navigate("/"); // Redirect after animation
+        setShowAlert(false);
+        navigate("/");
       }, 2000);
     } catch (err: any) {
       setMessage(`Sign in failed: ${err.message}`);
-      setShowAlert(true); // Show the alert
-      setTimeout(() => setShowAlert(false), 2000); // Hide the alert after animation
+      setShowAlert(true);
+      setTimeout(() => setShowAlert(false), 2000);
+    }
+  };
+
+  const handleGoogleLogin = async () => {
+    try {
+      await loginWithGoogle();
+      // No need to set message here; the AuthProvider handles it via onAuthStateChange
+    } catch (err: any) {
+      setMessage(`Google sign-in failed: ${err.message}`);
+      setShowAlert(true);
+      setTimeout(() => setShowAlert(false), 2000);
     }
   };
 
@@ -54,7 +68,7 @@ const Login: React.FC = () => {
               showAlert ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-10 h-0"
             }`}
             style={{
-              height: showAlert ? "auto" : "0", // Smoothly adjusts height
+              height: showAlert ? "auto" : "0",
             }}
           >
             {message && (
@@ -73,6 +87,7 @@ const Login: React.FC = () => {
             )}
           </div>
 
+          {/* Email and Password Login */}
           <form onSubmit={handleLogin} className="space-y-6">
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-main-darkBlue">
@@ -109,6 +124,35 @@ const Login: React.FC = () => {
               Sign in
             </Button>
           </form>
+
+          {/* Separator */}
+          <div className="relative my-6">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-gray-300"></div>
+            </div>
+            <div className="relative flex justify-center text-sm">
+              <span className="px-2 bg-white text-main-darkBlue">OR</span>
+            </div>
+          </div>
+
+          {/* Google Login */}
+          <Button
+            onClick={handleGoogleLogin}
+            className="w-full flex items-center justify-center space-x-2 bg-white border border-gray-300 shadow hover:bg-gray-100 transition-all duration-300"
+          >
+            <FcGoogle className="w-6 h-6" />
+            <span className="text-main-darkBlue font-semibold">Continue with Google</span>
+          </Button>
+
+          {/* Placeholder for more buttons */}
+          <div className="mt-4">
+            <Button
+              className="w-full py-2 px-4 bg-secondary-lightGray text-main-darkBlue border border-gray-400 rounded-lg shadow-sm hover:bg-gray-100 transition-all duration-300"
+              disabled
+            >
+              More Login Options Coming Soon
+            </Button>
+          </div>
         </CardContent>
       </Card>
     </div>

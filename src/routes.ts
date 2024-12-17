@@ -1,6 +1,6 @@
 // src/routes.ts
 import { Router } from 'express';
-import { handleNewUser, updateUsername } from './controllers/userController';
+import { getUserByEmail, handleNewUser, updateUsername } from './controllers/userController';
 import { createQuestion, deleteQuestion, getAllQuestions, isAdmin, updateQuestion } from './controllers/adminController';
 import { getQuestionById } from './controllers/questionController';
 import { authenticate } from './middleware/auth';
@@ -9,6 +9,7 @@ import { deleteUser, getAllUsers, updateUser } from './controllers/adminUserCont
 const router: Router = Router();
 
 router.post('/user', handleNewUser);
+router.get('/user', getUserByEmail);
 router.get('/question/:id', getQuestionById);
 
 router.get('/admin/users', authenticate, isAdmin, getAllUsers);
