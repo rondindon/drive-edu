@@ -1,4 +1,5 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+// src/context/AuthContext.tsx
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { supabase } from '../services/supabase';
 import { User } from '@supabase/supabase-js';
 
@@ -20,34 +21,65 @@ interface AuthContextProps {
 
 const AuthContext = createContext<AuthContextProps | undefined>(undefined);
 
-export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(null);
-  const [role, setRole] = useState<string | null>(null);
-  const [username, setUsername] = useState<string | null>(null);
-  const [isInitialized, setIsInitialized] = useState(false);
+export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+  // Initialize state from localStorage if available
+  const [user, setUser] = useState<User | null>(() => {
+    const storedUser = localStorage.getItem('user');
+    return storedUser ? JSON.parse(storedUser) : null;
+  });
+  const [role, setRole] = useState<string | null>(() => localStorage.getItem('role'));
+  const [username, setUsername] = useState<string | null>(() => localStorage.getItem('username'));
+  const [isInitialized, setIsInitialized] = useState(true);
 
   // Function to fetch additional user data from the backend API
   const fetchUserData = async (email: string): Promise<UserData> => {
     console.log(`Fetching user data for email: ${email}`);
+
+    // Check if user data is already present in state
+    if (role && username) {
+      console.log('User data already present. Skipping fetch.');
+      return { role, username };
+    }
+
+    setIsInitialized(false);
+
     try {
       const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:4444/api';
       const response = await fetch(`${API_BASE_URL}/user?email=${encodeURIComponent(email)}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
-          // Include authentication headers if required
-          // 'Authorization': `Bearer ${token}`,
         },
       });
 
+      console.log(`Received response with status: ${response.status}`);
+
       if (response.status === 404) {
-        console.warn(`User with email ${email} not found in backend.`);
-        // Optionally, you can choose to create a new user here or handle it differently
-        throw new Error('User not found in backend.');
+        console.warn(`User with email ${email} not found in backend. Creating new user.`);
+        // Create the user in the backend
+        const createResponse = await fetch(`${API_BASE_URL}/user`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ email, username: email.split('@')[0] }), // Derive username from email
+        });
+
+        if (!createResponse.ok) {
+          const errorData = await createResponse.json();
+          console.error('Failed to create user in backend:', errorData);
+          throw new Error(errorData.error || 'Failed to create user.');
+        }
+
+        const createdUser = await createResponse.json();
+        console.log('New user created in backend:', createdUser);
+
+        return { role: createdUser.user.role, username: createdUser.user.username };
       }
 
       if (!response.ok) {
         const errorData = await response.json();
+        console.error('Failed to fetch user data:', errorData);
         throw new Error(errorData.error || 'Failed to fetch user data.');
       }
 
@@ -71,18 +103,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           const email = data.session.user.email;
 
           if (email) {
-            try {
-              const userData = await fetchUserData(email);
-              setRole(userData.role);
-              setUsername(userData.username);
+            // Check if user data is already in state (from localStorage)
+            if (!role || !username) {
+              try {
+                const userData = await fetchUserData(email);
+                setRole(userData.role);
+                setUsername(userData.username);
 
-              localStorage.setItem('supabaseToken', data.session.access_token);
-              localStorage.setItem('role', userData.role);
-              localStorage.setItem('username', userData.username);
-            } catch (error) {
-              console.error('Error during user data fetch:', error);
-              setRole(null);
-              setUsername(null);
+                // Store in localStorage
+                localStorage.setItem('supabaseToken', data.session.access_token);
+                localStorage.setItem('role', userData.role);
+                localStorage.setItem('username', userData.username);
+                localStorage.setItem('user', JSON.stringify(data.session.user));
+              } catch (error) {
+                console.error('Error during user data fetch:', error);
+                setRole(null);
+                setUsername(null);
+              }
             }
           } else {
             console.error('User email is undefined');
@@ -116,9 +153,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             setRole(userData.role);
             setUsername(userData.username);
 
+            // Store in localStorage
             localStorage.setItem('supabaseToken', session.access_token);
             localStorage.setItem('role', userData.role);
             localStorage.setItem('username', userData.username);
+            localStorage.setItem('user', JSON.stringify(session.user));
           } catch (error) {
             console.error('Error fetching user data on sign-in:', error);
             setRole(null);
@@ -144,7 +183,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       listener?.subscription.unsubscribe();
       console.log('Auth state change listener unsubscribed.');
     };
-  }, []);
+  }, [role, username]); // Removed dependencies to prevent re-running
 
   const login = async (email: string, password: string) => {
     console.log(`Logging in user with email: ${email}`);
@@ -174,9 +213,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setRole(userData.role);
       setUsername(userData.username);
 
+      // Store in localStorage
       localStorage.setItem('supabaseToken', session.access_token);
       localStorage.setItem('role', userData.role);
       localStorage.setItem('username', userData.username);
+      localStorage.setItem('user', JSON.stringify(currentUser));
     } catch (error) {
       console.error('Error fetching user data during login:', error);
       throw error;

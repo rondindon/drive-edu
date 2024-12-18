@@ -1,4 +1,3 @@
-// src/App.tsx
 import { Route, Routes } from 'react-router-dom';
 import Login from './pages/Login';
 import Register from './pages/Register';
@@ -7,6 +6,7 @@ import QuestionDetails from './components/QuestionDetails';
 import LandingPage from './pages/LandingPage';
 import CrossroadSimulator from './pages/CrossroadSimulator';
 import ProtectedRoute from './components/ProtectedRoute';
+import { Slide, ToastContainer } from 'react-toastify';
 
 // Import Layouts
 import PublicLayout from './layouts/PublicLayout';
@@ -20,6 +20,20 @@ import Profile from './pages/Profile';
 
 function App() {
   return (
+    <>
+  <ToastContainer
+    position="top-right"
+    autoClose={2000}
+    hideProgressBar={false}
+    newestOnTop
+    closeOnClick
+    rtl={false}
+    pauseOnFocusLoss
+    draggable
+    pauseOnHover
+    theme="light"
+    transition={Slide} // Choose from Slide, Zoom, Flip, Bounce, etc.
+  />
     <Routes>
       {/* Public Routes with PublicLayout */}
       <Route element={<PublicLayout />}>
@@ -60,6 +74,7 @@ function App() {
       {/* Catch-All Route (Optional) */}
       {/* <Route path="*" element={<NotFound />} /> */}
     </Routes>
+    </>
   );
 }
 

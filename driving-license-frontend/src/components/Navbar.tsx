@@ -9,6 +9,7 @@ import {
 } from "./ui/dropdown-menu";
 import { useAuth } from "../context/AuthContext";
 import { User } from "lucide-react"; // Import user icon
+import { toast } from "react-toastify";
 
 const Navbar: React.FC = () => {
   const location = useLocation();
@@ -23,6 +24,7 @@ const Navbar: React.FC = () => {
   const handleLogout = async () => {
     try {
       await logout();
+      toast.success("Log out successful!")
       navigate("/login");
     } catch (err) {
       console.error("Logout failed", err);

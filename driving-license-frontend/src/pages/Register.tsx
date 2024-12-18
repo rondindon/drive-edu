@@ -1,3 +1,5 @@
+// src/pages/Register.tsx
+
 import React, { useState } from "react";
 import { supabase } from "../services/supabase";
 import { AuthError, User } from "@supabase/supabase-js";
@@ -5,6 +7,7 @@ import { Input } from "../components/ui/input";
 import { Button } from "../components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "../components/ui/alert";
+import { FcGoogle } from "react-icons/fc"; // Google icon for styling
 
 const Register: React.FC = () => {
   const [email, setEmail] = useState<string>("");
@@ -12,9 +15,11 @@ const Register: React.FC = () => {
   const [username, setUsername] = useState<string>(""); // Add username state
   const [message, setMessage] = useState<string | null>(null);
   const [showAlert, setShowAlert] = useState<boolean>(false);
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false); // To handle multiple submissions
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsSubmitting(true);
 
     try {
       const { data, error }: { data: { user: User | null }; error: AuthError | null } =
@@ -31,17 +36,37 @@ const Register: React.FC = () => {
         setShowAlert(true);
 
         // Notify the backend to add the user to the Prisma User table
-        await fetch("http://localhost:4444/api/user", {
+        const response = await fetch("http://localhost:4444/api/user", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({ email, username }), // Send username to backend
         });
+
+        if (!response.ok) {
+          throw new Error("Failed to create user in the backend.");
+        }
       }
-    } catch (err) {
-      setMessage(`Registration failed: ${err}`);
+    } catch (err: any) {
+      setMessage(`Registration failed: ${err.message || err}`);
       setShowAlert(true);
+    } finally {
+      setIsSubmitting(false);
+      // Hide alert after 5 seconds
+      setTimeout(() => setShowAlert(false), 5000);
+    }
+  };
+
+  const handleGoogleRegister = async () => {
+    try {
+      await supabase.auth.signInWithOAuth({ provider: "google" });
+      // No need to set message here; the AuthProvider handles it via onAuthStateChange
+    } catch (err: any) {
+      setMessage(`Google sign-up failed: ${err.message || err}`);
+      setShowAlert(true);
+      // Hide alert after 5 seconds
+      setTimeout(() => setShowAlert(false), 5000);
     }
   };
 
@@ -66,19 +91,20 @@ const Register: React.FC = () => {
             {message && (
               <Alert
                 className={`mb-4 ${
-                  message.includes("Error")
+                  message.includes("Error") || message.includes("failed")
                     ? "bg-secondary-red text-white border-secondary-red"
                     : "bg-secondary-greenBackground text-main-green border-main-green"
                 }`}
               >
                 <AlertTitle className="font-bold">
-                  {message.includes("Error") ? "Error" : "Success"}
+                  {message.includes("Error") || message.includes("failed") ? "Error" : "Success"}
                 </AlertTitle>
                 <AlertDescription>{message}</AlertDescription>
               </Alert>
             )}
           </div>
 
+          {/* Registration Form */}
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
               <label htmlFor="username" className="block text-sm font-medium text-main-darkBlue">
@@ -124,11 +150,31 @@ const Register: React.FC = () => {
             </div>
             <Button
               type="submit"
-              className="w-full py-2 px-4 bg-main-green text-white font-semibold rounded-lg shadow-md hover:bg-main-darkBlue transition-all duration-300 transform hover:scale-105"
+              disabled={isSubmitting}
+              className="w-full py-2 px-4 bg-main-green text-white font-semibold rounded-lg shadow-md hover:bg-main-darkBlue transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Register
+              {isSubmitting ? "Registering..." : "Register"}
             </Button>
           </form>
+
+          {/* Separator */}
+          <div className="relative my-6">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-gray-300"></div>
+            </div>
+            <div className="relative flex justify-center text-sm">
+              <span className="px-2 bg-white text-main-darkBlue">OR</span>
+            </div>
+          </div>
+
+          {/* Google Register */}
+          <Button
+            onClick={handleGoogleRegister}
+            className="w-full flex items-center justify-center space-x-2 bg-white border border-gray-300 shadow hover:bg-gray-100 transition-all duration-300"
+          >
+            <FcGoogle className="w-6 h-6" />
+            <span className="text-main-darkBlue font-semibold">Continue with Google</span>
+          </Button>
         </CardContent>
       </Card>
     </div>

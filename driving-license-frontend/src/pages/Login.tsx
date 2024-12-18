@@ -8,6 +8,7 @@ import { Button } from "../components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "../components/ui/alert";
 import { FcGoogle } from "react-icons/fc"; // Google icon for styling
+import { toast } from "react-toastify";
 
 const Login: React.FC = () => {
   const [email, setEmail] = useState<string>("");
@@ -29,12 +30,7 @@ const Login: React.FC = () => {
 
     try {
       await login(email, password);
-      setMessage("Sign in successful!");
-      setShowAlert(true);
-      setTimeout(() => {
-        setShowAlert(false);
-        navigate("/");
-      }, 2000);
+      toast.success("Sign in successful!");
     } catch (err: any) {
       setMessage(`Sign in failed: ${err.message}`);
       setShowAlert(true);
@@ -143,16 +139,6 @@ const Login: React.FC = () => {
             <FcGoogle className="w-6 h-6" />
             <span className="text-main-darkBlue font-semibold">Continue with Google</span>
           </Button>
-
-          {/* Placeholder for more buttons */}
-          <div className="mt-4">
-            <Button
-              className="w-full py-2 px-4 bg-secondary-lightGray text-main-darkBlue border border-gray-400 rounded-lg shadow-sm hover:bg-gray-100 transition-all duration-300"
-              disabled
-            >
-              More Login Options Coming Soon
-            </Button>
-          </div>
         </CardContent>
       </Card>
     </div>
