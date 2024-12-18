@@ -17,6 +17,7 @@ import AdminDashboard from './pages/admin/AdminDashboard';
 import AdminUsers from './pages/admin/users/AdminUsers';
 import AdminQuestions from './pages/admin/questions/AdminQuestions';
 import Profile from './pages/Profile';
+import AboutPage from './pages/AboutPage';
 
 function App() {
   return (
@@ -43,15 +44,23 @@ function App() {
         <Route path="/register" element={<Register />} />
         <Route path="/simulator" element={<CrossroadSimulator />} />
 
-        {/* Profile Route */}
+      {/* Profile Route */}
         <Route
-          path="/profile"
-          element={
-            <ProtectedRoute allowedRoles={['ADMIN', 'USER']}>
-              <Profile />
-            </ProtectedRoute>
-          }
-        />
+            path="/profile"
+            element={
+              <ProtectedRoute allowedRoles={['ADMIN', 'USER']}>
+                <Profile />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/about"
+            element={
+              <ProtectedRoute allowedRoles={['ADMIN', 'USER']}>
+                <AboutPage />
+              </ProtectedRoute>
+            }
+          />
       </Route>
 
       {/* Admin Routes with AdminLayout */}

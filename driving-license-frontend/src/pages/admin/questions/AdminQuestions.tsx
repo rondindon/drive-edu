@@ -45,6 +45,32 @@ const categories = [
 
 const difficultyOptions = ["All", "easy", "medium", "hard"];
 
+// Reusable Skeleton Row Component
+const SkeletonRow: React.FC = () => {
+  return (
+    <tr className="border-b border-gray-200">
+      <td className="py-2 px-4">
+        <Skeleton className="w-6 h-4" />
+      </td>
+      <td className="py-2 px-4">
+        <div className="flex items-center">
+          <Skeleton className="w-16 h-10 mr-2 rounded" />
+          <Skeleton className="flex-1 h-4" />
+        </div>
+      </td>
+      <td className="py-2 px-4">
+        <Skeleton className="w-24 h-4" />
+      </td>
+      <td className="py-2 px-4">
+        <Skeleton className="w-16 h-4" />
+      </td>
+      <td className="py-2 px-4">
+        <Skeleton className="w-8 h-4" />
+      </td>
+    </tr>
+  );
+};
+
 const AdminQuestions: React.FC = () => {
   const { role } = useAuth();
   const navigate = useNavigate();
@@ -276,14 +302,13 @@ const AdminQuestions: React.FC = () => {
     }
   };
 
-  // Render a full-section Skeleton while loading
-  if (loading && questions.length === 0) {
-    return (
-      <div className="flex items-center justify-center h-full">
-        <Skeleton className="w-full h-3/4 rounded" />
-      </div>
-    );
-  }
+  // Render multiple Skeleton Rows
+  const renderSkeletonRows = () => {
+    const skeletonRows = Array.from({ length: 15 }).map((_, index) => (
+      <SkeletonRow key={index} />
+    ));
+    return skeletonRows;
+  };
 
   // Render error state
   if (error) {
@@ -296,6 +321,7 @@ const AdminQuestions: React.FC = () => {
 
   return (
     <>
+      {/* Header and Add Button */}
       <div className="flex justify-between items-center mb-4">
         <h1 className="text-2xl font-bold">Questions</h1>
         <Button
@@ -306,6 +332,7 @@ const AdminQuestions: React.FC = () => {
         </Button>
       </div>
 
+      {/* Filters and Search Bar */}
       <div className="flex items-center space-x-4 mb-4">
         <Input
           placeholder="Search questions..."
@@ -348,6 +375,7 @@ const AdminQuestions: React.FC = () => {
         </div>
       </div>
 
+      {/* Questions Table */}
       <Card className="p-4">
         <table className="w-full border-collapse text-left">
           <thead>
@@ -360,62 +388,66 @@ const AdminQuestions: React.FC = () => {
             </tr>
           </thead>
           <tbody>
-            {filteredQuestions.map((q) => (
-              <tr
-                key={q.id}
-                className="border-b border-gray-200 hover:bg-gray-50"
-              >
-                <td className="py-2 px-4">{q.id}</td>
-                <td className="py-2 px-4">
-                  <div className="flex items-center">
-                    {q.imageUrl && (
-                      <img
-                        src={q.imageUrl}
-                        alt="Question"
-                        className="w-16 h-auto mr-2 rounded pl-4"
-                      />
-                    )}
-                    <span className="pl-4">{q.text}</span>
-                  </div>
-                </td>
-                <td className="py-2 px-4 w-1/5">{q.category}</td>
-                <td className="py-2 px-4">{q.difficulty}</td>
-                <td className="py-2 px-4 text-right">
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" className="h-8 w-8 p-0">
-                        <MoreVertical />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem onClick={() => q.id && handleEdit(q)}>
-                        Edit
-                      </DropdownMenuItem>
-                      <DropdownMenuItem
-                        onClick={() => q.id && handleDelete(q.id)}
-                        className="text-red-500"
-                      >
-                        Delete
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </td>
-              </tr>
-            ))}
-            {filteredQuestions.length === 0 && !loading && (
-              <tr>
-                <td colSpan={5} className="text-center py-4">
-                  No questions found.
-                </td>
-              </tr>
-            )}
-            {/* Show skeleton if loading more */}
-            {loading && questions.length > 0 && (
-              <tr>
-                <td colSpan={5} className="pt-2">
-                  <Skeleton className="w-full h-10 rounded" />
-                </td>
-              </tr>
+            {/* If loading and no questions yet, show skeleton rows */}
+            {loading && questions.length === 0 ? (
+              renderSkeletonRows()
+            ) : (
+              <>
+                {filteredQuestions.map((q) => (
+                  <tr
+                    key={q.id}
+                    className="border-b border-gray-200 hover:bg-gray-50"
+                  >
+                    <td className="py-2 px-4">{q.id}</td>
+                    <td className="py-2 px-4">
+                      <div className="flex items-center">
+                        {q.imageUrl && (
+                          <img
+                            src={q.imageUrl}
+                            alt="Question"
+                            className="w-16 h-auto mr-2 rounded pl-4"
+                          />
+                        )}
+                        <span className="pl-4">{q.text}</span>
+                      </div>
+                    </td>
+                    <td className="py-2 px-4 w-1/5">{q.category}</td>
+                    <td className="py-2 px-4">{q.difficulty}</td>
+                    <td className="py-2 px-4 text-right">
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" className="h-8 w-8 p-0">
+                            <MoreVertical />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={() => q.id && handleEdit(q)}>
+                            Edit
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={() => q.id && handleDelete(q.id)}
+                            className="text-red-500"
+                          >
+                            Delete
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </td>
+                  </tr>
+                ))}
+
+                {/* If no questions found after filtering */}
+                {filteredQuestions.length === 0 && !loading && (
+                  <tr>
+                    <td colSpan={5} className="text-center py-4">
+                      No questions found.
+                    </td>
+                  </tr>
+                )}
+
+                {/* If loading more data, append skeleton rows */}
+                {loading && questions.length > 0 && renderSkeletonRows()}
+              </>
             )}
           </tbody>
         </table>
@@ -424,7 +456,9 @@ const AdminQuestions: React.FC = () => {
         {hasMore && categoryFilter === "All" && (
           <div className="mt-4 text-center">
             {loading && questions.length > 0 ? (
-              <Skeleton className="mx-auto w-32 h-10 rounded" />
+              <Button disabled className="bg-main-green text-main-darkBlue opacity-50 cursor-not-allowed">
+                Loading...
+              </Button>
             ) : (
               <Button
                 onClick={loadMore}

@@ -63,10 +63,19 @@ module.exports = {
           '0%': { transform: 'scale(.96)', opacity: 0.8 },
           '100%': { transform: 'scale(1)', opacity: 1 },
         },
+        glow: {
+          '0%, 100%': {
+            boxShadow: '0 0 10px rgba(39, 174, 96, 0.5)'
+          },
+          '50%': {
+            boxShadow: '0 0 20px rgba(39, 174, 96, 1)'
+          }
+        }
       },
       animation: {
         fadeIn: 'fadeIn 0.5s ease-in-out',
         scaleUp: 'scaleUp 0.5s ease-in-out',
+        glow: 'glow 3s ease-in-out infinite',
       },
       transitionProperty: {
         all: "all",

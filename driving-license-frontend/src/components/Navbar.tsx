@@ -42,7 +42,7 @@ const Navbar: React.FC = () => {
         <div className="hidden md:flex space-x-6">
           <a href="/" className={isActive("/")}>Home</a>
           <a href="/about" className={isActive("/about")}>About</a>
-          <a href="/contact" className={isActive("/contact")}>Contact</a>
+          {/* <a href="/contact" className={isActive("/contact")}>Contact</a> */}
         </div>
         <div className="hidden md:flex items-center space-x-4">
           {/* Profile Dropdown */}

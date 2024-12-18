@@ -2,6 +2,7 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { supabase } from '../services/supabase';
 import { User } from '@supabase/supabase-js';
+import { toast } from 'react-toastify';
 
 interface UserData {
   role: string;
@@ -190,6 +191,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) {
       console.error('Login error:', error);
+      toast.error('Failed to log in.');
       throw error;
     }
 
@@ -220,6 +222,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       localStorage.setItem('user', JSON.stringify(currentUser));
     } catch (error) {
       console.error('Error fetching user data during login:', error);
+      toast.error('Failed to fetch user data.');
       throw error;
     }
   };
@@ -228,6 +231,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     console.log('Initiating Google OAuth sign-in.');
     const { error } = await supabase.auth.signInWithOAuth({ provider: 'google' });
     if (error) {
+      toast.error('Failed to sign in with Google.');
       console.error('Google OAuth sign-in error:', error);
       throw error;
     }
