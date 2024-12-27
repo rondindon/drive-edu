@@ -18,6 +18,7 @@ import AdminUsers from './pages/admin/users/AdminUsers';
 import AdminQuestions from './pages/admin/questions/AdminQuestions';
 import Profile from './pages/Profile';
 import AboutPage from './pages/AboutPage';
+import TestPage from './pages/TestPage';
 
 function App() {
   return (
@@ -53,7 +54,7 @@ function App() {
               </ProtectedRoute>
             }
           />
-          <Route
+        <Route
             path="/about"
             element={
               <ProtectedRoute allowedRoles={['ADMIN', 'USER']}>
@@ -61,6 +62,14 @@ function App() {
               </ProtectedRoute>
             }
           />
+          <Route
+              path="/test/:testId"
+              element={
+                <ProtectedRoute allowedRoles={['ADMIN', 'USER']}>
+                  <TestPage />
+                </ProtectedRoute>
+              }
+            />
       </Route>
 
       {/* Admin Routes with AdminLayout */}

@@ -5,17 +5,45 @@ import Viewer from '../components/3DViewer';
 import { Separator } from '../components/ui/separator';
 
 const LandingPage: React.FC = () => {
-  const allGroups = ['A', 'B', 'BE', 'C', 'CE', 'D', 'DE', 'T']; // Available groups
-  const [selectedGroup, setSelectedGroup] = useState<string>(''); // Selected group
-  const navigate = useNavigate(); // For navigation
+  const allGroups = ['A', 'B', 'BE', 'C', 'CE', 'D', 'DE', 'T']; 
+  const [selectedGroup, setSelectedGroup] = useState<string>('');
+  const navigate = useNavigate();
 
-  const handleStartTest = () => {
+  const handleStartTest = async () => {
     if (!selectedGroup) {
       alert('Please select a group to start the test.');
       return;
     }
-    alert(`Starting test for group ${selectedGroup}`);
-    // Future functionality: navigate(`/test/${selectedGroup}`);
+
+    try {
+      // Make a request to start the test
+      const response = await fetch('/tests/start', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          // Include auth token if needed
+        },
+        body: JSON.stringify({ group: selectedGroup }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        alert(`Error: ${errorData.message}`);
+        return;
+      }
+
+      const data = await response.json();
+      // data will contain { message, testId, questions }
+
+      // Example: redirect to a test page with the testId and the questions
+// Example in LandingPage's handleStartTest
+      navigate(`/test/${data.testId}`, {
+        state: { questions: data.questions, testId: data.testId },
+      });
+    } catch (error) {
+      console.error(error);
+      alert('Something went wrong starting the test.');
+    }
   };
 
   return (
@@ -23,17 +51,15 @@ const LandingPage: React.FC = () => {
       <h1 className="text-4xl font-bold text-main-darkBlue mb-4 font-bam">
         Driving License Test
       </h1>
-      <Separator className='w-1/2' />
+      <Separator className="w-1/2" />
       <p className="text-lg text-main-darkBlue transition-opacity duration-500 ease-in-out">
         Select your group to begin the test:
       </p>
 
-      {/* Group selection */}
       <Select onValueChange={(value) => setSelectedGroup(value)}>
         <SelectTrigger className="w-60 py-1 px-2 transition-all duration-300 hover:py-5 hover:px-4">
           <SelectValue placeholder="Select a group" />
         </SelectTrigger>
-
         <SelectContent>
           {allGroups.map((group) => (
             <SelectItem
@@ -47,7 +73,6 @@ const LandingPage: React.FC = () => {
         </SelectContent>
       </Select>
 
-      {/* 3D Viewer */}
       <div
         className={`my-6 w-full flex justify-center transition-transform duration-500 ${
           selectedGroup ? 'scale-100 opacity-100 animate-scaleUp' : 'scale-95 opacity-50'
@@ -62,7 +87,6 @@ const LandingPage: React.FC = () => {
         )}
       </div>
 
-      {/* Start test button */}
       <button
         onClick={handleStartTest}
         className="px-6 py-3 text-base font-semibold text-white bg-main-green rounded-md shadow-md hover:bg-secondary-red hover:scale-105 transition-transform transition-shadow duration-300 disabled:bg-gray-400 disabled:cursor-not-allowed"
