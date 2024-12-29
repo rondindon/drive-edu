@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import { PrismaClient } from '@prisma/client';
+import { AuthenticatedRequest } from '../interfaces/AuthenticatedRequest';
 
 const prisma = new PrismaClient();
 
@@ -17,98 +18,158 @@ const categoriesConfig = [
   { category: 'Konštrukcia vozidiel a ich údržba', count: 2 },
 ];
 
-export async function startTest(req: Request, res: Response) {
-  try {
-    const userId = req.user?.id; 
-    const { group } = req.body;
+const letterMap = ['A', 'B', 'C']; // Extend if you might have more than 4-5 options
 
-    if (!userId) {
-      return res.status(401).json({ message: 'User not authenticated' });
+// Helper: Fisher-Yates shuffle
+function shuffleArray<T>(array: T[]): T[] {
+    const arr = [...array];
+    for (let i = arr.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [arr[i], arr[j]] = [arr[j], arr[i]];
     }
-    if (!group) {
-      return res.status(400).json({ message: 'Group is required' });
-    }
-
-    // Container for our final selected questions
-    let selectedQuestions: any[] = [];
-
-    // For each category, pick the required count of questions
-    for (const cat of categoriesConfig) {
-      // 1) Get all questions for this category that also include the chosen group
-      // We'll also compute how often they've been answered wrong (globally, as an example).
-      // In Prisma, we can do an aggregate on the WrongAnswer table or fetch them with includes.
-
-      const questionsInCategory = await prisma.question.findMany({
-        where: {
-          category: cat.category,
-          groups: {
-            has: group, // means "groups" array should contain the `group` string
-          },
-        },
-        include: {
-          wrongAnswers: true, // so we can see how many times they've been answered incorrectly
-        },
-      });
-
-      // 2) Calculate "totalWrongAttempts" for each question
-      //    If you want user-specific weighting, filter the user's wrongAnswers instead.
-      const weightedQuestions = questionsInCategory.map((q) => {
-        const totalWrong = q.wrongAnswers.reduce((acc, wa) => acc + wa.attempts, 0);
-        return { ...q, totalWrong };
-      });
-
-      // 3) Sort by totalWrong in descending order => the top means more frequently missed
-      weightedQuestions.sort((a, b) => b.totalWrong - a.totalWrong);
-
-      // 4) Pick the top N. 
-      //    Alternatively, you might do a random pick with weighted probability if you want more variety.
-      const picked = weightedQuestions.slice(0, cat.count);
-
-      selectedQuestions = [...selectedQuestions, ...picked];
-    }
-
-    // Now we have 40 questions (8+2+8+4+1+3+2+2+8+2 = 40).
-    // Create a new Test record
-    const newTest = await prisma.test.create({
-      data: {
-        userId: userId,
-        group: group,
-        score: 0,
-        totalQuestions: 40, // or selectedQuestions.length
-        timeTaken: 0,
-        isPassed: false,
-      },
-    });
-
-    // Optionally, store each question in a TestQuestion table
-    // (if you added that model above).
-    // This way, you know exactly which questions are in this test.
-    // In a real app, consider using a transaction or upsert approach.
-    for (let q of selectedQuestions) {
-      await prisma.testQuestion.create({
-        data: {
-          testId: newTest.id,
-          questionId: q.id,
-        },
-      });
-    }
-
-    return res.status(200).json({
-      message: 'Test started successfully',
-      testId: newTest.id,
-      questions: selectedQuestions,
-    });
-  } catch (error) {
-    console.error(error);
-    return res.status(500).json({ message: 'Error starting test' });
+    return arr;
   }
-}
+
+export async function startTest(req: AuthenticatedRequest, res: Response) {
+    try {
+      const userId = req.user?.id;
+      const { group } = req.body;
+  
+      if (!userId) {
+        return res.status(401).json({ message: 'User not authenticated' });
+      }
+      if (!group) {
+        return res.status(400).json({ message: 'Group is required' });
+      }
+  
+      let finalQuestions: any[] = [];
+  
+      // 1) For each category
+      for (const cat of categoriesConfig) {
+        // Fetch all Qs for that category + group
+        const questionsInCategory = await prisma.question.findMany({
+          where: {
+            category: cat.category,
+            groups: {
+              has: group,
+            },
+          },
+          include: {
+            wrongAnswers: true,
+          },
+        });
+  
+        // If no questions in this category, skip (or handle error)
+        if (!questionsInCategory.length) continue;
+  
+        // 2) Separate into "bad" vs "good"
+        const badQuestions: any[] = [];
+        const goodQuestions: any[] = [];
+  
+        for (const q of questionsInCategory) {
+          const totalWrong = q.wrongAnswers.reduce((acc, wa) => acc + wa.attempts, 0);
+          // Adjust threshold as you like. Here, we say "bad" = totalWrong > 0
+          // or you might do totalWrong >= 3, etc.
+          if (totalWrong > 0) {
+            badQuestions.push({ ...q, totalWrong });
+          } else {
+            goodQuestions.push({ ...q, totalWrong });
+          }
+        }
+  
+        // 3) Randomize "goodQuestions" + pick cat.count from them
+        shuffleArray(goodQuestions);
+        let randomPick = goodQuestions.slice(0, cat.count);
+  
+        // 4) Insert some "badQuestions" by replacing random picks
+        // Shuffle badQuestions so the replacement is random
+        shuffleArray(badQuestions);
+  
+        // We'll replace as many random picks as we can (or want).
+        // For each badQuestion, if it's not already in randomPick, replace a random item
+        for (const badQ of badQuestions) {
+          // If randomPick already includes badQ (by ID), skip
+          if (randomPick.some((item) => item.id === badQ.id)) {
+            continue;
+          }
+          // Replace a random index in randomPick
+          const randIndex = Math.floor(Math.random() * randomPick.length);
+          randomPick[randIndex] = badQ; 
+        }
+  
+        // Now we have cat.count final for this category in randomPick
+        finalQuestions = [...finalQuestions, ...randomPick];
+      }
+  
+      // We now have 40 questions total (assuming your categories sum to 40).
+      // If you'd like to shuffle the entire 40, do so here:
+      // finalQuestions = shuffleArray(finalQuestions);
+  
+      // === 5) Randomize each question's options and remap correctAnswer
+      const randomizedQuestions = finalQuestions.map((q) => {
+        // If correctAnswer is a letter, find the index in letterMap
+        const oldLetterIndex = letterMap.indexOf(q.correctAnswer);
+        if (oldLetterIndex < 0) {
+          // If not found, default to no changes or handle text-based
+          return q;
+        }
+  
+        // Original correct option text
+        const correctOptionText = q.options[oldLetterIndex];
+  
+        // Shuffle the options array
+        const newOptions = shuffleArray(q.options);
+  
+        // Find new index of correctOptionText
+        const newIndex = newOptions.indexOf(correctOptionText);
+        const newCorrectLetter = letterMap[newIndex] ?? 'A';
+  
+        return {
+          ...q,
+          options: newOptions,
+          correctAnswer: newCorrectLetter,
+        };
+      });
+  
+      // 6) Create a new Test record
+      const newTest = await prisma.test.create({
+        data: {
+          userId,
+          group,
+          score: 0,
+          totalQuestions: 40, // or randomizedQuestions.length
+          timeTaken: 0,
+          isPassed: false,
+        },
+      });
+  
+      // 7) Optionally store in TestQuestion
+      for (const q of randomizedQuestions) {
+        await prisma.testQuestion.create({
+          data: {
+            testId: newTest.id,
+            questionId: q.id,
+          },
+        });
+      }
+  
+      return res.status(200).json({
+        message: 'Test started successfully',
+        testId: newTest.id,
+        questions: randomizedQuestions,
+      });
+    } catch (error) {
+      console.error(error);
+      return res.status(500).json({ message: 'Error starting test' });
+    }
+  }
 
 // If you want an endpoint for finishing/updating the test:
-export async function finishTest(req: Request, res: Response) {
+export async function finishTest(req: AuthenticatedRequest, res: Response) {
   try {
     const userId = req.user?.id;
     const { testId, score, timeTaken, isPassed } = req.body;
+    console.log(req.body);
 
     if (!userId) {
       return res.status(401).json({ message: 'Not authenticated' });

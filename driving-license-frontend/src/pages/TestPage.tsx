@@ -1,24 +1,26 @@
 import React, { useEffect, useState } from 'react';
-import { useLocation, useNavigate, useParams } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 
 // Define a Question interface for clarity
 interface Question {
   id: number;
   text: string;
-  options: string[];
-  correctAnswer: string;
-  points: number;
-  // Add more fields if needed (e.g., imageUrl, difficulty, etc.)
+  options: string[];      // e.g. ["Answer A text", "Answer B text", "Answer C text"]
+  correctAnswer: string;  // either "A", "B", or "C"
+  points: number;         // e.g. 1
 }
 
 const TestPage: React.FC = () => {
   const navigate = useNavigate();
   const { state } = useLocation();
+  const token = localStorage.getItem("supabaseToken");
 
-  // If the user was navigated here via `navigate('/test/:testId', { state: { questions, testId } })`,
-  // we can extract them from `state`. If not found, default to empty.
+  // If user navigated via navigate('/test/:testId', { state: { questions, testId } })
   const { questions = [], testId = null }: { questions: Question[]; testId: number | null } =
     state || {};
+
+  // Mapping index 0 -> "A", 1 -> "B", 2 -> "C"
+  const letterMap = ["A", "B", "C"];
 
   const [currentIndex, setCurrentIndex] = useState(0);
   const [score, setScore] = useState(0);
@@ -26,22 +28,20 @@ const TestPage: React.FC = () => {
   // 30 minutes in seconds
   const [timeLeft, setTimeLeft] = useState(30 * 60);
 
-  // Optionally, track user's answers (if you want to show them at the end or store them).
-  const [userAnswers, setUserAnswers] = useState<string[]>(() =>
+  // Track user answers for potential debugging/review (optional)
+  const [userAnswers, setUserAnswers] = useState<string[]>(
     new Array(questions.length).fill('')
   );
 
   // === 1. TIMER EFFECT ===
   useEffect(() => {
-    // Only start the countdown if we actually have questions
     if (!questions.length) return;
 
     const timer = setInterval(() => {
       setTimeLeft((prev) => {
-        // If time runs out, auto-finish
         if (prev <= 1) {
           clearInterval(timer);
-          finishTest(); // automatically finish test
+          finishTest(); // automatically finish if time runs out
           return 0;
         }
         return prev - 1;
@@ -53,22 +53,27 @@ const TestPage: React.FC = () => {
   }, [questions]);
 
   // === 2. HANDLE ANSWER ===
-  const handleAnswer = (selectedAnswer: string) => {
+  const handleAnswer = (selectedIndex: number) => {
     const currentQuestion = questions[currentIndex];
+    // Convert selectedIndex (0,1,2) to a letter "A", "B", or "C"
+    const chosenLetter = letterMap[selectedIndex];
 
-    // Update user's answer in local state (optional, for reference)
+    console.log("Selected letter:", chosenLetter);
+    console.log("Correct letter:", currentQuestion.correctAnswer);
+
+    // Store user’s chosen letter (optional, for reference)
     setUserAnswers((prev) => {
       const updated = [...prev];
-      updated[currentIndex] = selectedAnswer;
+      updated[currentIndex] = chosenLetter;
       return updated;
     });
 
-    // If correct, add points
-    if (selectedAnswer === currentQuestion.correctAnswer) {
-      setScore((prev) => prev + currentQuestion.points);
+    // Compare with question’s correctAnswer
+    if (chosenLetter === currentQuestion.correctAnswer) {
+      setScore((prev) => prev + (currentQuestion.points || 0));
     } else {
       // Optionally record a "wrong answer" in the DB
-      // E.g., fetch('/wrong-answers', { ... })
+      // fetch('/wrong-answers', { ... })
     }
 
     // Move to next question or finish if last question
@@ -81,10 +86,9 @@ const TestPage: React.FC = () => {
 
   // === 3. FINISH TEST LOGIC ===
   const finishTest = async () => {
-    // Example pass/fail condition: 90 points or more is a pass
-    const isPassed = score >= 90;
+    // Example pass/fail if your max is 40 points. Adjust as needed.
+    const isPassed = score >= 35;
 
-    // If there's no `testId`, we can’t finish. (Could handle gracefully.)
     if (!testId) {
       alert('No valid testId found. Returning to homepage.');
       navigate('/');
@@ -92,32 +96,33 @@ const TestPage: React.FC = () => {
     }
 
     try {
-      const response = await fetch('/tests/finish', {
+      const response = await fetch('http://localhost:4444/api/tests/finish', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
         body: JSON.stringify({
           testId,
           score,
-          timeTaken: 30 * 60 - timeLeft, // how much time the user spent
+          timeTaken: 30 * 60 - timeLeft,
           isPassed,
         }),
       });
 
       const data = await response.json();
-      // e.g., { message: 'Test finished!', test: { ... } }
+      console.log("Finish response:", data);
       alert(data.message || 'Test completed');
     } catch (error) {
       console.error('Error finishing test:', error);
       alert('Error finishing test');
     } finally {
-      // Navigate away from the Test page. Could go to a "Results" page instead.
       navigate('/');
     }
   };
 
   // === 4. RENDERING ===
   if (!questions.length) {
-    // If there are no questions, show a message or redirect
     return <p className="p-4">No questions loaded. Please start a test from the landing page.</p>;
   }
 
@@ -142,7 +147,7 @@ const TestPage: React.FC = () => {
       {currentQuestion.options.map((option, idx) => (
         <button
           key={idx}
-          onClick={() => handleAnswer(option)}
+          onClick={() => handleAnswer(idx)} // Pass the index (0,1,2)
           className="block w-full text-left p-2 my-2 bg-blue-200 hover:bg-blue-300 rounded transition-colors"
         >
           {option}

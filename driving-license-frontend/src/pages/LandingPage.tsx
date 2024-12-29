@@ -8,6 +8,7 @@ const LandingPage: React.FC = () => {
   const allGroups = ['A', 'B', 'BE', 'C', 'CE', 'D', 'DE', 'T']; 
   const [selectedGroup, setSelectedGroup] = useState<string>('');
   const navigate = useNavigate();
+  const token = localStorage.getItem("supabaseToken");
 
   const handleStartTest = async () => {
     if (!selectedGroup) {
@@ -17,11 +18,11 @@ const LandingPage: React.FC = () => {
 
     try {
       // Make a request to start the test
-      const response = await fetch('/tests/start', {
+      const response = await fetch('http://localhost:4444/api/tests/start', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          // Include auth token if needed
+          "Authorization": `Bearer ${token}`
         },
         body: JSON.stringify({ group: selectedGroup }),
       });

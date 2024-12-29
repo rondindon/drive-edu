@@ -3,7 +3,10 @@
       "target": "ESNext",
       "module": "CommonJS",
       "outDir": "./dist",
-      "typeRoots": ["./node_modules/@types", "./src/types"],
+      "typeRoots": [
+        "./node_modules/@types",
+        "./src/types"  // folder that has express.d.ts
+      ],
       "esModuleInterop": true,
       "strict": true,
       "skipLibCheck": true
