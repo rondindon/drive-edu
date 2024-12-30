@@ -30,24 +30,30 @@ function shuffleArray<T>(array: T[]): T[] {
     return arr;
   }
 
-export async function startTest(req: AuthenticatedRequest, res: Response) {
+  export async function startTest(req: AuthenticatedRequest, res: Response) {
     try {
       const userId = req.user?.id;
       const { group } = req.body;
   
       if (!userId) {
+        console.log('[startTest] ERROR: No user ID.');
         return res.status(401).json({ message: 'User not authenticated' });
       }
       if (!group) {
+        console.log('[startTest] ERROR: No group provided.');
         return res.status(400).json({ message: 'Group is required' });
       }
   
+      console.log(`[startTest] START | userId=${userId}, group=${group}`);
+  
       let finalQuestions: any[] = [];
   
-      // 1) For each category
+      // For each category
       for (const cat of categoriesConfig) {
-        // Fetch all Qs for that category + group
-        const questionsInCategory = await prisma.question.findMany({
+        console.log(`[startTest] Category: "${cat.category}" => fetch from DB...`);
+        
+        // 1) Fetch ALL questions (good + bad) for the category
+        const allCategoryQuestions = await prisma.question.findMany({
           where: {
             category: cat.category,
             groups: {
@@ -59,68 +65,74 @@ export async function startTest(req: AuthenticatedRequest, res: Response) {
           },
         });
   
-        // If no questions in this category, skip (or handle error)
-        if (!questionsInCategory.length) continue;
+        const totalFound = allCategoryQuestions.length;
+        console.log(`   Found ${totalFound} questions in DB for "${cat.category}".`);
   
-        // 2) Separate into "bad" vs "good"
-        const badQuestions: any[] = [];
-        const goodQuestions: any[] = [];
-  
-        for (const q of questionsInCategory) {
-          const totalWrong = q.wrongAnswers.reduce((acc, wa) => acc + wa.attempts, 0);
-          // Adjust threshold as you like. Here, we say "bad" = totalWrong > 0
-          // or you might do totalWrong >= 3, etc.
-          if (totalWrong > 0) {
-            badQuestions.push({ ...q, totalWrong });
-          } else {
-            goodQuestions.push({ ...q, totalWrong });
-          }
+        if (totalFound === 0) {
+          console.log(`   Skipping "${cat.category}" because no questions found.`);
+          continue;
         }
   
-        // 3) Randomize "goodQuestions" + pick cat.count from them
-        shuffleArray(goodQuestions);
-        let randomPick = goodQuestions.slice(0, cat.count);
+        // 2) Shuffle the entire array (pure random)
+        const shuffledAll = shuffleArray(allCategoryQuestions);
   
-        // 4) Insert some "badQuestions" by replacing random picks
-        // Shuffle badQuestions so the replacement is random
+        // 3) Take the top 'cat.count' => randomPick
+        let randomPick = shuffledAll.slice(0, cat.count);
+  
+        console.log(`   After shuffle, randomPick has ${randomPick.length} items.`);
+  
+        // 4) Identify "bad" questions (totalWrong > 0)
+        //    We'll try to insert them by replacing random items in randomPick
+        const badQuestions = shuffledAll.filter((q) => {
+          const totalWrong = q.wrongAnswers.reduce((acc, wa) => acc + wa.attempts, 0);
+          return totalWrong > 0;
+        });
+  
+        console.log(`   Among the ${totalFound} total, found ${badQuestions.length} 'bad' Qs.`);
+  
+        // Shuffle the badQ so the insertion is random
         shuffleArray(badQuestions);
   
-        // We'll replace as many random picks as we can (or want).
-        // For each badQuestion, if it's not already in randomPick, replace a random item
-        for (const badQ of badQuestions) {
-          // If randomPick already includes badQ (by ID), skip
-          if (randomPick.some((item) => item.id === badQ.id)) {
+        for (const bq of badQuestions) {
+          // If randomPick already has it (by ID), skip
+          if (randomPick.some((item) => item.id === bq.id)) {
+            // console.log(`     [skip] badQ ID=${bq.id} is already in randomPick`);
             continue;
           }
-          // Replace a random index in randomPick
+          // Replace a random item in randomPick with this bad Q
           const randIndex = Math.floor(Math.random() * randomPick.length);
-          randomPick[randIndex] = badQ; 
+          console.log(`     Replacing item in randomPick idx=${randIndex} with badQ ID=${bq.id}`);
+          randomPick[randIndex] = bq;
         }
   
-        // Now we have cat.count final for this category in randomPick
+        // Now we have cat.count final for this category
+        console.log(`   Final pick for "${cat.category}" => ${randomPick.length} Qs.`);
+  
         finalQuestions = [...finalQuestions, ...randomPick];
       }
   
-      // We now have 40 questions total (assuming your categories sum to 40).
-      // If you'd like to shuffle the entire 40, do so here:
+      const totalSelected = finalQuestions.length;
+      console.log(`[startTest] Combined total after all categories = ${totalSelected} questions.`);
+  
+      // Optional: shuffle the entire final array of 40 if you want them in random order across categories
       // finalQuestions = shuffleArray(finalQuestions);
   
-      // === 5) Randomize each question's options and remap correctAnswer
+      // === Randomize each question's options & re-map correctAnswer
       const randomizedQuestions = finalQuestions.map((q) => {
-        // If correctAnswer is a letter, find the index in letterMap
+        // We assume q.correctAnswer is letter-based ("A", "B", "C", etc.)
         const oldLetterIndex = letterMap.indexOf(q.correctAnswer);
         if (oldLetterIndex < 0) {
-          // If not found, default to no changes or handle text-based
-          return q;
+          console.log(`   [WARNING] Q ID=${q.id} has correctAnswer="${q.correctAnswer}", not in letterMap.`);
+          return q; // fallback: no change
         }
   
         // Original correct option text
         const correctOptionText = q.options[oldLetterIndex];
   
-        // Shuffle the options array
+        // Shuffle the q.options array
         const newOptions = shuffleArray(q.options);
   
-        // Find new index of correctOptionText
+        // Where did correctOptionText land?
         const newIndex = newOptions.indexOf(correctOptionText);
         const newCorrectLetter = letterMap[newIndex] ?? 'A';
   
@@ -131,19 +143,21 @@ export async function startTest(req: AuthenticatedRequest, res: Response) {
         };
       });
   
-      // 6) Create a new Test record
+      // === Create a new Test record
       const newTest = await prisma.test.create({
         data: {
           userId,
           group,
           score: 0,
-          totalQuestions: 40, // or randomizedQuestions.length
+          totalQuestions: randomizedQuestions.length,
           timeTaken: 0,
           isPassed: false,
         },
       });
   
-      // 7) Optionally store in TestQuestion
+      console.log(`[startTest] Created Test ID=${newTest.id}. Storing testQuestion links...`);
+  
+      // Save to TestQuestion
       for (const q of randomizedQuestions) {
         await prisma.testQuestion.create({
           data: {
@@ -152,6 +166,7 @@ export async function startTest(req: AuthenticatedRequest, res: Response) {
           },
         });
       }
+      console.log(`[startTest] Stored ${randomizedQuestions.length} testQuestion records for Test ID=${newTest.id}`);
   
       return res.status(200).json({
         message: 'Test started successfully',
@@ -159,7 +174,7 @@ export async function startTest(req: AuthenticatedRequest, res: Response) {
         questions: randomizedQuestions,
       });
     } catch (error) {
-      console.error(error);
+      console.error('[startTest] Error:', error);
       return res.status(500).json({ message: 'Error starting test' });
     }
   }
@@ -207,4 +222,99 @@ export async function getAllTests(req: Request, res: Response) {
     } catch (error) {
       res.status(500).json({ message: 'Error retrieving tests' });
     }
-  }  
+  }
+
+  export const recordWrongAnswer = async (req: AuthenticatedRequest, res: Response) => {
+    try {
+      console.log('[recordWrongAnswer] req.body:', req.body);
+      const userId = req.user?.id;
+      const { questionId } = req.body;
+  
+      if (!userId) {
+        return res.status(401).json({ message: 'User not authenticated.' });
+      }
+      if (!questionId) {
+        return res.status(400).json({ message: 'questionId is required.' });
+      }
+  
+      // findUnique using named constraint "userId_questionId_unique"
+      const existingRecord = await prisma.wrongAnswer.findUnique({
+        where: {
+          userId_questionId_unique: {
+            userId,
+            questionId,
+          },
+        },
+      });
+  
+      if (existingRecord) {
+        // update if found
+        const updated = await prisma.wrongAnswer.update({
+          where: {
+            userId_questionId_unique: {
+              userId,
+              questionId,
+            },
+          },
+          data: {
+            attempts: existingRecord.attempts + 1,
+          },
+        });
+  
+        return res.status(200).json({
+          message: 'Wrong answer updated successfully',
+          wrongAnswer: updated,
+        });
+      } else {
+        // create new if not found
+        const created = await prisma.wrongAnswer.create({
+          data: {
+            userId,
+            questionId,
+            attempts: 1,
+          },
+        });
+  
+        return res.status(201).json({
+          message: 'Wrong answer recorded successfully',
+          wrongAnswer: created,
+        });
+      }
+    } catch (error) {
+      console.error('Error recording wrong answer:', error);
+      return res.status(500).json({ message: 'Error recording wrong answer' });
+    }
+  };
+
+  export async function recordUserAnswer(req: AuthenticatedRequest, res: Response) {
+    try {
+      const userId = req.user?.id;
+      const { questionId, testId, selected, isCorrect } = req.body;
+  
+      if (!userId) {
+        return res.status(401).json({ message: 'User not authenticated.' });
+      }
+      if (!questionId || selected === undefined || isCorrect === undefined) {
+        return res.status(400).json({ message: 'questionId, selected, and isCorrect are required.' });
+      }
+  
+      // Create a new UserAnswer record
+      const answer = await prisma.userAnswer.create({
+        data: {
+          userId,
+          questionId,
+          testId,      // can be null or omitted if not relevant
+          selected,    // e.g. "A"
+          isCorrect,   // boolean
+        },
+      });
+  
+      return res.status(201).json({
+        message: 'User answer recorded successfully',
+        userAnswer: answer,
+      });
+    } catch (error) {
+      console.error('Error recording user answer:', error);
+      return res.status(500).json({ message: 'Error recording user answer' });
+    }
+  }

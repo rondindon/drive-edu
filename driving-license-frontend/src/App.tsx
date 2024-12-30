@@ -18,7 +18,8 @@ import AdminUsers from './pages/admin/users/AdminUsers';
 import AdminQuestions from './pages/admin/questions/AdminQuestions';
 import Profile from './pages/Profile';
 import AboutPage from './pages/AboutPage';
-import TestPage from './pages/TestPage';
+import TestPage from './pages/tests/TestPage';
+import ResultsPage from './pages/tests/ResultsPage';
 
 function App() {
   return (
@@ -67,6 +68,14 @@ function App() {
               element={
                 <ProtectedRoute allowedRoles={['ADMIN', 'USER']}>
                   <TestPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/results"
+              element={
+                <ProtectedRoute allowedRoles={['ADMIN', 'USER']}>
+                  <ResultsPage />
                 </ProtectedRoute>
               }
             />
