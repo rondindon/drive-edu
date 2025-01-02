@@ -1,14 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Button } from 'src/components/ui/button'; // shadcn button (adjust path as needed)
+import { Button } from 'src/components/ui/button'; // Adjust import path if needed
 
 interface Question {
   id: number;
-  category: string;           // <-- Make sure each question has a 'category'
+  category: string;
   text: string;
-  options: string[];          // e.g. ["Answer A", "Answer B", "Answer C"]
-  correctAnswer: string;      // e.g. "A", "B", or "C"
-  points: number;             // e.g. 1
+  options: string[];
+  correctAnswer: string;
+  points: number;
 }
 
 const TestPage: React.FC = () => {
@@ -16,24 +16,19 @@ const TestPage: React.FC = () => {
   const { state } = useLocation();
   const token = localStorage.getItem('supabaseToken');
 
-  // If user navigated here via: navigate('/test/:id', { state: { questions, testId } })
   const { questions = [], testId = null }: { questions: Question[]; testId: number | null } =
     state || {};
 
-  // Extract all categories
   const categories = Array.from(new Set(questions.map((q) => q.category)));
-
-  // Mapping index => letter
   const letterMap = ['A', 'B', 'C']; // If only 3 options
 
   const [currentIndex, setCurrentIndex] = useState(0);
   const [score, setScore] = useState(0);
-  const [timeLeft, setTimeLeft] = useState(30 * 60); // 30 minutes in seconds
-  const [userAnswers, setUserAnswers] = useState<string[]>(() =>
+  const [timeLeft, setTimeLeft] = useState(30 * 60);
+  const [userAnswers, setUserAnswers] = useState<string[]>(
     new Array(questions.length).fill('')
   );
 
-  // === TIMER EFFECT ===
   useEffect(() => {
     if (!questions.length) return;
 
@@ -41,7 +36,7 @@ const TestPage: React.FC = () => {
       setTimeLeft((prev) => {
         if (prev <= 1) {
           clearInterval(timer);
-          finishTest(); // automatically finish if time runs out
+          finishTest();
           return 0;
         }
         return prev - 1;
@@ -52,32 +47,31 @@ const TestPage: React.FC = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [questions]);
 
-  // === NAVIGATE TO CATEGORY ===
-  function jumpToCategory(category: string) {
-    // Find the first question that matches this category
-    const index = questions.findIndex((q) => q.category === category);
-    if (index !== -1) {
+  function jumpToQuestion(index: number) {
+    if (index >= 0 && index < questions.length) {
       setCurrentIndex(index);
     }
   }
 
-  // === HANDLE ANSWER ===
+  function jumpToCategory(cat: string) {
+    const idx = questions.findIndex((q) => q.category === cat);
+    if (idx !== -1) {
+      setCurrentIndex(idx);
+    }
+  }
+
   const handleAnswer = async (selectedIndex: number) => {
     const currentQuestion = questions[currentIndex];
     const chosenLetter = letterMap[selectedIndex];
+    const isCorrect = chosenLetter === currentQuestion.correctAnswer;
 
-    console.log('Selected letter:', chosenLetter);
-    console.log('Correct letter:', currentQuestion.correctAnswer);
-
-    // Track user's chosen letter
     setUserAnswers((prev) => {
       const updated = [...prev];
       updated[currentIndex] = chosenLetter;
       return updated;
     });
-    
-    const isCorrect = chosenLetter === currentQuestion.correctAnswer;
-  
+
+    // Record userAnswer
     await fetch('http://localhost:4444/api/user-answers', {
       method: 'POST',
       headers: {
@@ -88,17 +82,16 @@ const TestPage: React.FC = () => {
         questionId: currentQuestion.id,
         testId,
         selected: chosenLetter,
-        isCorrect: isCorrect
+        isCorrect
       }),
-    });  
+    });
 
-    // If correct, add points
+    // Update score if correct
     if (isCorrect) {
       setScore((prev) => prev + (currentQuestion.points || 0));
     } else {
-      // Record a wrong answer in the DB
+      // Optionally record a wrong answer
       try {
-        console.log('Recording wrong answer...');
         await fetch('http://localhost:4444/api/wrong-answers', {
           method: 'POST',
           headers: {
@@ -106,8 +99,7 @@ const TestPage: React.FC = () => {
             Authorization: `Bearer ${token}`
           },
           body: JSON.stringify({
-            questionId: currentQuestion.id,
-            // If needed, pass userId or let your backend decode from token
+            questionId: currentQuestion.id
           }),
         });
       } catch (err) {
@@ -115,7 +107,7 @@ const TestPage: React.FC = () => {
       }
     }
 
-    // Move to next question or finish if last question
+    // Go next or finish
     if (currentIndex < questions.length - 1) {
       setCurrentIndex((prev) => prev + 1);
     } else {
@@ -123,10 +115,8 @@ const TestPage: React.FC = () => {
     }
   };
 
-  // === FINISH TEST ===
   const finishTest = async () => {
-    // Example pass/fail threshold (if total is 40, requiring 90 might be too high, adjust as needed)
-    const isPassed = score >= 90; // e.g. pass if 30+ points
+    const isPassed = score >= 90; 
 
     if (!testId) {
       alert('No valid testId found. Returning to homepage.');
@@ -152,7 +142,6 @@ const TestPage: React.FC = () => {
       const data = await response.json();
       console.log('Finish response:', data);
 
-      // Navigate to a results page, passing final data
       navigate('/results', {
         state: {
           score,
@@ -167,71 +156,100 @@ const TestPage: React.FC = () => {
     }
   };
 
-  // If no questions
   if (!questions.length) {
     return (
-      <p className="p-4 text-main-darkBlue">
-        No questions loaded. Please start a test from the landing page.
-      </p>
+      <div className="flex items-center justify-center min-h-screen bg-secondary-lightGray text-main-darkBlue">
+        <p className="p-4">No questions loaded. Please start a test from the landing page.</p>
+      </div>
     );
   }
 
-  // Current question
   const currentQuestion = questions[currentIndex];
   const minutes = Math.floor(timeLeft / 60);
   const seconds = timeLeft % 60;
 
-  // === LAYOUT: Sidebar + Main Content ===
   return (
-    <div className="flex min-h-screen bg-secondary-lightGray text-main-darkBlue">
-      {/* Sidebar with categories */}
-      <aside className="w-64 bg-main-darkBlue text-white p-4 space-y-2">
-        <h2 className="text-xl font-semibold mb-4">Categories</h2>
-        {categories.map((cat) => (
-          <Button
-            variant="secondary"
-            key={cat}
-            className="w-full justify-start bg-[#34495E] hover:bg-[#2C3E50]"
-            onClick={() => jumpToCategory(cat)}
-          >
-            {cat}
-          </Button>
-        ))}
-      </aside>
+    <div className="flex flex-col items-center justify-center min-h-screen bg-secondary-lightGray text-main-darkBlue px-4 py-8">
+      <div className="w-full max-w-4xl">
+        <div className="flex gap-6">
+          {/* Categories on the left */}
+          <aside className="bg-white rounded shadow p-4 w-64 h-min">
+            <h3 className="font-semibold text-lg mb-3">Categories</h3>
+            <div className="flex flex-col gap-2">
+              {categories.map((cat) => (
+                <Button
+                  key={cat}
+                  variant="secondary"
+                  className="px-6 py-3 bg-[#ECF0F1] hover:bg-[#BDC3C7] text-main-darkBlue min-w-[12rem]"
+                  onClick={() => jumpToCategory(cat)}
+                >
+                  {cat}
+                </Button>
+              ))}
+            </div>
+          </aside>
 
-      {/* Main content */}
-      <main className="flex-1 p-6">
-        {/* Timer & Question Info */}
-        <div className="mb-4 flex items-center justify-between">
-          <div className="text-main-darkBlue font-medium">
-            Time Left: {minutes}:{seconds.toString().padStart(2, '0')}
-          </div>
-          <div className="text-sm text-main-darkBlue">
-            Score: {score}
-          </div>
+          {/* Main content */}
+          <main className="flex-1 space-y-6">
+            {/* Timer & Score */}
+            <div className="flex items-center justify-between">
+              <div className="font-medium">
+                Time Left: {minutes}:{seconds.toString().padStart(2, '0')}
+              </div>
+              <div className="text-sm">Score: {score}</div>
+            </div>
+
+            {/* Question Navigation (numbers) */}
+            <div className="flex flex-wrap gap-2">
+              {questions.map((_, i) => (
+                <Button
+                  key={i}
+                  variant="secondary"
+                  className={`
+                    px-3 py-1
+                    ${i === currentIndex ? 'bg-main-green text-white' : 'bg-white'}
+                  `}
+                  onClick={() => jumpToQuestion(i)}
+                >
+                  {i + 1}
+                </Button>
+              ))}
+            </div>
+
+            {/* Question Box */}
+            <div className="bg-white rounded shadow p-6">
+              <h2 className="text-xl font-bold mb-3">
+                Question {currentIndex + 1} of {questions.length}
+              </h2>
+              {/* 
+                For the question text to wrap:
+                - whitespace-normal + break-words 
+              */}
+              <p className="mb-4 whitespace-normal break-words max-w-2xl">
+                {currentQuestion.text}
+              </p>
+
+              <div className="space-y-2">
+                {currentQuestion.options.map((option, idx) => (
+                  <Button
+                    key={idx}
+                    variant="outline"
+                    /*
+                      The keys for text-wrapping:
+                      - 'whitespace-normal break-words'
+                      - Use a <span> inside if needed
+                    */
+                    className="w-full text-left justify-start bg-secondary-greenBackground hover:bg-secondary.red hover:text-white max-w-2xl whitespace-normal break-words"
+                    onClick={() => handleAnswer(idx)}
+                  >
+                    {option}
+                  </Button>
+                ))}
+              </div>
+            </div>
+          </main>
         </div>
-
-        {/* Question card */}
-        <div className="bg-white rounded shadow p-6 mb-4">
-          <h2 className="text-xl font-bold mb-3">
-            Question {currentIndex + 1} of {questions.length}
-          </h2>
-          <p className="mb-4">{currentQuestion.text}</p>
-
-          <div className="space-y-2">
-            {currentQuestion.options.map((option, idx) => (
-              <Button
-                key={idx}
-                variant="outline"
-                className="w-full text-left justify-start bg-secondary-greenBackground hover:bg-secondary.red hover:text-white"
-                onClick={() => handleAnswer(idx)}
-              >
-                {option}
-              </Button>
-            ))}
-          </div>
-        </div>
-      </main>
+      </div>
     </div>
   );
 };
