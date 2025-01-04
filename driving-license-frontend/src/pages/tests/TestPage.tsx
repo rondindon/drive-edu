@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Button } from 'src/components/ui/button'; // Adjust import path if needed
+import { Button } from 'src/components/ui/button';
+import { Progress } from 'src/components/ui/progress';  // or wherever your shadcn progress is
 
 interface Question {
   id: number;
@@ -9,6 +10,7 @@ interface Question {
   options: string[];
   correctAnswer: string;
   points: number;
+  imageUrl?: string;  // If you store an image URL
 }
 
 const TestPage: React.FC = () => {
@@ -19,16 +21,26 @@ const TestPage: React.FC = () => {
   const { questions = [], testId = null }: { questions: Question[]; testId: number | null } =
     state || {};
 
+  // Gather unique categories
   const categories = Array.from(new Set(questions.map((q) => q.category)));
-  const letterMap = ['A', 'B', 'C']; // If only 3 options
+
+  // For 3-option questions
+  const letterMap = ['A', 'B', 'C'];
 
   const [currentIndex, setCurrentIndex] = useState(0);
+
+  // We'll track "score" for your backend logic but won't display a total on the UI.
   const [score, setScore] = useState(0);
+
+  // 30 minutes in seconds => 1800
   const [timeLeft, setTimeLeft] = useState(30 * 60);
+
+  // Keep user answers if needed
   const [userAnswers, setUserAnswers] = useState<string[]>(
     new Array(questions.length).fill('')
   );
 
+  // === Timer Effect ===
   useEffect(() => {
     if (!questions.length) return;
 
@@ -47,6 +59,14 @@ const TestPage: React.FC = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [questions]);
 
+  // Convert timeLeft to a progress from 0..100
+  const totalDuration = 30 * 60; // 1800
+  const progressValue = (timeLeft / totalDuration) * 100;
+
+  // Convert timeLeft to minutes/seconds for display
+  const minutes = Math.floor(timeLeft / 60);
+  const seconds = timeLeft % 60;
+
   function jumpToQuestion(index: number) {
     if (index >= 0 && index < questions.length) {
       setCurrentIndex(index);
@@ -55,9 +75,7 @@ const TestPage: React.FC = () => {
 
   function jumpToCategory(cat: string) {
     const idx = questions.findIndex((q) => q.category === cat);
-    if (idx !== -1) {
-      setCurrentIndex(idx);
-    }
+    if (idx !== -1) setCurrentIndex(idx);
   }
 
   const handleAnswer = async (selectedIndex: number) => {
@@ -65,28 +83,26 @@ const TestPage: React.FC = () => {
     const chosenLetter = letterMap[selectedIndex];
     const isCorrect = chosenLetter === currentQuestion.correctAnswer;
 
+    // Record local user choice
     setUserAnswers((prev) => {
       const updated = [...prev];
       updated[currentIndex] = chosenLetter;
       return updated;
     });
 
-    // Record userAnswer
+    // POST to /api/user-answers
     await fetch('http://localhost:4444/api/user-answers', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`
-      },
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
       body: JSON.stringify({
         questionId: currentQuestion.id,
         testId,
         selected: chosenLetter,
-        isCorrect
+        isCorrect,
       }),
     });
 
-    // Update score if correct
+    // If correct, increment local score
     if (isCorrect) {
       setScore((prev) => prev + (currentQuestion.points || 0));
     } else {
@@ -94,20 +110,15 @@ const TestPage: React.FC = () => {
       try {
         await fetch('http://localhost:4444/api/wrong-answers', {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`
-          },
-          body: JSON.stringify({
-            questionId: currentQuestion.id
-          }),
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+          body: JSON.stringify({ questionId: currentQuestion.id }),
         });
       } catch (err) {
         console.error('Error recording wrong answer:', err);
       }
     }
 
-    // Go next or finish
+    // Move on or finish
     if (currentIndex < questions.length - 1) {
       setCurrentIndex((prev) => prev + 1);
     } else {
@@ -116,8 +127,7 @@ const TestPage: React.FC = () => {
   };
 
   const finishTest = async () => {
-    const isPassed = score >= 90; 
-
+    const isPassed = score >= 90;
     if (!testId) {
       alert('No valid testId found. Returning to homepage.');
       navigate('/');
@@ -127,14 +137,11 @@ const TestPage: React.FC = () => {
     try {
       const response = await fetch('http://localhost:4444/api/tests/finish', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`
-        },
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({
           testId,
           score,
-          timeTaken: 30 * 60 - timeLeft,
+          timeTaken: totalDuration - timeLeft,  // how long they took
           isPassed,
         }),
       });
@@ -142,6 +149,7 @@ const TestPage: React.FC = () => {
       const data = await response.json();
       console.log('Finish response:', data);
 
+      // Navigate to results
       navigate('/results', {
         state: {
           score,
@@ -156,6 +164,7 @@ const TestPage: React.FC = () => {
     }
   };
 
+  // If no questions
   if (!questions.length) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-secondary-lightGray text-main-darkBlue">
@@ -164,23 +173,65 @@ const TestPage: React.FC = () => {
     );
   }
 
+  // Current question
   const currentQuestion = questions[currentIndex];
-  const minutes = Math.floor(timeLeft / 60);
-  const seconds = timeLeft % 60;
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-secondary-lightGray text-main-darkBlue px-4 py-8">
-      <div className="w-full max-w-4xl">
-        <div className="flex gap-6">
-          {/* Categories on the left */}
-          <aside className="bg-white rounded shadow p-4 w-64 h-min">
-            <h3 className="font-semibold text-lg mb-3">Categories</h3>
+    <div className="flex flex-col items-center justify-start min-h-screen bg-secondary-lightGray text-main-darkBlue px-4 py-8">
+      {/* 
+        1) Display the progress bar and the time left 
+        2) Show question's points on the right 
+      */}
+      <div className="mb-6 w-[70%] flex items-center justify-between gap-4">
+        {/* Left side: Progress bar + time left */}
+        <div className="flex items-center w-2/3 gap-2">
+          <Progress value={progressValue} className="h-2 w-full" />
+          <span className="text-sm font-medium text-main-darkBlue">
+            {minutes}:{String(seconds).padStart(2, '0')}
+          </span>
+        </div>
+        {/* Right side: Points for the current question */}
+        <div className="text-sm font-medium text-right w-1/3">
+          Points: {currentQuestion.points}
+        </div>
+      </div>
+
+      {/* The main container (70% wide) */}
+      <div className="w-[70%]">
+        <div className="flex gap-6 items-start">
+          {/* Categories sidebar with fixed height */}
+          <aside
+            className="
+              bg-white
+              rounded
+              shadow
+              p-4
+              text-left
+              w-56
+              h-[39rem]
+              overflow-auto
+              shrink-0
+            "
+          >
+            {/* Buttons for categories */}
             <div className="flex flex-col gap-2">
               {categories.map((cat) => (
                 <Button
                   key={cat}
                   variant="secondary"
-                  className="px-6 py-3 bg-[#ECF0F1] hover:bg-[#BDC3C7] text-main-darkBlue min-w-[12rem]"
+                  size={'reactive'}
+                  className="
+                    w-full
+                    text-xs
+                    whitespace-normal
+                    break-words
+                    text-left
+                    leading-tight
+                    bg-[#ECF0F1]
+                    hover:bg-[#BDC3C7]
+                    text-main-darkBlue
+                    px-4 py-2
+                  "
                   onClick={() => jumpToCategory(cat)}
                 >
                   {cat}
@@ -189,24 +240,18 @@ const TestPage: React.FC = () => {
             </div>
           </aside>
 
-          {/* Main content */}
-          <main className="flex-1 space-y-6">
-            {/* Timer & Score */}
-            <div className="flex items-center justify-between">
-              <div className="font-medium">
-                Time Left: {minutes}:{seconds.toString().padStart(2, '0')}
-              </div>
-              <div className="text-sm">Score: {score}</div>
-            </div>
-
-            {/* Question Navigation (numbers) */}
-            <div className="flex flex-wrap gap-2">
+          {/* Main column */}
+          <main className="flex-1 flex flex-col gap-4">
+            {/* Question Navigation - pinned with shrink-0 */}
+            <div className="flex flex-wrap gap-2 shrink-0">
               {questions.map((_, i) => (
                 <Button
                   key={i}
                   variant="secondary"
                   className={`
-                    px-3 py-1
+                    w-10 h-10
+                    flex items-center justify-center
+                    text-sm
                     ${i === currentIndex ? 'bg-main-green text-white' : 'bg-white'}
                   `}
                   onClick={() => jumpToQuestion(i)}
@@ -216,30 +261,44 @@ const TestPage: React.FC = () => {
               ))}
             </div>
 
-            {/* Question Box */}
-            <div className="bg-white rounded shadow p-6">
-              <h2 className="text-xl font-bold mb-3">
-                Question {currentIndex + 1} of {questions.length}
-              </h2>
-              {/* 
-                For the question text to wrap:
-                - whitespace-normal + break-words 
-              */}
-              <p className="mb-4 whitespace-normal break-words max-w-2xl">
+            {/* The question box can grow if there's a large image */}
+            <div className="bg-white rounded shadow p-6 flex-1 overflow-auto">
+              {/* Title is the question text */}
+              <h2 className="text-xl font-bold mb-4 whitespace-normal break-words max-w-4xl">
                 {currentQuestion.text}
-              </p>
+              </h2>
 
+              {/* If there's an image, display it */}
+              {currentQuestion.imageUrl && (
+                <div className="mb-4">
+                  <img
+                    src={currentQuestion.imageUrl}
+                    alt="question"
+                    className="max-w-full h-auto rounded shadow-sm"
+                  />
+                </div>
+              )}
+
+              {/* Answers */}
               <div className="space-y-2">
                 {currentQuestion.options.map((option, idx) => (
                   <Button
                     key={idx}
                     variant="outline"
-                    /*
-                      The keys for text-wrapping:
-                      - 'whitespace-normal break-words'
-                      - Use a <span> inside if needed
-                    */
-                    className="w-full text-left justify-start bg-secondary-greenBackground hover:bg-secondary.red hover:text-white max-w-2xl whitespace-normal break-words"
+                    size={'reactive'}
+                    className="
+                      w-full
+                      text-left
+                      justify-start
+                      bg-secondary-greenBackground
+                      hover:bg-secondary.red
+                      hover:text-white
+                      whitespace-normal
+                      break-words
+                      px-4 py-3
+                      max-w-3xl
+                      text-xs
+                    "
                     onClick={() => handleAnswer(idx)}
                   >
                     {option}
