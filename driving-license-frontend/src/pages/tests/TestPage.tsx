@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Button } from 'src/components/ui/button';
-import { Progress } from 'src/components/ui/progress';  // or wherever your shadcn progress is
+import { Progress } from 'src/components/ui/progress'; // or wherever your shadcn progress is
 
 interface Question {
   id: number;
@@ -10,7 +10,7 @@ interface Question {
   options: string[];
   correctAnswer: string;
   points: number;
-  imageUrl?: string;  // If you store an image URL
+  imageUrl?: string; // If you store an image URL
 }
 
 const TestPage: React.FC = () => {
@@ -21,21 +21,22 @@ const TestPage: React.FC = () => {
   const { questions = [], testId = null }: { questions: Question[]; testId: number | null } =
     state || {};
 
-  // Gather unique categories
+  // Unique categories
   const categories = Array.from(new Set(questions.map((q) => q.category)));
 
-  // For 3-option questions
+  // If only 3 options
   const letterMap = ['A', 'B', 'C'];
 
   const [currentIndex, setCurrentIndex] = useState(0);
 
-  // We'll track "score" for your backend logic but won't display a total on the UI.
+  // We'll track "score" if needed for your final pass/fail, 
+  // but we won't push each answer to the DB individually.
   const [score, setScore] = useState(0);
 
-  // 30 minutes in seconds => 1800
+  // 30 minutes => 1800 seconds
   const [timeLeft, setTimeLeft] = useState(30 * 60);
 
-  // Keep user answers if needed
+  // Local answers: userAnswers[i] = 'A'|'B'|'C'
   const [userAnswers, setUserAnswers] = useState<string[]>(
     new Array(questions.length).fill('')
   );
@@ -48,7 +49,7 @@ const TestPage: React.FC = () => {
       setTimeLeft((prev) => {
         if (prev <= 1) {
           clearInterval(timer);
-          finishTest();
+          finishTest(); // auto-finish if time runs out
           return 0;
         }
         return prev - 1;
@@ -59,13 +60,48 @@ const TestPage: React.FC = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [questions]);
 
-  // Convert timeLeft to a progress from 0..100
+  // Convert timeLeft to a % for the progress bar
   const totalDuration = 30 * 60; // 1800
   const progressValue = (timeLeft / totalDuration) * 100;
 
-  // Convert timeLeft to minutes/seconds for display
+  // For display: minutes:seconds
   const minutes = Math.floor(timeLeft / 60);
   const seconds = timeLeft % 60;
+
+  // Store user’s choice locally (no immediate DB calls)
+  const handleAnswer = (selectedIndex: number) => {
+    const currentQuestion = questions[currentIndex];
+    const chosenLetter = letterMap[selectedIndex];
+    const isCorrect = chosenLetter === currentQuestion.correctAnswer;
+
+    // Update userAnswers
+    setUserAnswers((prev) => {
+      const updated = [...prev];
+      updated[currentIndex] = chosenLetter;
+      return updated;
+    });
+
+    // Optionally track local "score"
+    if (isCorrect) {
+      setScore((prev) => prev + (currentQuestion.points || 0));
+    } else {
+      setScore((prev) => Math.max(prev - (currentQuestion.points || 0), 0));
+    }
+    // No further navigation here—Next/Previous is separate
+  };
+
+  // Navigation
+  const nextQuestion = () => {
+    if (currentIndex < questions.length - 1) {
+      setCurrentIndex((prev) => prev + 1);
+    }
+  };
+
+  const prevQuestion = () => {
+    if (currentIndex > 0) {
+      setCurrentIndex((prev) => prev - 1);
+    }
+  };
 
   function jumpToQuestion(index: number) {
     if (index >= 0 && index < questions.length) {
@@ -78,56 +114,9 @@ const TestPage: React.FC = () => {
     if (idx !== -1) setCurrentIndex(idx);
   }
 
-  const handleAnswer = async (selectedIndex: number) => {
-    const currentQuestion = questions[currentIndex];
-    const chosenLetter = letterMap[selectedIndex];
-    const isCorrect = chosenLetter === currentQuestion.correctAnswer;
-
-    // Record local user choice
-    setUserAnswers((prev) => {
-      const updated = [...prev];
-      updated[currentIndex] = chosenLetter;
-      return updated;
-    });
-
-    // POST to /api/user-answers
-    await fetch('http://localhost:4444/api/user-answers', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-      body: JSON.stringify({
-        questionId: currentQuestion.id,
-        testId,
-        selected: chosenLetter,
-        isCorrect,
-      }),
-    });
-
-    // If correct, increment local score
-    if (isCorrect) {
-      setScore((prev) => prev + (currentQuestion.points || 0));
-    } else {
-      // Optionally record a wrong answer
-      try {
-        await fetch('http://localhost:4444/api/wrong-answers', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-          body: JSON.stringify({ questionId: currentQuestion.id }),
-        });
-      } catch (err) {
-        console.error('Error recording wrong answer:', err);
-      }
-    }
-
-    // Move on or finish
-    if (currentIndex < questions.length - 1) {
-      setCurrentIndex((prev) => prev + 1);
-    } else {
-      finishTest();
-    }
-  };
-
+  // Finish test: one final POST with userAnswers
   const finishTest = async () => {
-    const isPassed = score >= 90;
+    const isPassed = score >= 90; 
     if (!testId) {
       alert('No valid testId found. Returning to homepage.');
       navigate('/');
@@ -141,8 +130,14 @@ const TestPage: React.FC = () => {
         body: JSON.stringify({
           testId,
           score,
-          timeTaken: totalDuration - timeLeft,  // how long they took
+          timeTaken: totalDuration - timeLeft, // how long user spent
           isPassed,
+          // include final answers for DB if needed
+          userAnswers: userAnswers.map((answer, i) => ({
+            questionId: questions[i].id,
+            selected: answer,
+            isCorrect: answer === questions[i].correctAnswer
+          })),
         }),
       });
 
@@ -175,31 +170,29 @@ const TestPage: React.FC = () => {
 
   // Current question
   const currentQuestion = questions[currentIndex];
+  const selectedAnswer = userAnswers[currentIndex]; // Get selected answer for current question
 
   return (
     <div className="flex flex-col items-center justify-start min-h-screen bg-secondary-lightGray text-main-darkBlue px-4 py-8">
-      {/* 
-        1) Display the progress bar and the time left 
-        2) Show question's points on the right 
-      */}
+      {/* Top row: progress bar & time left + question points */}
       <div className="mb-6 w-[70%] flex items-center justify-between gap-4">
-        {/* Left side: Progress bar + time left */}
+        {/* Left side: progress bar + time left */}
         <div className="flex items-center w-2/3 gap-2">
           <Progress value={progressValue} className="h-2 w-full" />
           <span className="text-sm font-medium text-main-darkBlue">
             {minutes}:{String(seconds).padStart(2, '0')}
           </span>
         </div>
-        {/* Right side: Points for the current question */}
+        {/* Right side: Points for current question */}
         <div className="text-sm font-medium text-right w-1/3">
           Points: {currentQuestion.points}
         </div>
       </div>
 
-      {/* The main container (70% wide) */}
+      {/* Main container */}
       <div className="w-[70%]">
         <div className="flex gap-6 items-start">
-          {/* Categories sidebar with fixed height */}
+          {/* Categories box */}
           <aside
             className="
               bg-white
@@ -213,7 +206,6 @@ const TestPage: React.FC = () => {
               shrink-0
             "
           >
-            {/* Buttons for categories */}
             <div className="flex flex-col gap-2">
               {categories.map((cat) => (
                 <Button
@@ -242,7 +234,7 @@ const TestPage: React.FC = () => {
 
           {/* Main column */}
           <main className="flex-1 flex flex-col gap-4">
-            {/* Question Navigation - pinned with shrink-0 */}
+            {/* Question Navigation */}
             <div className="flex flex-wrap gap-2 shrink-0">
               {questions.map((_, i) => (
                 <Button
@@ -261,9 +253,9 @@ const TestPage: React.FC = () => {
               ))}
             </div>
 
-            {/* The question box can grow if there's a large image */}
+            {/* Question box */}
             <div className="bg-white rounded shadow p-6 flex-1 overflow-auto">
-              {/* Title is the question text */}
+              {/* Title = question text */}
               <h2 className="text-xl font-bold mb-4 whitespace-normal break-words max-w-4xl">
                 {currentQuestion.text}
               </h2>
@@ -280,30 +272,55 @@ const TestPage: React.FC = () => {
               )}
 
               {/* Answers */}
-              <div className="space-y-2">
-                {currentQuestion.options.map((option, idx) => (
-                  <Button
-                    key={idx}
-                    variant="outline"
-                    size={'reactive'}
-                    className="
-                      w-full
-                      text-left
-                      justify-start
-                      bg-secondary-greenBackground
-                      hover:bg-secondary.red
-                      hover:text-white
-                      whitespace-normal
-                      break-words
-                      px-4 py-3
-                      max-w-3xl
-                      text-xs
-                    "
-                    onClick={() => handleAnswer(idx)}
-                  >
-                    {option}
+              <div className="space-y-2 mb-4">
+                {currentQuestion.options.map((option, idx) => {
+                  const optionLetter = letterMap[idx];
+                  const isSelected = selectedAnswer === optionLetter;
+
+                  return (
+                    <Button
+                      key={idx}
+                      variant="outline"
+                      size={'reactive'}
+                      className={`
+                        w-full
+                        text-left
+                        justify-start
+                        bg-secondary-greenBackground
+                        hover:bg-secondary.red
+                        hover:text-white
+                        whitespace-normal
+                        break-words
+                        px-4 py-3
+                        max-w-3xl
+                        text-xs
+                        ${isSelected ? 'bg-blue-500 text-white' : ''}
+                      `}
+                      onClick={() => handleAnswer(idx)}
+                    >
+                      {option}
+                    </Button>
+                  );
+                })}
+              </div>
+
+              {/* Next/Prev + Finish on last */}
+              <div className="flex justify-between">
+                <Button onClick={() => prevQuestion()} disabled={currentIndex === 0}>
+                  Previous
+                </Button>
+                {currentIndex < questions.length - 1 ? (
+                  <Button onClick={() => nextQuestion()}>
+                    Next
                   </Button>
-                ))}
+                ) : (
+                  <Button
+                    onClick={finishTest}
+                    className="bg-main-green text-white hover:bg-green-700"
+                  >
+                    Finish Test
+                  </Button>
+                )}
               </div>
             </div>
           </main>

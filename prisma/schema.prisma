@@ -17,7 +17,7 @@ model User {
   badges       Badge[]
   tests        Test[]
   wrongAnswers WrongAnswer[]
-  userAnswers UserAnswer[]
+  userAnswers  UserAnswer[]
 }
 
 model Question {
@@ -35,7 +35,7 @@ model Question {
   points        Int
   wrongAnswers  WrongAnswer[]
   testQuestions TestQuestion[]
-  userAnswers UserAnswer[]
+  userAnswers   UserAnswer[]
 }
 
 model Test {
@@ -50,7 +50,7 @@ model Test {
   updatedAt      DateTime       @updatedAt
   user           User           @relation(fields: [userId], references: [id])
   testQuestions  TestQuestion[]
-  userAnswers UserAnswer[]
+  userAnswers    UserAnswer[]
 }
 
 model TestQuestion {
@@ -75,24 +75,24 @@ model WrongAnswer {
 }
 
 model UserAnswer {
-  id          Int      @id @default(autoincrement())
-  userId      Int
-  questionId  Int
-  testId      Int?     // optional: link answers to a specific Test record
-  selected    String    // e.g. "A", "B", "C" or full text if you prefer
-  isCorrect   Boolean
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  id         Int      @id @default(autoincrement())
+  userId     Int
+  questionId Int
+  testId     Int? // optional: link answers to a specific Test record
+  selected   String // e.g. "A", "B", "C" or full text if you prefer
+  isCorrect  Boolean
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 
   // Relations
-  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  question    Question  @relation(fields: [questionId], references: [id], onDelete: Cascade)
-  test        Test?     @relation(fields: [testId], references: [id])
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  question Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  test     Test?    @relation(fields: [testId], references: [id])
 
+  // The KEY to enabling a compound unique in findUnique/update:
+  @@unique([userId, questionId, testId], name: "user_question_test_unique")
   @@index([userId])
   @@index([questionId])
-  // Optionally, if you want to ensure user can't have duplicates for the same test:
-  // @@unique([userId, questionId, testId])
 }
 
 model Badge {

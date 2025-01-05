@@ -179,36 +179,67 @@ function shuffleArray<T>(array: T[]): T[] {
     }
   }
 
-// If you want an endpoint for finishing/updating the test:
-export async function finishTest(req: AuthenticatedRequest, res: Response) {
-  try {
-    const userId = req.user?.id;
-    const { testId, score, timeTaken, isPassed } = req.body;
-    console.log(req.body);
-
-    if (!userId) {
-      return res.status(401).json({ message: 'Not authenticated' });
+  export async function finishTest(req: AuthenticatedRequest, res: Response) {
+    try {
+      const userId = req.user?.id;
+      const { testId, score, timeTaken, isPassed, userAnswers } = req.body;
+  
+      if (!userId) {
+        return res.status(401).json({ message: 'Not authenticated' });
+      }
+      if (!testId) {
+        return res.status(400).json({ message: 'testId is required' });
+      }
+  
+      // 1) Update the Test record
+      const updatedTest = await prisma.test.update({
+        where: { id: testId },
+        data: {
+          score: score || 0, 
+          timeTaken: timeTaken || 0,
+          isPassed: Boolean(isPassed),
+        },
+      });
+  
+      // 2) If userAnswers array is provided, upsert them in the UserAnswer table
+      if (Array.isArray(userAnswers)) {
+        for (const ans of userAnswers) {
+          // Each ans = { questionId, selected, isCorrect }
+          // Use your named unique constraint "user_question_test_unique"
+          // so we can upsert on (userId, questionId, testId).
+          await prisma.userAnswer.upsert({
+            where: {
+              user_question_test_unique: {
+                userId: userId,
+                questionId: ans.questionId,
+                testId: testId,
+              },
+            },
+            update: {
+              selected: ans.selected,
+              isCorrect: ans.isCorrect,
+            },
+            create: {
+              userId: userId,
+              questionId: ans.questionId,
+              testId: testId,
+              selected: ans.selected,
+              isCorrect: ans.isCorrect,
+            },
+          });
+        }
+      }
+  
+      // 3) Return success response
+      return res.json({
+        message: 'Test finished!',
+        test: updatedTest,
+      });
+    } catch (error) {
+      console.error('[finishTest] Error:', error);
+      return res.status(500).json({ message: 'Error finishing test', error: String(error) });
     }
-
-    // update the test
-    const updated = await prisma.test.update({
-      where: { id: testId },
-      data: {
-        score,
-        timeTaken,
-        isPassed,
-      },
-    });
-
-    return res.json({
-      message: 'Test finished!',
-      test: updated,
-    });
-  } catch (error) {
-    console.error(error);
-    return res.status(500).json({ message: 'Error finishing test' });
   }
-}
 
 // In testController.ts
 export async function getAllTests(req: Request, res: Response) {
