@@ -294,7 +294,7 @@ const TestPage: React.FC = () => {
                         px-4 py-3
                         max-w-3xl
                         text-xs
-                        ${isSelected ? 'bg-blue-500 text-white' : ''}
+                        ${isSelected ? 'bg-main-green text-white' : ''}
                       `}
                       onClick={() => handleAnswer(idx)}
                     >
