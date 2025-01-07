@@ -239,6 +239,16 @@ const AdminTests: React.FC = () => {
       {/* Header and Add/Refresh Button */}
       <div className="flex justify-between items-center mb-4">
         <h1 className="text-2xl font-bold">User Tests</h1>
+      </div>
+
+      {/* Filters and Search Bar */}
+      <div className="flex items-center justify-between space-x-4 mb-4">
+        <Input
+          placeholder="Search by username, email, or group..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="w-1/3"
+        />
         <div className="flex space-x-2">
           {/* Refresh Button */}
           <Button
@@ -248,28 +258,11 @@ const AdminTests: React.FC = () => {
               // Optionally, clear cache to force fresh fetch
               localStorage.removeItem(getCacheKey());
             }}
-            className="bg-main-blue text-white hover:bg-main-blue/90"
+            className="bg-main-blue text-white hover:bg-main-blue/90 cursor-pointer"
           >
             Refresh
           </Button>
-          {/* Add Test Button (if applicable) */}
-          {/* <Button
-            onClick={handleAddNew}
-            className="bg-main-green text-main-darkBlue hover:bg-main-green/90 text-white"
-          >
-            Add Test
-          </Button> */}
         </div>
-      </div>
-
-      {/* Filters and Search Bar */}
-      <div className="flex items-center space-x-4 mb-4">
-        <Input
-          placeholder="Search by username, email, or group..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="w-1/3"
-        />
         {/* You can add more filters here if needed */}
       </div>
 

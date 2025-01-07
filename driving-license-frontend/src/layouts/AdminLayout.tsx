@@ -29,7 +29,7 @@ const AdminLayout: React.FC = () => {
     { name: "Users", icon: Users, href: "/admin/users" },
     { name: "Tests", icon: List, href: "/admin/tests" },
     { name: "Questions", icon: HelpCircle, href: "/admin/questions" },
-    { name: "Requests", icon: FileText, href: "/admin/requests" },
+    // { name: "Requests", icon: FileText, href: "/admin/requests" },
     { name: "Reports", icon: BarChart2, href: "/admin/reports" },
   ];
 

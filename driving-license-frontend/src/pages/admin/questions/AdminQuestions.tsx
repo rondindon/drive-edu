@@ -13,9 +13,16 @@ import { useAuth } from "src/context/AuthContext";
 import { useNavigate } from "react-router-dom";
 import AddEditQuestionDialog from "./AddEditQuestionDialog";
 import { MoreVertical } from "lucide-react";
-import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from "src/components/ui/select";
+import {
+  Select,
+  SelectTrigger,
+  SelectContent,
+  SelectItem,
+  SelectValue,
+} from "src/components/ui/select";
 import { Skeleton } from "src/components/ui/skeleton";
 
+// Updated Question Interface
 export interface Question {
   id?: number;
   groups: string[];
@@ -29,6 +36,7 @@ export interface Question {
   explanation: string;
 }
 
+// Categories and Difficulty Options
 const categories = [
   "All",
   "Pravidlá cestnej premávky",
@@ -45,195 +53,173 @@ const categories = [
 
 const difficultyOptions = ["All", "easy", "medium", "hard"];
 
+// Define Cache Structure
+interface QuestionCache {
+  questions: Question[];
+  timestamp: number; // For optional time-based cache invalidation
+}
+
 // Reusable Skeleton Row Component
-const SkeletonRow: React.FC = () => {
-  return (
-    <tr className="border-b border-gray-200">
-      <td className="py-2 px-4">
-        <Skeleton className="w-6 h-4" />
-      </td>
-      <td className="py-2 px-4">
-        <div className="flex items-center">
-          <Skeleton className="w-16 h-10 mr-2 rounded" />
-          <Skeleton className="flex-1 h-4" />
-        </div>
-      </td>
-      <td className="py-2 px-4">
-        <Skeleton className="w-24 h-4" />
-      </td>
-      <td className="py-2 px-4">
-        <Skeleton className="w-16 h-4" />
-      </td>
-      <td className="py-2 px-4">
-        <Skeleton className="w-8 h-4" />
-      </td>
-    </tr>
-  );
+const SkeletonRow: React.FC = () => (
+  <tr className="border-b border-gray-200">
+    <td className="py-2 px-4">
+      <Skeleton className="w-6 h-4" />
+    </td>
+    <td className="py-2 px-4">
+      <div className="flex items-center">
+        <Skeleton className="w-16 h-10 mr-2 rounded" />
+        <Skeleton className="flex-1 h-4" />
+      </div>
+    </td>
+    <td className="py-2 px-4">
+      <Skeleton className="w-24 h-4" />
+    </td>
+    <td className="py-2 px-4">
+      <Skeleton className="w-16 h-4" />
+    </td>
+    <td className="py-2 px-4">
+      <Skeleton className="w-8 h-4" />
+    </td>
+  </tr>
+);
+
+// Function to render multiple SkeletonRows
+const renderSkeletonRows = (count: number = 10) => {
+  return Array.from({ length: count }).map((_, index) => (
+    <SkeletonRow key={index} />
+  ));
 };
 
 const AdminQuestions: React.FC = () => {
   const { role } = useAuth();
   const navigate = useNavigate();
 
+  // Authentication and Authorization
   useEffect(() => {
     if (role !== "ADMIN") {
       navigate("/login");
     }
   }, [role, navigate]);
 
+  // State Management
   const [search, setSearch] = useState("");
   const [questions, setQuestions] = useState<Question[]>([]);
-  const [filteredQuestions, setFilteredQuestions] = useState<Question[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
   const [openDialog, setOpenDialog] = useState(false);
   const [editQuestion, setEditQuestion] = useState<Question | null>(null);
 
   // Filters
-  const [categoryFilter, setCategoryFilter] = useState("All");
-  const [difficultyFilter, setDifficultyFilter] = useState("All");
-
-  // Pagination states
-  const [offset, setOffset] = useState(0);
-  const [hasMore, setHasMore] = useState(true);
-  const limit = 100;
+  const [categoryFilter, setCategoryFilter] = useState<string>("All");
+  const [difficultyFilter, setDifficultyFilter] = useState<string>("All");
 
   const token = localStorage.getItem("supabaseToken");
 
-  // Unique cache key based on current filters
-  const getCacheKey = () => {
-    return `adminQuestionsCache_${categoryFilter}_${difficultyFilter}_${search}`;
-  };
+  // Define a single Cache Key
+  const cacheKey = "adminQuestionsCache";
 
-  const fetchQuestions = useCallback(async (
-    offsetVal = 0,
-    cat = categoryFilter,
-    diff = difficultyFilter,
-    srch = search,
-    append = false,
-    fetchAll = false
-  ) => {
+  // Fetch Questions Function with Caching
+  const fetchQuestions = useCallback(async () => {
     setLoading(true);
     setError(null);
-    const params = new URLSearchParams();
-    
-    if (fetchAll) {
-      params.set("limit", '10000'); // Assuming 10,000 is sufficient to fetch all
-      params.set("offset", '0'); // Reset offset
-    } else {
-      params.set("limit", limit.toString());
-      params.set("offset", offsetVal.toString());
-    }
 
-    if (cat && cat !== "All") params.set("category", cat);
-    if (diff && diff !== "All") params.set("difficulty", diff);
-    if (srch && srch.trim().length > 0) {
-      params.set("search", srch.trim());
-    }
+    const cachedData = localStorage.getItem(cacheKey);
 
-    try {
-      const response = await fetch(`http://localhost:4444/api/admin/questions?${params.toString()}`, {
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`
+    // Optional: Time-Based Cache Invalidation (e.g., 5 minutes)
+    const cacheExpiry = 5 * 60 * 1000; // 5 minutes in milliseconds
+    const now = Date.now();
+
+    if (cachedData) {
+      try {
+        const parsedCache: QuestionCache = JSON.parse(cachedData);
+        if (now - parsedCache.timestamp < cacheExpiry) {
+          setQuestions(parsedCache.questions);
+          setLoading(false);
+          return;
+        } else {
+          // Cache is stale
+          localStorage.removeItem(cacheKey);
         }
-      });
+      } catch (e) {
+        console.error("Failed to parse cache:", e);
+        localStorage.removeItem(cacheKey);
+      }
+    }
+
+    // If no valid cache, fetch from server
+    try {
+      const params = new URLSearchParams();
+
+      // Apply Filters
+      if (categoryFilter !== "All") params.set("category", categoryFilter);
+      if (difficultyFilter !== "All") params.set("difficulty", difficultyFilter);
+      if (search.trim() !== "") params.set("search", search.trim());
+
+      // Fetch all questions by setting a high limit
+      params.set("limit", "10000"); // Adjust as necessary
+
+      const response = await fetch(
+        `http://localhost:4444/api/admin/questions?${params.toString()}`,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`,
+          },
+        }
+      );
+
       if (!response.ok) {
         throw new Error("Failed to fetch questions");
       }
+
       const data: Question[] = await response.json();
 
-      if (fetchAll || offsetVal === 0) {
-        setQuestions(data);
-      } else {
-        setQuestions(prev => [...prev, ...data]);
-      }
+      setQuestions(data);
 
-      if (data.length < limit) {
-        setHasMore(false);
-      } else {
-        setHasMore(true);
+      // Store fetched data to cache
+      const cacheData: QuestionCache = {
+        questions: data,
+        timestamp: now,
+      };
+
+      try {
+        localStorage.setItem(cacheKey, JSON.stringify(cacheData));
+      } catch (e) {
+        if ((e as DOMException).name === "QuotaExceededError") {
+          console.warn("LocalStorage quota exceeded. Cannot cache questions.");
+          // Optionally, you can implement alternative caching strategies here
+        } else {
+          console.error("Failed to set cache:", e);
+        }
       }
 
       setLoading(false);
     } catch (err) {
-      console.log(err);
+      console.error(err);
       setError("Could not fetch questions. Please try again later.");
       setLoading(false);
     }
-  }, [categoryFilter, difficultyFilter, search, limit, token]);
+  }, [categoryFilter, difficultyFilter, search, token]);
 
-  // Load from cache or fetch data on mount and when filters change
+  // Fetch questions on mount and when filters or search change
   useEffect(() => {
-    const savedCache = localStorage.getItem(getCacheKey());
-    if (savedCache) {
-      const { questions: savedQuestions, offset: savedOffset, hasMore: savedHasMore } = JSON.parse(savedCache);
-      setQuestions(savedQuestions);
-      setOffset(savedOffset);
-      setHasMore(savedHasMore);
-      setLoading(false);
-      return;
-    }
-    // If no cache, fetch from server
-    if (categoryFilter !== "All") {
-      fetchQuestions(0, categoryFilter, difficultyFilter, search, false, true); // fetchAll = true
-    } else {
-      fetchQuestions(0);
-    }
-  }, [getCacheKey(), fetchQuestions, categoryFilter, difficultyFilter, search]);
+    fetchQuestions();
+  }, [fetchQuestions]);
 
-  // Save to cache whenever questions or pagination changes
-  useEffect(() => {
-    const cacheData = {
-      questions,
-      offset,
-      hasMore,
-    };
-    localStorage.setItem(getCacheKey(), JSON.stringify(cacheData));
-  }, [questions, offset, hasMore, getCacheKey()]);
-
-  // Update filteredQuestions based on current filters
-  useEffect(() => {
-    const sortedQuestions = [...questions].sort((a, b) => {
-      const aId = a.id ?? 0;
-      const bId = b.id ?? 0;
-      return aId - bId;
-    });
-
-    let filtered = sortedQuestions.filter((q) =>
-      q.text.toLowerCase().includes(search.toLowerCase())
-    );
-
-    if (categoryFilter !== "All") {
-      filtered = filtered.filter((q) => q.category === categoryFilter);
-    }
-
-    if (difficultyFilter !== "All") {
-      filtered = filtered.filter((q) => q.difficulty === difficultyFilter);
-    }
-
-    setFilteredQuestions(filtered);
-  }, [questions, search, categoryFilter, difficultyFilter]);
-
-  const loadMore = () => {
-    if (!hasMore) return;
-    if (categoryFilter !== "All") return; // Do not load more if a specific category is selected
-    const newOffset = offset + limit;
-    setOffset(newOffset);
-    fetchQuestions(newOffset, categoryFilter, difficultyFilter, search, true, false);
-  };
-
+  // Handle Add New Question
   const handleAddNew = () => {
     setEditQuestion(null);
     setOpenDialog(true);
   };
 
+  // Handle Edit Question
   const handleEdit = (question: Question) => {
     setEditQuestion(question);
     setOpenDialog(true);
   };
 
+  // Handle Delete Question
   const handleDelete = async (questionId: number) => {
     if (!window.confirm("Are you sure you want to delete this question?")) {
       return;
@@ -245,19 +231,26 @@ const AdminQuestions: React.FC = () => {
         {
           method: "DELETE",
           headers: {
-            "Authorization": `Bearer ${token}`
-          }
+            "Authorization": `Bearer ${token}`,
+          },
         }
       );
+
       if (!response.ok) {
         throw new Error("Failed to delete question");
       }
+
       setQuestions((prev) => prev.filter((q) => q.id !== questionId));
+
+      // Invalidate cache after deletion
+      localStorage.removeItem(cacheKey);
     } catch (err) {
+      console.error(err);
       setError("Failed to delete the question");
     }
   };
 
+  // Handle Save (Add/Edit) Question
   const handleSave = async (question: Question) => {
     try {
       if (question.id) {
@@ -268,47 +261,73 @@ const AdminQuestions: React.FC = () => {
             method: "PUT",
             headers: {
               "Content-Type": "application/json",
-              "Authorization": `Bearer ${token}`
+              "Authorization": `Bearer ${token}`,
             },
             body: JSON.stringify(question),
           }
         );
+
         if (!response.ok) {
           throw new Error("Failed to update question");
         }
+
         const updatedQuestion: Question = await response.json();
+
         setQuestions((prev) =>
           prev.map((q) => (q.id === updatedQuestion.id ? updatedQuestion : q))
         );
       } else {
         // Add new question
-        const response = await fetch("http://localhost:4444/api/admin/questions", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${token}`
-          },
-          body: JSON.stringify(question),
-        });
+        const response = await fetch(
+          "http://localhost:4444/api/admin/questions",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "Authorization": `Bearer ${token}`,
+            },
+            body: JSON.stringify(question),
+          }
+        );
+
         if (!response.ok) {
           throw new Error("Failed to add question");
         }
+
         const newQuestion: Question = await response.json();
+
         setQuestions((prev) => [...prev, newQuestion]);
       }
+
       setOpenDialog(false);
+
+      // Invalidate cache after adding/editing
+      localStorage.removeItem(cacheKey);
     } catch (err) {
+      console.error(err);
       setError((err as Error).message);
     }
   };
 
-  // Render multiple Skeleton Rows
-  const renderSkeletonRows = () => {
-    const skeletonRows = Array.from({ length: 15 }).map((_, index) => (
-      <SkeletonRow key={index} />
-    ));
-    return skeletonRows;
+  // Handle Refresh Button
+  const handleRefresh = () => {
+    localStorage.removeItem(cacheKey);
+    fetchQuestions();
   };
+
+  // Filter Questions Based on Search and Filters
+  const getFilteredQuestions = () => {
+    return questions.filter((q) => {
+      const matchesSearch = q.text.toLowerCase().includes(search.toLowerCase());
+      const matchesCategory =
+        categoryFilter === "All" || q.category === categoryFilter;
+      const matchesDifficulty =
+        difficultyFilter === "All" || q.difficulty === difficultyFilter;
+      return matchesSearch && matchesCategory && matchesDifficulty;
+    });
+  };
+
+  const filteredQuestions = getFilteredQuestions();
 
   // Render error state
   if (error) {
@@ -321,57 +340,76 @@ const AdminQuestions: React.FC = () => {
 
   return (
     <>
-      {/* Header and Add Button */}
+      {/* Header and Add/Refresh Buttons */}
       <div className="flex justify-between items-center mb-4">
         <h1 className="text-2xl font-bold">Questions</h1>
-        <Button
-          onClick={handleAddNew}
-          className="bg-main-green text-main-darkBlue hover:bg-main-green/90 text-white"
-        >
-          Add Question
-        </Button>
       </div>
 
       {/* Filters and Search Bar */}
-      <div className="flex items-center space-x-4 mb-4">
-        <Input
-          placeholder="Search questions..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="w-1/3"
-        />
+      <div className="flex items-center space-x-4 mb-4 justify-between">
+        <div className="flex">
+          <Input
+            placeholder="Search questions..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="w-1/3"
+          />
 
-        {/* Category Filter */}
-        <div className="flex items-center space-x-2">
-          <span>Category:</span>
-          <Select value={categoryFilter} onValueChange={(val) => setCategoryFilter(val)}>
-            <SelectTrigger className="w-100">
-              <SelectValue placeholder="All" />
-            </SelectTrigger>
-            <SelectContent>
-              {categories.map((cat) => (
-                <SelectItem key={cat} value={cat}>{cat}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          {/* Category Filter */}
+          <div className="flex items-center space-x-2">
+            <span>Category:</span>
+            <Select
+              value={categoryFilter}
+              onValueChange={(val) => setCategoryFilter(val)}
+            >
+              <SelectTrigger className="w-100">
+                <SelectValue placeholder="All" />
+              </SelectTrigger>
+              <SelectContent>
+                {categories.map((cat) => (
+                  <SelectItem key={cat} value={cat}>
+                    {cat}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Difficulty Filter */}
+          <div className="flex items-center space-x-2">
+            <span>Difficulty:</span>
+            <Select
+              value={difficultyFilter}
+              onValueChange={(val) =>
+                setDifficultyFilter(val as 'easy' | 'medium' | 'hard' | 'All')
+              }
+            >
+              <SelectTrigger className="w-32">
+                <SelectValue placeholder="All" />
+              </SelectTrigger>
+              <SelectContent>
+                {difficultyOptions.map((diff) => (
+                  <SelectItem key={diff} value={diff}>
+                    {diff}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
         </div>
-
-        {/* Difficulty Filter */}
-        <div className="flex items-center space-x-2">
-          <span>Difficulty:</span>
-          <Select
-            value={difficultyFilter}
-            onValueChange={(val) => setDifficultyFilter(val as 'easy' | 'medium' | 'hard' | 'All')}
+        <div className="flex space-x-2">
+          <Button
+            onClick={handleRefresh}
+            className="bg-main-blue text-white hover:bg-main-blue/90"
           >
-            <SelectTrigger className="w-32">
-              <SelectValue placeholder="All" />
-            </SelectTrigger>
-            <SelectContent>
-              {difficultyOptions.map((diff) => (
-                <SelectItem key={diff} value={diff}>{diff}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+            Refresh
+          </Button>
+          <Button
+            onClick={handleAddNew}
+            className="bg-main-green text-main-darkBlue hover:bg-main-green/90 text-white"
+          >
+            Add Question
+          </Button>
         </div>
       </div>
 
@@ -405,14 +443,14 @@ const AdminQuestions: React.FC = () => {
                           <img
                             src={q.imageUrl}
                             alt="Question"
-                            className="w-16 h-auto mr-2 rounded pl-4"
+                            className="w-16 h-auto mr-2 rounded"
                           />
                         )}
-                        <span className="pl-4">{q.text}</span>
+                        <span>{q.text}</span>
                       </div>
                     </td>
                     <td className="py-2 px-4 w-1/5">{q.category}</td>
-                    <td className="py-2 px-4">{q.difficulty}</td>
+                    <td className="py-2 px-4 capitalize">{q.difficulty}</td>
                     <td className="py-2 px-4 text-right">
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
@@ -451,24 +489,6 @@ const AdminQuestions: React.FC = () => {
             )}
           </tbody>
         </table>
-
-        {/* Load More Button */}
-        {hasMore && categoryFilter === "All" && (
-          <div className="mt-4 text-center">
-            {loading && questions.length > 0 ? (
-              <Button disabled className="bg-main-green text-main-darkBlue opacity-50 cursor-not-allowed">
-                Loading...
-              </Button>
-            ) : (
-              <Button
-                onClick={loadMore}
-                className="bg-main-green text-main-darkBlue hover:bg-main-green/90 text-white"
-              >
-                Load More
-              </Button>
-            )}
-          </div>
-        )}
       </Card>
 
       {/* Add/Edit Question Dialog */}

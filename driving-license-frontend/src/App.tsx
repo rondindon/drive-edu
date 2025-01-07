@@ -10,7 +10,7 @@ import { Slide, ToastContainer } from 'react-toastify';
 
 // Import Layouts
 import PublicLayout from './layouts/PublicLayout';
-import AdminLayout from './pages/admin/AdminLayout';
+import AdminLayout from './layouts/AdminLayout';
 
 // Import Admin Pages
 import AdminDashboard from './pages/admin/AdminDashboard';
@@ -21,6 +21,7 @@ import AboutPage from './pages/AboutPage';
 import TestPage from './pages/tests/TestPage';
 import ResultsPage from './pages/tests/ResultsPage';
 import AdminTests from './pages/admin/tests/AdminTests';
+import AdminReports from './pages/admin/reports/AdminReports';
 
 function App() {
   return (
@@ -96,6 +97,7 @@ function App() {
         <Route path="users" element={<AdminUsers />} />
         <Route path="tests" element={<AdminTests />} />
         <Route path="questions" element={<AdminQuestions />} />
+        <Route path="reports" element={<AdminReports />} />
         <Route path="add-question" element={<AdminAddQuestion />} />
         {/* Add other admin routes here */}
       </Route>

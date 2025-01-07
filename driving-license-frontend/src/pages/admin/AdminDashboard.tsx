@@ -58,7 +58,7 @@ const AdminDashboard: React.FC = () => {
           <CardHeader>
             <CardTitle className="flex items-center space-x-2">
               <BarChart className="text-main-green" />
-              <span>Pending Requests</span>
+              <span>Pending Reports</span>
             </CardTitle>
           </CardHeader>
           <CardContent>

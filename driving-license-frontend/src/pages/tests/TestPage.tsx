@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Button } from 'src/components/ui/button';
-import { Progress } from 'src/components/ui/progress'; // or wherever your shadcn progress is
+import { Progress } from 'src/components/ui/progress';
+import { FaFlag } from 'react-icons/fa'; // For the "report" icon
+import { stat } from 'fs';
 
 interface Question {
   id: number;
@@ -29,14 +31,13 @@ const TestPage: React.FC = () => {
 
   const [currentIndex, setCurrentIndex] = useState(0);
 
-  // We'll track "score" if needed for your final pass/fail, 
-  // but we won't push each answer to the DB individually.
+  // We won't push each answer to DB immediately. We'll store final later.
   const [score, setScore] = useState(0);
 
   // 30 minutes => 1800 seconds
   const [timeLeft, setTimeLeft] = useState(30 * 60);
 
-  // Local answers: userAnswers[i] = 'A'|'B'|'C'
+  // userAnswers[i] = 'A'|'B'|'C'
   const [userAnswers, setUserAnswers] = useState<string[]>(
     new Array(questions.length).fill('')
   );
@@ -49,7 +50,7 @@ const TestPage: React.FC = () => {
       setTimeLeft((prev) => {
         if (prev <= 1) {
           clearInterval(timer);
-          finishTest(); // auto-finish if time runs out
+          finishTest(); 
           return 0;
         }
         return prev - 1;
@@ -60,37 +61,36 @@ const TestPage: React.FC = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [questions]);
 
-  // Convert timeLeft to a % for the progress bar
+  // Convert timeLeft to progress bar value
   const totalDuration = 30 * 60; // 1800
   const progressValue = (timeLeft / totalDuration) * 100;
 
-  // For display: minutes:seconds
+  // For display
   const minutes = Math.floor(timeLeft / 60);
   const seconds = timeLeft % 60;
 
-  // Store user’s choice locally (no immediate DB calls)
+  // user selects an answer
   const handleAnswer = (selectedIndex: number) => {
-    const currentQuestion = questions[currentIndex];
+    const q = questions[currentIndex];
     const chosenLetter = letterMap[selectedIndex];
-    const isCorrect = chosenLetter === currentQuestion.correctAnswer;
+    const isCorrect = chosenLetter === q.correctAnswer;
 
-    // Update userAnswers
+    // update local answer
     setUserAnswers((prev) => {
       const updated = [...prev];
       updated[currentIndex] = chosenLetter;
       return updated;
     });
 
-    // Optionally track local "score"
+    // update local score
     if (isCorrect) {
-      setScore((prev) => prev + (currentQuestion.points || 0));
+      setScore((prev) => prev + (q.points || 0));
     } else {
-      setScore((prev) => Math.max(prev - (currentQuestion.points || 0), 0));
+      setScore((prev) => Math.max(prev - (q.points || 0), 0));
     }
-    // No further navigation here—Next/Previous is separate
   };
 
-  // Navigation
+  // Next/Prev
   const nextQuestion = () => {
     if (currentIndex < questions.length - 1) {
       setCurrentIndex((prev) => prev + 1);
@@ -103,27 +103,80 @@ const TestPage: React.FC = () => {
     }
   };
 
+  // Jump to question by index
   function jumpToQuestion(index: number) {
     if (index >= 0 && index < questions.length) {
       setCurrentIndex(index);
     }
   }
 
+  // Jump to category
   function jumpToCategory(cat: string) {
     const idx = questions.findIndex((q) => q.category === cat);
     if (idx !== -1) setCurrentIndex(idx);
   }
 
-  // Finish test: one final POST with userAnswers
+  // Report popup state
+  const [showReportPopup, setShowReportPopup] = useState(false);
+  const [reportDescription, setReportDescription] = useState('');
+  const [reportQuestionId, setReportQuestionId] = useState<number | null>(null);
+
+  // Open the popup for the current question
+  const openReportPopup = (qId: number) => {
+    setReportQuestionId(qId);
+    setReportDescription('');
+    setShowReportPopup(true);
+  };
+  // Close popup
+  const closeReportPopup = () => {
+    setShowReportPopup(false);
+    setReportQuestionId(null);
+    setReportDescription('');
+  };
+
+  // Submit the report to the backend
+  const submitReport = async () => {
+    if (!reportQuestionId) return;
+    if (!reportDescription.trim()) {
+      alert('Please provide a description');
+      return;
+    }
+
+    try {
+      const resp = await fetch('http://localhost:4444/api/report', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          questionId: reportQuestionId,
+          description: reportDescription,
+          status: 'Pending',
+        }),
+      });
+      if (!resp.ok) {
+        const errData = await resp.json();
+        throw new Error(errData.message || 'Error creating report');
+      }
+      alert('Report submitted successfully');
+      closeReportPopup();
+    } catch (err) {
+      console.error(err);
+      alert('Error submitting report');
+    }
+  };
+
+  // Finish test
   const finishTest = async () => {
-    let score = 0;
-    userAnswers.forEach((answer, idx) => {
-      if (answer === questions[idx].correctAnswer) {
-        score += (questions[idx].points || 0);
+    let finalScore = 0;
+    userAnswers.forEach((ans, idx) => {
+      if (ans === questions[idx].correctAnswer) {
+        finalScore += (questions[idx].points || 0);
       }
     });
-  
-    const isPassed = score >= 90;
+
+    const isPassed = finalScore >= 90;
     if (!testId) {
       alert('No valid testId found. Returning to homepage.');
       navigate('/');
@@ -136,10 +189,9 @@ const TestPage: React.FC = () => {
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({
           testId,
-          score,
-          timeTaken: totalDuration - timeLeft, // how long user spent
+          score: finalScore,
+          timeTaken: totalDuration - timeLeft,
           isPassed,
-          // include final answers for DB if needed
           userAnswers: userAnswers.map((answer, i) => ({
             questionId: questions[i].id,
             selected: answer,
@@ -151,19 +203,18 @@ const TestPage: React.FC = () => {
       const data = await response.json();
       console.log('Finish response:', data);
 
-      // Navigate to results
+      // Go to results
       navigate('/results', {
         state: {
           isPassed,
-          score,
+          score: finalScore,
           totalQuestions: questions.length,
-          testDate: "2023-10-07",  // Example placeholders
-          group: "B",              // Example placeholders
+          testDate: "2023-10-07",
+          group: "B",
           timeTaken: totalDuration - timeLeft,
-          // Add userAnswer property to each question
           questions: questions.map((q, i) => ({
             ...q,
-            userAnswer: userAnswers[i], // e.g., "A", "B", or "C"
+            userAnswer: userAnswers[i],
           })),
         },
       });
@@ -183,31 +234,27 @@ const TestPage: React.FC = () => {
     );
   }
 
-  // Current question
   const currentQuestion = questions[currentIndex];
-  const selectedAnswer = userAnswers[currentIndex]; // Get selected answer for current question
+  const selectedAnswer = userAnswers[currentIndex];
 
   return (
     <div className="flex flex-col items-center justify-start min-h-screen bg-secondary-lightGray text-main-darkBlue px-4 py-8">
-      {/* Top row: progress bar & time left + question points */}
+      {/* Timer + progress + question points */}
       <div className="mb-6 w-[70%] flex items-center justify-between gap-4">
-        {/* Left side: progress bar + time left */}
         <div className="flex items-center w-2/3 gap-2">
           <Progress value={progressValue} className="h-2 w-full" />
           <span className="text-sm font-medium text-main-darkBlue">
             {minutes}:{String(seconds).padStart(2, '0')}
           </span>
         </div>
-        {/* Right side: Points for current question */}
         <div className="text-sm font-medium text-right w-1/3">
           Points: {currentQuestion.points}
         </div>
       </div>
 
-      {/* Main container */}
       <div className="w-[70%]">
         <div className="flex gap-6 items-start">
-          {/* Categories box */}
+          {/* Categories */}
           <aside
             className="
               bg-white
@@ -249,33 +296,43 @@ const TestPage: React.FC = () => {
 
           {/* Main column */}
           <main className="flex-1 flex flex-col gap-4">
-            {/* Question Navigation */}
+            {/* Navigation row of question numbers */}
             <div className="flex flex-wrap gap-2 shrink-0">
-              {questions.map((_, i) => (
-                <Button
-                  key={i}
-                  variant="secondary"
-                  className={`
-                    w-10 h-10
-                    flex items-center justify-center
-                    text-sm
-                    ${i === currentIndex ? 'bg-main-green text-white' : 'bg-white'}
-                  `}
-                  onClick={() => jumpToQuestion(i)}
-                >
-                  {i + 1}
-                </Button>
-              ))}
+              {questions.map((_, i) => {
+                const isActive = i === currentIndex;
+                return (
+                  <Button
+                    key={i}
+                    variant="secondary"
+                    className={`
+                      w-10 h-10
+                      flex items-center justify-center
+                      text-sm
+                      ${isActive ? 'bg-main-green text-white' : 'bg-white'}
+                    `}
+                    onClick={() => jumpToQuestion(i)}
+                  >
+                    {i + 1}
+                  </Button>
+                );
+              })}
             </div>
 
-            {/* Question box */}
-            <div className="bg-white rounded shadow p-6 flex-1 overflow-auto">
-              {/* Title = question text */}
+            {/* Question content */}
+            <div className="relative bg-white rounded shadow p-6 flex-1 overflow-auto">
+              {/* Report icon at the top right of question box */}
+              <Button
+                variant="outline"
+                className="absolute top-4 right-6 h-8 px-2 flex items-center justify-center"
+                onClick={() => openReportPopup(currentQuestion.id)}
+                title="Report an issue with this question"
+              >
+                <FaFlag className="text-red-500" />
+              </Button>
+
               <h2 className="text-xl font-bold mb-4 whitespace-normal break-words max-w-4xl">
                 {currentQuestion.text}
               </h2>
-
-              {/* If there's an image, display it */}
               {currentQuestion.imageUrl && (
                 <div className="mb-4">
                   <img
@@ -286,15 +343,13 @@ const TestPage: React.FC = () => {
                 </div>
               )}
 
-              {/* Answers */}
               <div className="space-y-2 mb-4">
                 {currentQuestion.options.map((option, idx) => {
-                  const optionLetter = letterMap[idx];
-                  const isSelected = selectedAnswer === optionLetter;
-
+                  const letter = letterMap[idx];
+                  const isSelected = selectedAnswer === letter;
                   return (
                     <Button
-                      key={idx}
+                      key={option}
                       variant="outline"
                       size={'reactive'}
                       className={`
@@ -319,15 +374,12 @@ const TestPage: React.FC = () => {
                 })}
               </div>
 
-              {/* Next/Prev + Finish on last */}
               <div className="flex justify-between">
-                <Button onClick={() => prevQuestion()} disabled={currentIndex === 0}>
+                <Button onClick={prevQuestion} disabled={currentIndex === 0}>
                   Previous
                 </Button>
                 {currentIndex < questions.length - 1 ? (
-                  <Button onClick={() => nextQuestion()}>
-                    Next
-                  </Button>
+                  <Button onClick={nextQuestion}>Next</Button>
                 ) : (
                   <Button
                     onClick={finishTest}
@@ -341,6 +393,29 @@ const TestPage: React.FC = () => {
           </main>
         </div>
       </div>
+
+      {/* Report Popup */}
+      {showReportPopup && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded p-6 w-[300px] shadow">
+            <h3 className="text-lg font-semibold mb-2">Report Issue</h3>
+            <textarea
+              className="w-full h-24 p-2 border border-gray-300 rounded mb-4"
+              placeholder="Describe the issue..."
+              value={reportDescription}
+              onChange={(e) => setReportDescription(e.target.value)}
+            />
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={closeReportPopup}>
+                Cancel
+              </Button>
+              <Button variant="default" onClick={submitReport} className="bg-red-500 text-white">
+                Submit
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

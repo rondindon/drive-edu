@@ -6,6 +6,7 @@ import { getQuestionById } from './controllers/questionController';
 import { authenticate } from './middleware/auth';
 import { deleteUser, getAllUsers, updateUser } from './controllers/adminUserController';
 import {deleteTest, finishTest, getAllTests, recordUserAnswer, recordWrongAnswer, startTest } from './controllers/testController';
+import { createReport, getAllReports, markReportResolved, markReportReviewed } from './controllers/reportController';
 
 const router: Router = Router();
 
@@ -31,5 +32,10 @@ router.post('/user-answers', authenticate, recordUserAnswer);
 //ADMIN
 router.get('/admin/tests', authenticate, isAdmin, getAllTests);
 router.delete("/admin/tests/:id", authenticate, isAdmin, deleteTest);
+
+router.post('/report', authenticate, createReport);
+router.get('/admin/report', authenticate, isAdmin, getAllReports);
+router.post('/admin/reports/:id/review', authenticate, isAdmin, markReportReviewed);
+router.post('/admin/reports/:id/resolve', authenticate, isAdmin, markReportResolved);
 
 export default router;
