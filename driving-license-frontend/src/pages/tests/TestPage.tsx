@@ -116,7 +116,14 @@ const TestPage: React.FC = () => {
 
   // Finish test: one final POST with userAnswers
   const finishTest = async () => {
-    const isPassed = score >= 90; 
+    let score = 0;
+    userAnswers.forEach((answer, idx) => {
+      if (answer === questions[idx].correctAnswer) {
+        score += (questions[idx].points || 0);
+      }
+    });
+  
+    const isPassed = score >= 90;
     if (!testId) {
       alert('No valid testId found. Returning to homepage.');
       navigate('/');
@@ -147,9 +154,17 @@ const TestPage: React.FC = () => {
       // Navigate to results
       navigate('/results', {
         state: {
+          isPassed,
           score,
           totalQuestions: questions.length,
-          isPassed,
+          testDate: "2023-10-07",  // Example placeholders
+          group: "B",              // Example placeholders
+          timeTaken: totalDuration - timeLeft,
+          // Add userAnswer property to each question
+          questions: questions.map((q, i) => ({
+            ...q,
+            userAnswer: userAnswers[i], // e.g., "A", "B", or "C"
+          })),
         },
       });
     } catch (error) {

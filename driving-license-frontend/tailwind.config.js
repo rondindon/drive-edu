@@ -16,6 +16,7 @@ module.exports = {
           darkBlue: "#2C3E50",
           green: "#27AE60",
           yellow: "#F1C40F",
+          blue: "#2C3E50",
         },
         secondary: {
           lightGray: "#ECF0F1",

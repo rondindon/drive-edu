@@ -241,20 +241,6 @@ function shuffleArray<T>(array: T[]): T[] {
     }
   }
 
-// In testController.ts
-export async function getAllTests(req: Request, res: Response) {
-    try {
-      const tests = await prisma.test.findMany({
-        include: {
-          user: true,
-        },
-      });
-      res.json(tests);
-    } catch (error) {
-      res.status(500).json({ message: 'Error retrieving tests' });
-    }
-  }
-
   export const recordWrongAnswer = async (req: AuthenticatedRequest, res: Response) => {
     try {
       console.log('[recordWrongAnswer] req.body:', req.body);
@@ -349,3 +335,31 @@ export async function getAllTests(req: Request, res: Response) {
       return res.status(500).json({ message: 'Error recording user answer' });
     }
   }
+
+// ADMIN
+export async function getAllTests(req: Request, res: Response) {
+  try {
+    const tests = await prisma.test.findMany({
+      include: {
+        user: true,
+      },
+    });
+    res.json(tests);
+  } catch (error) {
+    res.status(500).json({ message: 'Error retrieving tests' });
+  }
+}
+
+export async function deleteTest(req: Request, res: Response) {
+const { id } = req.params;
+
+try {
+  const deletedTest = await prisma.test.delete({
+    where: { id: parseInt(id, 10) },
+  });
+  res.json(deletedTest);
+} catch (error) {
+  console.error(error);
+  res.status(500).json({ message: 'Error deleting test' });
+}
+}

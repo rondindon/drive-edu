@@ -20,6 +20,7 @@ import Profile from './pages/Profile';
 import AboutPage from './pages/AboutPage';
 import TestPage from './pages/tests/TestPage';
 import ResultsPage from './pages/tests/ResultsPage';
+import AdminTests from './pages/admin/tests/AdminTests';
 
 function App() {
   return (
@@ -93,6 +94,7 @@ function App() {
         {/* Admin Nested Routes */}
         <Route index element={<AdminDashboard />} />
         <Route path="users" element={<AdminUsers />} />
+        <Route path="tests" element={<AdminTests />} />
         <Route path="questions" element={<AdminQuestions />} />
         <Route path="add-question" element={<AdminAddQuestion />} />
         {/* Add other admin routes here */}

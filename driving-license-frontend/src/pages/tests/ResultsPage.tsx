@@ -1,33 +1,209 @@
 import React from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Button } from 'src/components/ui/button';
+import { Button } from 'src/components/ui/button';  
+import { Progress } from 'src/components/ui/progress'; 
+import { FaPercent, FaQuestionCircle, FaClock } from 'react-icons/fa';
+
+interface Question {
+  id: number;
+  text: string;
+  options: string[];
+  correctAnswer: string; 
+  userAnswer?: string;   // user’s selected letter
+  points: number;
+  imageUrl?: string;
+}
+
+interface ResultsState {
+  isPassed: boolean;
+  score: number;            // out of 100
+  totalQuestions: number;   
+  testDate: string;         
+  group: string;            
+  timeTaken: number;        // in seconds
+  questions: Question[];    
+}
 
 const ResultsPage: React.FC = () => {
   const navigate = useNavigate();
   const { state } = useLocation();
 
-  // Destructure data from the location state
-  const { score, totalQuestions, isPassed } = state || {
-    score: 0,
-    totalQuestions: 0,
-    isPassed: false,
+  const {
+    isPassed = false,
+    score = 0,
+    totalQuestions = 0,
+    testDate = '',
+    group = '',
+    timeTaken = 0,
+    questions = [],
+  } = (state || {}) as ResultsState;
+
+  const headingText = isPassed ? 'You Passed!' : 'You Failed';
+
+  // Score-based success rate (score out of 100)
+  const successRate = Math.round(score);
+
+  // Count how many questions the user got correct
+  let correctCount = 0;
+  questions.forEach((q) => {
+    if (q.userAnswer === q.correctAnswer) correctCount++;
+  });
+  const questionAccuracyDisplay = `${correctCount}/${totalQuestions}`;
+
+  // For the progress bar, clamp at 100
+  const progressValue = Math.min(score, 100);
+
+  // Convert timeTaken (seconds) to mm:ss
+  const minutes = Math.floor(timeTaken / 60);
+  const seconds = timeTaken % 60;
+  const timeDisplay = `${minutes}:${String(seconds).padStart(2, '0')}`;
+
+  // By default, open the first question if it exists
+  const [selectedQuestionId, setSelectedQuestionId] = React.useState<number | null>(
+    questions.length > 0 ? questions[0].id : null
+  );
+  const selectedQuestion = questions.find((q) => q.id === selectedQuestionId);
+
+  const handleQuestionClick = (qId: number) => {
+    setSelectedQuestionId(qId === selectedQuestionId ? null : qId);
   };
 
-  function handleGoHome() {
+  // Bottom Buttons
+  const goHome = () => {
     navigate('/');
-  }
+  };
+  const startAnotherTest = () => {
+    navigate('/');
+  };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-secondary-lightGray text-main-darkBlue">
-      <div className="bg-white p-6 rounded shadow-md w-full max-w-md text-center">
-        <h1 className="text-2xl font-bold mb-4">Test Results</h1>
-        <p className="mb-2">Score: {score} / {100}</p>
-        <p className={`mb-4 ${isPassed ? 'text-main-green' : 'text-secondary-red'}`}>
-          {isPassed ? 'You Passed!' : 'You Failed!'}
-        </p>
-        <Button variant="default" className="bg-main-green hover:bg-secondary-red" onClick={handleGoHome}>
-          Go Home
-        </Button>
+    <div className="min-h-screen w-full bg-secondary-lightGray text-main-darkBlue">
+      <div className="max-w-5xl mx-auto px-6 py-10">
+        {/* Pass/Fail + Basic Info */}
+        <div className="text-center mb-10">
+          <h1 className="text-3xl font-extrabold mb-4">
+            {headingText}
+          </h1>
+          <div className="space-y-1 text-base text-gray-700">
+            <p>
+              <span className="font-semibold">Date:</span> {testDate}
+            </p>
+            <p>
+              <span className="font-semibold">Group:</span> {group}
+            </p>
+          </div>
+        </div>
+
+        {/* Score Progress Bar */}
+        <div className="bg-white rounded-md shadow p-6 mb-8 max-w-xl mx-auto">
+          <h2 className="text-lg font-semibold mb-3 text-center">Overall Score</h2>
+          <Progress value={progressValue} className="h-4 w-full" />
+          <p className="text-center text-base mt-2">{score}/100 Points</p>
+        </div>
+
+        {/* Icons Row (3 icons) */}
+        <div className="flex flex-row gap-12 items-center justify-center mb-10">
+          {/* Icon 1: Success Rate */}
+          <div className="flex flex-col items-center justify-center">
+            <FaPercent className="text-4xl text-main-darkBlue mb-2" />
+            <p className="text-lg text-gray-800 font-semibold">Success Rate</p>
+            <p className="text-xl bg-blue-100 text-blue-800 px-3 py-1 mt-1 rounded">
+              {successRate}%
+            </p>
+          </div>
+
+          {/* Icon 2: Total Questions */}
+          <div className="flex flex-col items-center justify-center">
+            <FaQuestionCircle className="text-4xl text-main-darkBlue mb-2" />
+            <p className="text-lg text-gray-800 font-semibold">Total Questions</p>
+            <p className="text-xl bg-green-100 text-main-darkBlue px-3 py-1 mt-1 rounded">
+              {correctCount}/{totalQuestions}
+            </p>
+          </div>
+
+          {/* Icon 3: Time */}
+          <div className="flex flex-col items-center justify-center">
+            <FaClock className="text-4xl text-main-darkBlue mb-2" />
+            <p className="text-lg text-gray-800 font-semibold">Time Taken</p>
+            <p className="text-xl bg-yellow-100 text-main-darkBlue px-3 py-1 mt-1 rounded">
+              {timeDisplay}
+            </p>
+          </div>
+        </div>
+
+        {/* Navigation for final question review */}
+        <div className="bg-white rounded-md shadow p-6 mb-8">
+          <h2 className="text-lg font-semibold mb-4">Question Review</h2>
+          <div className="flex flex-wrap gap-2 mb-6">
+            {questions.map((q, index) => {
+              const isCorrect = q.userAnswer === q.correctAnswer;
+              return (
+                <Button
+                  key={q.id}
+                  variant="secondary"
+                  className={`
+                    w-10 h-10 flex items-center justify-center text-sm
+                    ${isCorrect ? 'bg-green-300' : 'bg-red-300'}
+                  `}
+                  onClick={() => handleQuestionClick(q.id)}
+                >
+                  {index + 1}
+                </Button>
+              );
+            })}
+          </div>
+
+          {/* If a question is selected, show user’s selected vs correct */}
+          {selectedQuestion && (
+            <div className="p-4 rounded-md border border-gray-300">
+              <h3 className="font-bold mb-2 text-base">{selectedQuestion.text}</h3>
+              {selectedQuestion.imageUrl && (
+                <div className="mb-2">
+                  <img
+                    src={selectedQuestion.imageUrl}
+                    alt="question"
+                    className="max-w-full h-auto rounded shadow-sm"
+                  />
+                </div>
+              )}
+              <div className="space-y-2">
+                {selectedQuestion.options.map((option, idx) => {
+                  const letter = ['A', 'B', 'C'][idx];
+                  const isCorrectAnswer = letter === selectedQuestion.correctAnswer;
+                  const isUserSelected = letter === selectedQuestion.userAnswer;
+
+                  let bgClass = 'bg-white';
+                  if (selectedQuestion.userAnswer === selectedQuestion.correctAnswer) {
+                    // correct
+                    if (isCorrectAnswer) {
+                      bgClass = 'bg-green-200';
+                    }
+                  } else {
+                    // incorrect
+                    if (isUserSelected) bgClass = 'bg-red-200';
+                    if (isCorrectAnswer) bgClass = 'bg-green-200';
+                  }
+                  return (
+                    <div key={option} className={`p-2 rounded ${bgClass} text-sm`}>
+                      {option}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Bottom Buttons: Home and Start Another Test */}
+        <div className="flex justify-center gap-6">
+          <Button
+            onClick={goHome}
+            variant="outline"
+            className="px-6 py-3 text-base font-medium cursor-pointer"
+          >
+            Home
+          </Button>
+        </div>
       </div>
     </div>
   );
