@@ -313,16 +313,8 @@ const AdminReports: React.FC = () => {
       {/* Header and Action Buttons */}
       <div className="flex justify-between items-center mb-4">
         <h1 className="text-2xl font-bold">Reports</h1>
-        <div className="flex space-x-2">
-          <Button
-            onClick={handleRefresh}
-            className="bg-main-blue text-white hover:bg-main-blue/90"
-          >
-            Refresh
-          </Button>
-        </div>
       </div>
-
+      <div className="flex justify-between">
       {/* Filters and Search */}
       <div className="flex items-center space-x-4 mb-4">
         <Input
@@ -351,6 +343,15 @@ const AdminReports: React.FC = () => {
               ))}
             </SelectContent>
           </Select>
+        </div>
+        </div>
+        <div className="flex space-x-2">
+          <Button
+            onClick={handleRefresh}
+            className="bg-main-blue text-white hover:bg-main-blue/90"
+          >
+            Refresh
+          </Button>
         </div>
       </div>
 

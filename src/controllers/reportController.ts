@@ -67,8 +67,6 @@ export async function getAllReports(req: AuthenticatedRequest, res: Response) {
         return res.status(400).json({ message: 'Invalid report ID' });
       }
   
-      // Optional: Add authorization logic here (e.g., check if user is admin)
-  
       // Check if the report exists
       const existingReport = await prisma.reports.findUnique({
         where: { id: reportId },

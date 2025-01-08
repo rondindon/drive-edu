@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from '../components/ui/select';
 import Viewer from '../components/3DViewer';
 import { Separator } from '../components/ui/separator';
+import LoadingSpinner from 'src/components/LoadingSpinner';
 
 const LandingPage: React.FC = () => {
   const allGroups = ['A', 'B', 'BE', 'C', 'CE', 'D', 'DE', 'T']; 
@@ -52,6 +53,7 @@ const LandingPage: React.FC = () => {
       <h1 className="text-4xl font-bold text-main-darkBlue mb-4 font-bam">
         Driving License Test
       </h1>
+      <LoadingSpinner />
       <Separator className="w-1/2" />
       <p className="text-lg text-main-darkBlue transition-opacity duration-500 ease-in-out">
         Select your group to begin the test:

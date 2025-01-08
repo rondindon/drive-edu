@@ -3,6 +3,7 @@ import React, { createContext, useContext, useState, useEffect, ReactNode } from
 import { supabase } from '../services/supabase';
 import { User } from '@supabase/supabase-js';
 import { toast } from 'react-toastify';
+import LoadingSpinner from 'src/components/LoadingSpinner';
 
 interface UserData {
   role: string;
@@ -292,8 +293,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   if (!isInitialized) {
     return (
       <div className="flex items-center justify-center h-screen">
-        {/* Replace with your actual loading spinner */}
-        <div className="loader">Loading...</div>
+        <LoadingSpinner/>
       </div>
     );
   }

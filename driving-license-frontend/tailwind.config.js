@@ -71,7 +71,17 @@ module.exports = {
           '50%': {
             boxShadow: '0 0 20px rgba(39, 174, 96, 1)'
           }
-        }
+        },
+        'spin-slow': {
+          '0%': { transform: 'rotate(0deg)' },
+          '100%': { transform: 'rotate(360deg)' },
+        },
+        'car-move': {
+          '0%': { transform: 'rotate(0deg) translateX(50%) rotate(0deg)' },
+          '100%': { transform: 'rotate(360deg) translateX(50%) rotate(-360deg)' },
+          'spin-slow': 'spin-slow 5s linear infinite',
+          'car-move': 'car-move 5s linear infinite',
+        },
       },
       animation: {
         fadeIn: 'fadeIn 0.5s ease-in-out',

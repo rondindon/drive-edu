@@ -106,3 +106,81 @@
     transparent 63%
   );
 }
+
+@keyframes shake {
+  0% {
+    transform: translateY(-1%);
+  }
+  100% {
+    transform: translateY(3%);
+  }
+}
+
+.car__body {
+  animation: shake 0.3s ease-in-out infinite alternate;
+}
+
+/* Line Animations */
+@keyframes line {
+  0% {
+    stroke-dashoffset: 22;
+  }
+  25% {
+    stroke-dashoffset: 22;
+  }
+  50% {
+    stroke-dashoffset: 0;
+  }
+  51% {
+    stroke-dashoffset: 0;
+  }
+  80% {
+    stroke-dashoffset: -22;
+  }
+  100% {
+    stroke-dashoffset: -22;
+  }
+}
+
+.car__line {
+  stroke-dasharray: 22;
+  animation: line 0.8s ease-in-out infinite;
+  animation-fill-mode: both;
+}
+
+.car__line--top {
+  animation-delay: 0s;
+}
+
+.car__line--middle {
+  animation-delay: 0.2s;
+}
+
+.car__line--bottom {
+  animation-delay: 0.4s;
+}
+
+.line {
+  width: 100%; /* Use relative units */
+  height: 2px;
+  background: linear-gradient(
+    to right,
+    yellow 50%,
+    transparent 50%
+  );
+  background-size: 20px 2px;
+  animation: moveLeft 3s linear infinite;
+}
+
+.line.delay-2 {
+  animation-delay: 1s;
+}
+
+@keyframes moveLeft {
+  from {
+    background-position: 20px 0;
+  }
+  to {
+    background-position: 0 0;
+  }
+}
