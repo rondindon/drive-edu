@@ -3,7 +3,6 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { Button } from 'src/components/ui/button';
 import { Progress } from 'src/components/ui/progress';
 import { FaFlag } from 'react-icons/fa'; // For the "report" icon
-import { stat } from 'fs';
 
 interface Question {
   id: number;
@@ -20,8 +19,10 @@ const TestPage: React.FC = () => {
   const { state } = useLocation();
   const token = localStorage.getItem('supabaseToken');
 
-  const { questions = [], testId = null }: { questions: Question[]; testId: number | null } =
-    state || {};
+  const {
+    questions = [],
+    testId = null,
+  }: { questions: Question[]; testId: number | null } = state || {};
 
   // Unique categories
   const categories = Array.from(new Set(questions.map((q) => q.category)));
@@ -31,7 +32,8 @@ const TestPage: React.FC = () => {
 
   const [currentIndex, setCurrentIndex] = useState(0);
 
-  // We won't push each answer to DB immediately. We'll store final later.
+  // We'll track "score" if needed for final pass/fail,
+  // but not sending intermediate answers to DB
   const [score, setScore] = useState(0);
 
   // 30 minutes => 1800 seconds
@@ -50,7 +52,7 @@ const TestPage: React.FC = () => {
       setTimeLeft((prev) => {
         if (prev <= 1) {
           clearInterval(timer);
-          finishTest(); 
+          finishTest();
           return 0;
         }
         return prev - 1;
@@ -75,7 +77,7 @@ const TestPage: React.FC = () => {
     const chosenLetter = letterMap[selectedIndex];
     const isCorrect = chosenLetter === q.correctAnswer;
 
-    // update local answer
+    // update local userAnswers
     setUserAnswers((prev) => {
       const updated = [...prev];
       updated[currentIndex] = chosenLetter;
@@ -86,6 +88,7 @@ const TestPage: React.FC = () => {
     if (isCorrect) {
       setScore((prev) => prev + (q.points || 0));
     } else {
+      // subtract points if user changed from correct to incorrect
       setScore((prev) => Math.max(prev - (q.points || 0), 0));
     }
   };
@@ -96,7 +99,6 @@ const TestPage: React.FC = () => {
       setCurrentIndex((prev) => prev + 1);
     }
   };
-
   const prevQuestion = () => {
     if (currentIndex > 0) {
       setCurrentIndex((prev) => prev - 1);
@@ -109,7 +111,6 @@ const TestPage: React.FC = () => {
       setCurrentIndex(index);
     }
   }
-
   // Jump to category
   function jumpToCategory(cat: string) {
     const idx = questions.findIndex((q) => q.category === cat);
@@ -167,12 +168,24 @@ const TestPage: React.FC = () => {
     }
   };
 
-  // Finish test
+  /**
+   * After the user finishes the test:
+   * 1) Compute final score from userAnswers (in case local state is stale).
+   * 2) Identify all wrong answers => record in WrongAnswer DB with multiple calls or in one go.
+   * 3) Submit final test data => /api/tests/finish
+   * 4) Navigate to results
+   */
   const finishTest = async () => {
+    // 1) Compute final score from userAnswers
     let finalScore = 0;
-    userAnswers.forEach((ans, idx) => {
-      if (ans === questions[idx].correctAnswer) {
+    const wrongQuestionIds: number[] = [];
+
+    userAnswers.forEach((answer, idx) => {
+      if (answer === questions[idx].correctAnswer) {
         finalScore += (questions[idx].points || 0);
+      } else {
+        // track wrong Q
+        wrongQuestionIds.push(questions[idx].id);
       }
     });
 
@@ -184,33 +197,52 @@ const TestPage: React.FC = () => {
     }
 
     try {
+      // 2) Record all wrong answers => multiple calls to /wrong-answers or a single call in a loop
+      // We'll do a Promise.all for efficiency (in parallel).
+      await Promise.all(
+        wrongQuestionIds.map(async (qid) => {
+          const resp = await fetch('http://localhost:4444/api/wrong-answers', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify({ questionId: qid }),
+          });
+
+          if (!resp.ok) {
+            console.warn(`Failed to record wrong answer for questionId=${qid}`);
+          }
+        })
+      );
+
+      // 3) Submit final test data => /api/tests/finish
       const response = await fetch('http://localhost:4444/api/tests/finish', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
         body: JSON.stringify({
           testId,
           score: finalScore,
           timeTaken: totalDuration - timeLeft,
           isPassed,
-          userAnswers: userAnswers.map((answer, i) => ({
-            questionId: questions[i].id,
-            selected: answer,
-            isCorrect: answer === questions[i].correctAnswer
-          })),
+          // if you want, pass userAnswers or other details
         }),
       });
 
       const data = await response.json();
       console.log('Finish response:', data);
 
-      // Go to results
+      // 4) Go to results
       navigate('/results', {
         state: {
           isPassed,
           score: finalScore,
           totalQuestions: questions.length,
-          testDate: "2023-10-07",
-          group: "B",
+          testDate: '2023-10-07',
+          group: 'B',
           timeTaken: totalDuration - timeLeft,
           questions: questions.map((q, i) => ({
             ...q,
@@ -229,7 +261,9 @@ const TestPage: React.FC = () => {
   if (!questions.length) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-secondary-lightGray text-main-darkBlue">
-        <p className="p-4">No questions loaded. Please start a test from the landing page.</p>
+        <p className="p-4">
+          No questions loaded. Please start a test from the landing page.
+        </p>
       </div>
     );
   }
@@ -273,7 +307,7 @@ const TestPage: React.FC = () => {
                 <Button
                   key={cat}
                   variant="secondary"
-                  size={'reactive'}
+                  size="reactive"
                   className="
                     w-full
                     text-xs
@@ -351,7 +385,7 @@ const TestPage: React.FC = () => {
                     <Button
                       key={option}
                       variant="outline"
-                      size={'reactive'}
+                      size="reactive"
                       className={`
                         w-full
                         text-left
@@ -409,7 +443,11 @@ const TestPage: React.FC = () => {
               <Button variant="outline" onClick={closeReportPopup}>
                 Cancel
               </Button>
-              <Button variant="default" onClick={submitReport} className="bg-red-500 text-white">
+              <Button
+                variant="default"
+                onClick={submitReport}
+                className="bg-red-500 text-white"
+              >
                 Submit
               </Button>
             </div>
