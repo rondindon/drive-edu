@@ -5,7 +5,7 @@ import { createQuestion, deleteQuestion, getAllQuestions, isAdmin, updateQuestio
 import { getQuestionById } from './controllers/questionController';
 import { authenticate } from './middleware/auth';
 import { deleteUser, getAllUsers, updateUser } from './controllers/adminUserController';
-import {deleteTest, finishTest, getAllTests, recordUserAnswer, recordWrongAnswer, startTest } from './controllers/testController';
+import {deleteTest, finishTest, getAllTests, recordQuestionStat, recordUserAnswer, startTest } from './controllers/testController';
 import { createReport, getAllReports, markReportResolved, markReportReviewed } from './controllers/reportController';
 
 const router: Router = Router();
@@ -27,7 +27,7 @@ router.delete('/admin/questions/:id',authenticate, isAdmin, deleteQuestion);
 
 router.post('/tests/start', authenticate, startTest);
 router.post('/tests/finish', authenticate, finishTest);
-router.post('/wrong-answers', authenticate, recordWrongAnswer);
+router.post('/question-stats', authenticate, recordQuestionStat);
 router.post('/user-answers', authenticate, recordUserAnswer);
 //ADMIN
 router.get('/admin/tests', authenticate, isAdmin, getAllTests);

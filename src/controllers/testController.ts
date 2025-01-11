@@ -29,6 +29,48 @@ function shuffleArray<T>(array: T[]): T[] {
     }
     return arr;
   }
+  function pickWeighted<T extends { weight: number }>(
+    items: T[],
+    count: number
+  ): T[] {
+    // We’ll do a simple approach:
+    // For i in [1..count]:
+    //   sum all weights
+    //   pick random in [0..sum]
+    //   find item => push to result, remove from array
+    const result: T[] = [];
+    const available = [...items];
+  
+    for (let i = 0; i < count && available.length > 0; i++) {
+      // Compute total weight
+      let totalWeight = 0;
+      for (const item of available) {
+        totalWeight += item.weight;
+      }
+      if (totalWeight <= 0) {
+        // Means all items have weight=0, or no more "bad" ones. Stop.
+        break;
+      }
+  
+      const r = Math.random() * totalWeight;
+      let cumulative = 0;
+      let chosenIndex = 0;
+  
+      for (let idx = 0; idx < available.length; idx++) {
+        cumulative += available[idx].weight;
+        if (cumulative >= r) {
+          chosenIndex = idx;
+          break;
+        }
+      }
+  
+      // pick item
+      const picked = available.splice(chosenIndex, 1)[0];
+      result.push(picked);
+    }
+  
+    return result;
+  }
 
   export async function startTest(req: AuthenticatedRequest, res: Response) {
     try {
@@ -36,88 +78,98 @@ function shuffleArray<T>(array: T[]): T[] {
       const { group } = req.body;
   
       if (!userId) {
-        console.log('[startTest] ERROR: No user ID.');
         return res.status(401).json({ message: 'User not authenticated' });
       }
       if (!group) {
-        console.log('[startTest] ERROR: No group provided.');
         return res.status(400).json({ message: 'Group is required' });
       }
   
-      console.log(`[startTest] START | userId=${userId}, group=${group}`);
+      console.log(`[startTest] userId=${userId}, group=${group}`);
   
       let finalQuestions: any[] = [];
   
-      // For each category
       for (const cat of categoriesConfig) {
-        console.log(`[startTest] Category: "${cat.category}" => fetch from DB...`);
-        
-        // 1) Fetch ALL questions (good + bad) for the category
+        // Load all questions for that category
         const allCategoryQuestions = await prisma.question.findMany({
           where: {
             category: cat.category,
-            groups: {
-              has: group,
-            },
+            groups: { has: group },
           },
           include: {
-            wrongAnswers: true,
+            questionStats: {
+              where: { userId }, // user-specific stats only
+            },
           },
         });
   
         const totalFound = allCategoryQuestions.length;
-        console.log(`   Found ${totalFound} questions in DB for "${cat.category}".`);
-  
         if (totalFound === 0) {
-          console.log(`   Skipping "${cat.category}" because no questions found.`);
+          console.log(`   Category="${cat.category}": no questions found. Skipping.`);
           continue;
         }
   
-        // 2) Shuffle the entire array (pure random)
+        // Shuffle everything
         const shuffledAll = shuffleArray(allCategoryQuestions);
   
-        // 3) Take the top 'cat.count' => randomPick
+        // Normal random pick => first cat.count
         let randomPick = shuffledAll.slice(0, cat.count);
   
-        console.log(`   After shuffle, randomPick has ${randomPick.length} items.`);
+        // Identify "bad" candidates => ratio>0
+        // We'll define weight = ratio * log(totalAttempts+1)
+        // ratio = wrongCount / total
+        // total = correctCount + wrongCount
+        // If total=0 => never answered => ratio=0 => weight=0
+        const badCandidates = allCategoryQuestions
+          .map((q) => {
+            const stat = q.questionStats[0];
+            const correctCount = stat?.correctCount ?? 0;
+            const wrongCount = stat?.wrongCount ?? 0;
+            const total = correctCount + wrongCount;
+            if (total === 0) {
+              return null; // ratio=0 => not "bad"
+            }
+            const ratio = wrongCount / total;
+            if (ratio <= 0) {
+              return null;
+            }
+            // Weighted approach
+            const weight = ratio * Math.log(total + 1); // e.g. ratio * ln(total+1)
+            return { question: q, weight };
+          })
+          .filter((obj) => obj !== null) as { question: any; weight: number }[];
+        
+        console.log(`   Category="${cat.category}": totalFound=${totalFound}, badCandidates=${badCandidates.length}`);
+        // We only want to pick up to 2 or, say, 30% of cat.count, whichever is smaller
+        const maxBadAbsolute = 2; // limit of 2
+        const maxBadPercent = Math.floor(cat.count * 0.2); 
+        const maxBadToInject = Math.min(maxBadAbsolute, maxBadPercent, badCandidates.length);
   
-        // 4) Identify "bad" questions (totalWrong > 0)
-        //    We'll try to insert them by replacing random items in randomPick
-        const badQuestions = shuffledAll.filter((q) => {
-          const totalWrong = q.wrongAnswers.reduce((acc, wa) => acc + wa.attempts, 0);
-          return totalWrong > 0;
-        });
+        // Weighted random pick from these badCandidates
+        if (maxBadToInject > 0) {
+          const pickedBad = pickWeighted(badCandidates, maxBadToInject);
+          console.log(`   Category="${cat.category}": Injecting ${pickedBad.length} bad questions`);
   
-        console.log(`   Among the ${totalFound} total, found ${badQuestions.length} 'bad' Qs.`);
-  
-        // Shuffle the badQ so the insertion is random
-        shuffleArray(badQuestions);
-  
-        for (const bq of badQuestions) {
-          // If randomPick already has it (by ID), skip
-          if (randomPick.some((item) => item.id === bq.id)) {
-            // console.log(`     [skip] badQ ID=${bq.id} is already in randomPick`);
-            continue;
+          // Now replace random items in randomPick
+          for (const badObj of pickedBad) {
+            const bq = badObj.question;
+            // skip if randomPick already has it
+            if (randomPick.some((x) => x.id === bq.id)) continue;
+            // replace random item
+            const randIndex = Math.floor(Math.random() * randomPick.length);
+            randomPick[randIndex] = bq;
           }
-          // Replace a random item in randomPick with this bad Q
-          const randIndex = Math.floor(Math.random() * randomPick.length);
-          console.log(`     Replacing item in randomPick idx=${randIndex} with badQ ID=${bq.id}`);
-          randomPick[randIndex] = bq;
         }
   
-        // Now we have cat.count final for this category
-        console.log(`   Final pick for "${cat.category}" => ${randomPick.length} Qs.`);
-  
-        finalQuestions = [...finalQuestions, ...randomPick];
+        finalQuestions.push(...randomPick);
       }
   
       const totalSelected = finalQuestions.length;
-      console.log(`[startTest] Combined total after all categories = ${totalSelected} questions.`);
+      console.log(`[startTest] totalSelected=${totalSelected}`);
   
-      // Optional: shuffle the entire final array of 40 if you want them in random order across categories
-      // finalQuestions = shuffleArray(finalQuestions);
+      // Optionally shuffle finalQuestions across categories
+      // shuffleArray(finalQuestions);
   
-      // === Randomize each question's options & re-map correctAnswer
+      // Randomize each question’s options
       const randomizedQuestions = finalQuestions.map((q) => {
         // We assume q.correctAnswer is letter-based ("A", "B", "C", etc.)
         const oldLetterIndex = letterMap.indexOf(q.correctAnswer);
@@ -143,7 +195,7 @@ function shuffleArray<T>(array: T[]): T[] {
         };
       });
   
-      // === Create a new Test record
+      // Create the Test
       const newTest = await prisma.test.create({
         data: {
           userId,
@@ -155,9 +207,7 @@ function shuffleArray<T>(array: T[]): T[] {
         },
       });
   
-      console.log(`[startTest] Created Test ID=${newTest.id}. Storing testQuestion links...`);
-  
-      // Save to TestQuestion
+      // Insert testQuestion
       for (const q of randomizedQuestions) {
         await prisma.testQuestion.create({
           data: {
@@ -166,7 +216,6 @@ function shuffleArray<T>(array: T[]): T[] {
           },
         });
       }
-      console.log(`[startTest] Stored ${randomizedQuestions.length} testQuestion records for Test ID=${newTest.id}`);
   
       return res.status(200).json({
         message: 'Test started successfully',
@@ -241,67 +290,59 @@ function shuffleArray<T>(array: T[]): T[] {
     }
   }
 
-  export const recordWrongAnswer = async (req: AuthenticatedRequest, res: Response) => {
+  export async function recordQuestionStat(req: AuthenticatedRequest, res: Response) {
     try {
-      console.log('[recordWrongAnswer] req.body:', req.body);
       const userId = req.user?.id;
-      const { questionId } = req.body;
+      const { questionId, isCorrect } = req.body;
   
       if (!userId) {
-        return res.status(401).json({ message: 'User not authenticated.' });
+        return res.status(401).json({ message: 'User not authenticated' });
       }
-      if (!questionId) {
-        return res.status(400).json({ message: 'questionId is required.' });
+      if (!questionId || typeof isCorrect !== 'boolean') {
+        return res.status(400).json({ message: 'questionId and isCorrect are required' });
       }
   
-      // findUnique using named constraint "userId_questionId_unique"
-      const existingRecord = await prisma.wrongAnswer.findUnique({
+      // Attempt to find existing record
+      const existing = await prisma.questionStat.findUnique({
         where: {
-          userId_questionId_unique: {
+          user_question_unique: {
             userId,
             questionId,
           },
         },
       });
   
-      if (existingRecord) {
-        // update if found
-        const updated = await prisma.wrongAnswer.update({
+      if (existing) {
+        // Update existing
+        const updated = await prisma.questionStat.update({
           where: {
-            userId_questionId_unique: {
+            user_question_unique: {
               userId,
               questionId,
             },
           },
-          data: {
-            attempts: existingRecord.attempts + 1,
-          },
+          data: isCorrect
+            ? { correctCount: existing.correctCount + 1 }
+            : { wrongCount: existing.wrongCount + 1 },
         });
-  
-        return res.status(200).json({
-          message: 'Wrong answer updated successfully',
-          wrongAnswer: updated,
-        });
+        return res.status(200).json({ message: 'QuestionStat updated', questionStat: updated });
       } else {
-        // create new if not found
-        const created = await prisma.wrongAnswer.create({
+        // Create new
+        const created = await prisma.questionStat.create({
           data: {
             userId,
             questionId,
-            attempts: 1,
+            correctCount: isCorrect ? 1 : 0,
+            wrongCount: isCorrect ? 0 : 1,
           },
         });
-  
-        return res.status(201).json({
-          message: 'Wrong answer recorded successfully',
-          wrongAnswer: created,
-        });
+        return res.status(201).json({ message: 'QuestionStat created', questionStat: created });
       }
     } catch (error) {
-      console.error('Error recording wrong answer:', error);
-      return res.status(500).json({ message: 'Error recording wrong answer' });
+      console.error('[recordQuestionStat] Error:', error);
+      return res.status(500).json({ message: 'Error recording question stat' });
     }
-  };
+  }
 
   export async function recordUserAnswer(req: AuthenticatedRequest, res: Response) {
     try {

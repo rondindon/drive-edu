@@ -11,7 +11,7 @@ interface Question {
   options: string[];
   correctAnswer: string;
   points: number;
-  imageUrl?: string; // If you store an image URL
+  imageUrl?: string; 
 }
 
 const TestPage: React.FC = () => {
@@ -27,24 +27,19 @@ const TestPage: React.FC = () => {
   // Unique categories
   const categories = Array.from(new Set(questions.map((q) => q.category)));
 
-  // If only 3 options
+  // For 3-option questions
   const letterMap = ['A', 'B', 'C'];
 
   const [currentIndex, setCurrentIndex] = useState(0);
-
-  // We'll track "score" if needed for final pass/fail,
-  // but not sending intermediate answers to DB
   const [score, setScore] = useState(0);
-
-  // 30 minutes => 1800 seconds
   const [timeLeft, setTimeLeft] = useState(30 * 60);
 
-  // userAnswers[i] = 'A'|'B'|'C'
+  // userAnswers[i] = letter "A", "B", or "C"
   const [userAnswers, setUserAnswers] = useState<string[]>(
     new Array(questions.length).fill('')
   );
 
-  // === Timer Effect ===
+  // 30 min timer
   useEffect(() => {
     if (!questions.length) return;
 
@@ -63,32 +58,29 @@ const TestPage: React.FC = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [questions]);
 
-  // Convert timeLeft to progress bar value
-  const totalDuration = 30 * 60; // 1800
+  const totalDuration = 30 * 60;
   const progressValue = (timeLeft / totalDuration) * 100;
 
-  // For display
   const minutes = Math.floor(timeLeft / 60);
   const seconds = timeLeft % 60;
 
-  // user selects an answer
+  // handleAnswer
   const handleAnswer = (selectedIndex: number) => {
     const q = questions[currentIndex];
     const chosenLetter = letterMap[selectedIndex];
     const isCorrect = chosenLetter === q.correctAnswer;
 
-    // update local userAnswers
+    // local userAnswers
     setUserAnswers((prev) => {
       const updated = [...prev];
       updated[currentIndex] = chosenLetter;
       return updated;
     });
 
-    // update local score
+    // local score
     if (isCorrect) {
       setScore((prev) => prev + (q.points || 0));
     } else {
-      // subtract points if user changed from correct to incorrect
       setScore((prev) => Math.max(prev - (q.points || 0), 0));
     }
   };
@@ -105,40 +97,39 @@ const TestPage: React.FC = () => {
     }
   };
 
-  // Jump to question by index
-  function jumpToQuestion(index: number) {
+  // Jump to question
+  const jumpToQuestion = (index: number) => {
     if (index >= 0 && index < questions.length) {
       setCurrentIndex(index);
     }
-  }
-  // Jump to category
-  function jumpToCategory(cat: string) {
-    const idx = questions.findIndex((q) => q.category === cat);
-    if (idx !== -1) setCurrentIndex(idx);
-  }
+  };
 
-  // Report popup state
+  // Jump to category
+  const jumpToCategory = (cat: string) => {
+    const idx = questions.findIndex((q) => q.category === cat);
+    if (idx !== -1) {
+      setCurrentIndex(idx);
+    }
+  };
+
+  // Report popup
   const [showReportPopup, setShowReportPopup] = useState(false);
   const [reportDescription, setReportDescription] = useState('');
   const [reportQuestionId, setReportQuestionId] = useState<number | null>(null);
 
-  // Open the popup for the current question
   const openReportPopup = (qId: number) => {
     setReportQuestionId(qId);
     setReportDescription('');
     setShowReportPopup(true);
   };
-  // Close popup
   const closeReportPopup = () => {
     setShowReportPopup(false);
     setReportQuestionId(null);
     setReportDescription('');
   };
 
-  // Submit the report to the backend
   const submitReport = async () => {
-    if (!reportQuestionId) return;
-    if (!reportDescription.trim()) {
+    if (!reportQuestionId || !reportDescription.trim()) {
       alert('Please provide a description');
       return;
     }
@@ -169,55 +160,57 @@ const TestPage: React.FC = () => {
   };
 
   /**
-   * After the user finishes the test:
-   * 1) Compute final score from userAnswers (in case local state is stale).
-   * 2) Identify all wrong answers => record in WrongAnswer DB with multiple calls or in one go.
-   * 3) Submit final test data => /api/tests/finish
+   * Finish Test:
+   * 1) Recompute final score, identify correct/wrong
+   * 2) For each question, call /api/question-stats => increment correct or wrong
+   * 3) Then /api/tests/finish
    * 4) Navigate to results
    */
   const finishTest = async () => {
-    // 1) Compute final score from userAnswers
-    let finalScore = 0;
-    const wrongQuestionIds: number[] = [];
-
-    userAnswers.forEach((answer, idx) => {
-      if (answer === questions[idx].correctAnswer) {
-        finalScore += (questions[idx].points || 0);
-      } else {
-        // track wrong Q
-        wrongQuestionIds.push(questions[idx].id);
-      }
-    });
-
-    const isPassed = finalScore >= 90;
     if (!testId) {
       alert('No valid testId found. Returning to homepage.');
       navigate('/');
       return;
     }
 
-    try {
-      // 2) Record all wrong answers => multiple calls to /wrong-answers or a single call in a loop
-      // We'll do a Promise.all for efficiency (in parallel).
-      await Promise.all(
-        wrongQuestionIds.map(async (qid) => {
-          const resp = await fetch('http://localhost:4444/api/wrong-answers', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              Authorization: `Bearer ${token}`,
-            },
-            body: JSON.stringify({ questionId: qid }),
-          });
+    // 1) final score & correct/wrong list
+    let finalScore = 0;
+    // We'll store an array of promises for question stats
+    const questionStatsPromises: Promise<any>[] = [];
 
-          if (!resp.ok) {
-            console.warn(`Failed to record wrong answer for questionId=${qid}`);
-          }
+    userAnswers.forEach((answer, idx) => {
+      const q = questions[idx];
+      const isCorrect = answer === q.correctAnswer;
+
+      if (isCorrect) {
+        finalScore += (q.points || 0);
+      }
+
+      // create the record for question stat
+      // isCorrect => increment correctCount, else increment wrongCount
+      questionStatsPromises.push(
+        fetch('http://localhost:4444/api/question-stats', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            questionId: q.id,
+            isCorrect,
+          }),
         })
       );
+    });
 
-      // 3) Submit final test data => /api/tests/finish
-      const response = await fetch('http://localhost:4444/api/tests/finish', {
+    const isPassed = finalScore >= 90;
+
+    try {
+      // 2) Wait for all question stats calls
+      await Promise.all(questionStatsPromises);
+
+      // 3) Send final test data
+      const resp = await fetch('http://localhost:4444/api/tests/finish', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -228,14 +221,12 @@ const TestPage: React.FC = () => {
           score: finalScore,
           timeTaken: totalDuration - timeLeft,
           isPassed,
-          // if you want, pass userAnswers or other details
         }),
       });
+      const data = await resp.json();
+      console.log('[finishTest] response:', data);
 
-      const data = await response.json();
-      console.log('Finish response:', data);
-
-      // 4) Go to results
+      // 4) Navigate to results
       navigate('/results', {
         state: {
           isPassed,
@@ -250,14 +241,13 @@ const TestPage: React.FC = () => {
           })),
         },
       });
-    } catch (error) {
-      console.error('Error finishing test:', error);
+    } catch (err) {
+      console.error('Error finishing test:', err);
       alert('Error finishing test');
       navigate('/');
     }
   };
 
-  // If no questions
   if (!questions.length) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-secondary-lightGray text-main-darkBlue">
@@ -278,7 +268,7 @@ const TestPage: React.FC = () => {
         <div className="flex items-center w-2/3 gap-2">
           <Progress value={progressValue} className="h-2 w-full" />
           <span className="text-sm font-medium text-main-darkBlue">
-            {minutes}:{String(seconds).padStart(2, '0')}
+            {Math.floor(timeLeft / 60)}:{String(timeLeft % 60).padStart(2, '0')}
           </span>
         </div>
         <div className="text-sm font-medium text-right w-1/3">
@@ -364,7 +354,7 @@ const TestPage: React.FC = () => {
                 <FaFlag className="text-red-500" />
               </Button>
 
-              <h2 className="text-xl font-bold mb-4 whitespace-normal break-words max-w-4xl">
+              <h2 className="text-xl font-bold mb-4 whitespace-normal break-words max-w-3xl">
                 {currentQuestion.text}
               </h2>
               {currentQuestion.imageUrl && (

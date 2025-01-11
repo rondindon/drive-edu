@@ -8,17 +8,17 @@ datasource db {
 }
 
 model User {
-  id           Int           @id @default(autoincrement())
-  email        String        @unique
-  role         String        @default("USER")
-  createdAt    DateTime      @default(now())
-  updatedAt    DateTime      @updatedAt
-  username     String?       @unique
-  badges       Badge[]
-  tests        Test[]
-  wrongAnswers WrongAnswer[]
-  userAnswers  UserAnswer[]
-  reports      Reports[]
+  id            Int           @id @default(autoincrement())
+  email         String        @unique
+  role          String        @default("USER")
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  username      String?       @unique
+  badges        Badge[]
+  tests         Test[]
+  questionStats QuestionStat[]
+  userAnswers   UserAnswer[]
+  reports       Reports[]
 }
 
 model Question {
@@ -34,10 +34,10 @@ model Question {
   category      String
   groups        String[]
   points        Int
-  wrongAnswers  WrongAnswer[]
   testQuestions TestQuestion[]
   userAnswers   UserAnswer[]
   Reports       Reports[]
+  questionStats QuestionStat[]
 }
 
 model Test {
@@ -63,17 +63,20 @@ model TestQuestion {
   question   Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
 }
 
-model WrongAnswer {
-  id         Int      @id @default(autoincrement())
-  userId     Int
-  questionId Int
-  attempts   Int
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
-  question   Question @relation(fields: [questionId], references: [id], onDelete: Cascade, onUpdate: NoAction)
-  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+model QuestionStat {
+  id           Int      @id @default(autoincrement())
+  userId       Int
+  questionId   Int
+  correctCount Int      @default(0)
+  wrongCount   Int      @default(0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
-  @@unique([userId, questionId], name: "userId_questionId_unique")
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  question     Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  // Ensure a user can only have one "stat" record per question
+  @@unique([userId, questionId], name: "user_question_unique")
 }
 
 model UserAnswer {
