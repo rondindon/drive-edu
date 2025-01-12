@@ -293,15 +293,6 @@ const AdminReports: React.FC = () => {
   const [selectedReport, setSelectedReport] = useState<Report | null>(null);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState<boolean>(false);
 
-  const openDetailModal = (report: Report) => {
-    setSelectedReport(report);
-    setIsDetailModalOpen(true);
-  };
-  const closeDetailModal = () => {
-    setSelectedReport(null);
-    setIsDetailModalOpen(false);
-  };
-
   // === 7) Refresh button
   const handleRefresh = () => {
     localStorage.removeItem(cacheKey);
@@ -312,16 +303,16 @@ const AdminReports: React.FC = () => {
     <>
       {/* Header and Action Buttons */}
       <div className="flex justify-between items-center mb-4">
-        <h1 className="text-2xl font-bold">Reports</h1>
+        <h1 className="text-2xl font-bold text-[hsl(var(--foreground))]">Reports</h1>
       </div>
       <div className="flex justify-between">
       {/* Filters and Search */}
-      <div className="flex items-center space-x-4 mb-4">
+      <div className="flex items-center space-x-4 mb-4 text-[hsl(var(--foreground))]">
         <Input
           placeholder="Search by user, report ID, or question ID..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          className="w-1/3"
+          className="w-72"
         />
 
         {/* Status Filter */}
@@ -367,13 +358,13 @@ const AdminReports: React.FC = () => {
         <table className="w-full border-collapse text-left">
           <thead>
             <tr className="border-b border-main-green text-gray-800">
-              <th className="py-2 px-4">ID</th>
-              <th className="py-2 px-4">User</th>
-              <th className="py-2 px-4">Question</th>
-              <th className="py-2 px-4">Description</th>
-              <th className="py-2 px-4">Date Submitted</th>
-              <th className="py-2 px-4">Status</th>
-              <th className="py-2 px-4">Actions</th>
+              <th className="py-2 px-4 text-[hsl(var(--foreground))]">ID</th>
+              <th className="py-2 px-4 text-[hsl(var(--foreground))]">User</th>
+              <th className="py-2 px-4 text-[hsl(var(--foreground))]">Question</th>
+              <th className="py-2 px-4 text-[hsl(var(--foreground))]">Description</th>
+              <th className="py-2 px-4 text-[hsl(var(--foreground))]">Date Submitted</th>
+              <th className="py-2 px-4 text-[hsl(var(--foreground))]">Status</th>
+              <th className="py-2 px-4 text-[hsl(var(--foreground))]">Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -451,7 +442,7 @@ const AdminReports: React.FC = () => {
                         <>
                           <Button
                             variant="outline"
-                            className="mr-2 bg-green-200 hover:bg-green-300"
+                            className="mr-2 bg-green-200 hover:bg-green-300 text-[hsl(var(--muted))]"
                             onClick={() => handleResolve(report.id)}
                           >
                             Resolve
@@ -459,6 +450,7 @@ const AdminReports: React.FC = () => {
                           <Button
                             variant="destructive"
                             onClick={() => handleDelete(report.id)}
+                            className="text-[hsl(var(--foreground))]"
                           >
                             Delete
                           </Button>
@@ -468,6 +460,7 @@ const AdminReports: React.FC = () => {
                         <Button
                           variant="destructive"
                           onClick={() => handleDelete(report.id)}
+                          className="text-[hsl(var(--foreground))]"
                         >
                           Delete
                         </Button>
@@ -492,26 +485,6 @@ const AdminReports: React.FC = () => {
           </tbody>
         </table>
       </Card>
-
-      {/* Detail Modal (optional) */}
-      {isDetailModalOpen && selectedReport && (
-        <ReportDetailModal
-          report={selectedReport}
-          onClose={closeDetailModal}
-          onApprove={() => {
-            handleApprove(selectedReport.id);
-            closeDetailModal();
-          }}
-          onResolve={() => {
-            handleResolve(selectedReport.id);
-            closeDetailModal();
-          }}
-          onDelete={() => {
-            handleDelete(selectedReport.id);
-            closeDetailModal();
-          }}
-        />
-      )}
     </>
   );
 };

@@ -1,8 +1,10 @@
-import React, { useState } from 'react';
+// src/pages/LandingPage.tsx
+import React, { useState, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from '../components/ui/select';
 import Viewer from '../components/3DViewer';
 import { Separator } from '../components/ui/separator';
+import { ThemeContext } from '../context/ThemeContext'; // Import ThemeContext for theme awareness
 
 const LandingPage: React.FC = () => {
   const allGroups = ['A', 'B', 'BE', 'C', 'CE', 'D', 'DE', 'T']; 
@@ -36,8 +38,7 @@ const LandingPage: React.FC = () => {
       const data = await response.json();
       // data will contain { message, testId, questions }
 
-      // Example: redirect to a test page with the testId and the questions
-// Example in LandingPage's handleStartTest
+      // Redirect to a test page with the testId and the questions
       navigate(`/test/${data.testId}`, {
         state: { questions: data.questions, testId: data.testId },
       });
@@ -48,25 +49,25 @@ const LandingPage: React.FC = () => {
   };
 
   return (
-    <div className="p-5 text-center bg-secondary-lightGray min-h-screen flex flex-col items-center justify-center space-y-6 animate-fadeIn">
-      <h1 className="text-4xl font-bold text-main-darkBlue mb-4 font-bam">
+    <div className="p-5 text-center min-h-screen flex flex-col items-center justify-center space-y-6 animate-fadeIn bg-[hsl(var(--background))]">
+      <h1 className="text-4xl font-bold text-[hsl(var(--primary))] mb-4 font-bam">
         Driving License Test
       </h1>
       <Separator className="w-1/2" />
-      <p className="text-lg text-main-darkBlue transition-opacity duration-500 ease-in-out">
+      <p className="text-lg text-[hsl(var(--card-foreground))] transition-opacity duration-500 ease-in-out">
         Select your group to begin the test:
       </p>
 
       <Select onValueChange={(value) => setSelectedGroup(value)}>
-        <SelectTrigger className="w-60 py-1 px-2 transition-all duration-300 hover:py-5 hover:px-4">
+        <SelectTrigger className="w-60 py-1 px-2 transition-all duration-300 hover:py-5 hover:px-4 bg-[hsl(var(--card-bg))] text-[hsl(var(--card-foreground))] border border-[hsl(var(--stroke-color))] rounded-md">
           <SelectValue placeholder="Select a group" />
         </SelectTrigger>
-        <SelectContent>
+        <SelectContent className="bg-[hsl(var(--card))] text-[hsl(var(--card-foreground))] border border-[hsl(var(--stroke-color))] rounded-md shadow-l z-20">
           {allGroups.map((group) => (
             <SelectItem
               key={group}
               value={group}
-              className="hover:bg-gray-100 transition-colors cursor-pointer"
+              className="hover:bg-[hsl(var(--muted-foreground))] transition-colors cursor-pointer"
             >
               Group {group}
             </SelectItem>

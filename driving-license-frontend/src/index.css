@@ -13,6 +13,7 @@
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
     --card: 0 0% 100%;
+    --card-bg: hsl(0, 0%, 100%);
     --card-foreground: 222.2 47.4% 11.2%;
     --primary: 222.2 47.4% 11.2%;
     --primary-foreground: 210 40% 98%;
@@ -24,10 +25,14 @@
     --destructive-foreground: 210 40% 98%;
     --ring: 215 20.2% 65.1%;
     --radius: 0.5rem;
+    --stroke-color: hsl(0, 0%, 80%); /* Light gray for strokes */
+    --tooltip-bg: hsl(0, 0%, 100%); /* White background for tooltips */
+    --tooltip-text: hsl(0, 0%, 0%); /* Black text for tooltips */
+    --secondary-red: hsl(0, 75%, 60%);
   }
 
   .dark {
-    --background: 224 71% 4%;
+    --background: 150 20% 4%;
     --foreground: 213 31% 91%;
     --muted: 223 47% 11%;
     --muted-foreground: 215.4 16.3% 56.9%;
@@ -38,6 +43,7 @@
     --border: 216 34% 17%;
     --input: 216 34% 17%;
     --card: 224 71% 4%;
+    --card-bg: hsl(0, 0%, 20%);
     --card-foreground: 213 31% 91%;
     --primary: 210 40% 98%;
     --primary-foreground: 222.2 47.4% 1.2%;
@@ -46,15 +52,10 @@
     --destructive: 0 63% 31%;
     --destructive-foreground: 210 40% 98%;
     --ring: 216 34% 17%;
-  }
-}
-
-@layer base {
-  * {
-    @apply border-border;
-  }
-  body {
-    @apply font-sans antialiased bg-secondary-lightGray text-foreground;
+    --stroke-color: hsl(0, 0%, 40%); /* Dark gray for strokes */
+    --tooltip-bg: hsl(0, 0%, 20%); /* Dark background for tooltips */
+    --tooltip-text: hsl(0, 0%, 100%); /* White text for tooltips */
+    --secondary-red: hsl(0, 75%, 60%);
   }
   @font-face {
     font-family: 'BAM';

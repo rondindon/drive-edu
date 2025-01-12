@@ -118,16 +118,14 @@ const ActivityStats: React.FC = () => {
           performanceByCategory: answersRes.data.performanceByCategory || [],
         });
 
-        console.log(worstQuestionsRes)
-
         // Set Badge Statistics
         setBadgeStats({
           badges: badgesRes.data.badges || [],
           badgesOverTime: badgesRes.data.badgesOverTime || [],
         });
 
-        if(worstQuestionsRes.data.worstAccuracyQuestions !== null) {
         // Set Worst Accuracy Questions with imageUrl converted to undefined if null
+        if (worstQuestionsRes.data.worstAccuracyQuestions !== null) {
           setWorstAccuracyQuestions(
             worstQuestionsRes.data.worstAccuracyQuestions.map((q: WorstAccuracyQuestion) => ({
               ...q,
@@ -292,15 +290,15 @@ const ActivityStats: React.FC = () => {
   return (
     <div className="space-y-6 min-h-screen px-4 py-6">
       {/* Test Performance Over Time */}
-      <Card className="p-6 shadow-lg rounded-md animate-fadeIn">
+      <Card className="p-6 shadow-lg rounded-md animate-fadeIn bg-[hsl(var(--card))] text-[hsl(var(--card-foreground))]">
         {loading && <LoadingSpinner />}
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xl font-semibold text-main-darkBlue">
+          <h2 className="text-xl font-semibold text-[hsl(var(--primary))]">
             Test Performance Over Time ({selectedAggregation === 'month' ? 'Monthly' : 'Daily'})
           </h2>
           <button
             onClick={toggleAggregation}
-            className="bg-main-green text-white px-4 py-2 rounded-md hover:bg-main-darkGreen transition-colors"
+            className="bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] px-4 py-2 rounded-md hover:bg-[hsl(var(--primary))]/90 transition-colors"
             aria-label={`Switch to ${selectedAggregation === 'month' ? 'Daily' : 'Monthly'} View`}
           >
             {selectedAggregation === 'month' ? 'Daily View' : 'Monthly View'}
@@ -314,6 +312,7 @@ const ActivityStats: React.FC = () => {
               aria-label={`Test Performance Over Time (${selectedAggregation === 'month' ? 'Monthly' : 'Daily'})`}
               role="img"
             >
+              {/* Retain original graph colors by removing CSS variables */}
               <CartesianGrid stroke="#ccc" strokeDasharray="5 5" />
               <XAxis
                 dataKey="period"
@@ -323,16 +322,19 @@ const ActivityStats: React.FC = () => {
                 angle={-45}
                 textAnchor="end"
                 height={60}
+                className="font-BAM"
               />
               <YAxis stroke="#2C3E50" domain={[0, upperBound]} />
               <Tooltip
                 formatter={(value: number) => [value, 'Tests']}
                 labelFormatter={(label: string) => label}
+                // Retain original tooltip styling or adjust as needed
+                contentStyle={{ backgroundColor: '#fff', color: '#000' }}
               />
               <Line
                 type="monotone"
                 dataKey="count"
-                stroke="#27AE60"
+                stroke="#27AE60" // Original green color
                 strokeWidth={2}
                 dot={{ r: 4 }}
                 activeDot={{ r: 8 }}
@@ -343,27 +345,27 @@ const ActivityStats: React.FC = () => {
             </LineChart>
           </ResponsiveContainer>
         ) : (
-          <div className="text-gray-500">No test data available.</div>
+          <div className="text-[hsl(var(--muted-foreground))]">No test data available.</div>
         )}
       </Card>
 
       {/* Test Summary */}
-      <Card className="p-6 shadow-lg rounded-md animate-fadeIn">
-        <h2 className="text-xl font-semibold text-main-darkBlue mb-4">
+      <Card className="p-6 shadow-lg rounded-md animate-fadeIn bg-[hsl(var(--card))] text-[hsl(var(--card-foreground))]">
+        <h2 className="text-xl font-semibold text-[hsl(var(--primary))] mb-4">
           Test Summary
         </h2>
         <div className="flex flex-col md:flex-row md:space-x-6 space-y-4 md:space-y-0">
           {/* Average Score */}
           <div className="flex-1">
-            <span className="text-gray-500">Average Score</span>
-            <div className="text-3xl font-bold text-main-green">
+            <span className="text-[hsl(var(--muted-foreground))]">Average Score</span>
+            <div className="text-3xl font-bold text-[hsl(var(--primary))]">
               {averageScore !== null ? averageScore.toFixed(2) : 'N/A'}
             </div>
           </div>
           {/* Pass Rate */}
           <div className="flex-1">
-            <span className="text-gray-500">Pass Rate</span>
-            <div className="text-3xl font-bold text-main-green">
+            <span className="text-[hsl(var(--muted-foreground))]">Pass Rate</span>
+            <div className="text-3xl font-bold text-[hsl(var(--primary))]">
               {passRate !== null ? passRate.toFixed(2) + '%' : 'N/A'}
             </div>
           </div>
@@ -371,8 +373,8 @@ const ActivityStats: React.FC = () => {
       </Card>
 
       {/* Answer Distribution */}
-      <Card className="p-6 shadow-lg rounded-md animate-fadeIn">
-        <h2 className="text-xl font-semibold text-main-darkBlue mb-4">
+      <Card className="p-6 shadow-lg rounded-md animate-fadeIn bg-[hsl(var(--card))] text-[hsl(var(--card-foreground))]">
+        <h2 className="text-xl font-semibold text-[hsl(var(--primary))] mb-4">
           Answer Distribution
         </h2>
         {answerStats ? (
@@ -395,42 +397,48 @@ const ActivityStats: React.FC = () => {
                   { name: 'Correct', value: answerStats.correctCount },
                   { name: 'Wrong', value: answerStats.wrongCount },
                 ].map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                  <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} /> // Retain original colors
                 ))}
               </Pie>
-              <Tooltip />
+              <Tooltip
+                contentStyle={{ backgroundColor: '#fff', color: '#000' }} // Original tooltip colors
+              />
               <Legend verticalAlign="bottom" height={36} />
             </PieChart>
           </ResponsiveContainer>
         ) : (
-          <div className="text-gray-500">No answer data available.</div>
+          <div className="text-[hsl(var(--muted-foreground))]">No answer data available.</div>
         )}
       </Card>
 
       {/* Performance by Category */}
-      <Card className="p-6 shadow-lg rounded-md animate-fadeIn">
-        <h2 className="text-xl font-semibold text-main-darkBlue mb-4">
+      <Card className="p-6 shadow-lg rounded-md animate-fadeIn bg-[hsl(var(--card))] text-[hsl(var(--card-foreground))]">
+        <h2 className="text-xl font-semibold text-[hsl(var(--primary))] mb-4">
           Performance by Category
         </h2>
         {answerStats && answerStats.performanceByCategory.length > 0 ? (
           <ResponsiveContainer width="100%" height={300}>
             <BarChart data={answerStats.performanceByCategory}>
-              <CartesianGrid stroke="#ccc" strokeDasharray="5 5" />
-              <XAxis dataKey="category" stroke="#2C3E50" />
-              <YAxis domain={[0, 100]} />
-              <Tooltip />
-              <Legend />
-              <Bar dataKey="accuracy" fill="#27AE60" name="Accuracy (%)" animationDuration={6000} />
+              <CartesianGrid stroke="#ccc" strokeDasharray="5 5" /> {/* Original grid color */}
+              <XAxis dataKey="category" stroke="#2C3E50" /> {/* Original axis color */}
+              <YAxis domain={[0, 100]} stroke="#2C3E50" /> {/* Original axis color */}
+              <Tooltip
+                formatter={(value: number) => [value + '%', 'Accuracy']}
+                labelFormatter={(label: string) => label}
+                contentStyle={{ backgroundColor: '#fff', color: '#000' }} // Original tooltip colors
+              />
+              <Legend verticalAlign="top" height={36} />
+              <Bar dataKey="accuracy" fill="#27AE60" name="Accuracy (%)" animationDuration={6000} /> {/* Original bar color */}
             </BarChart>
           </ResponsiveContainer>
         ) : (
-          <div className="text-gray-500">No performance data available.</div>
+          <div className="text-[hsl(var(--muted-foreground))]">No performance data available.</div>
         )}
       </Card>
 
       {/* Badges Earned */}
-      <Card className="p-6 shadow-lg rounded-md animate-fadeIn">
-        <h2 className="text-xl font-semibold text-main-darkBlue mb-4">
+      <Card className="p-6 shadow-lg rounded-md animate-fadeIn bg-[hsl(var(--card))] text-[hsl(var(--card-foreground))]">
+        <h2 className="text-xl font-semibold text-[hsl(var(--primary))] mb-4">
           Badges Earned
         </h2>
         {badgeStats && badgeStats.badges.length > 0 ? (
@@ -438,15 +446,15 @@ const ActivityStats: React.FC = () => {
             {badgeStats.badges.map((badge, index) => (
               <div
                 key={index}
-                className="flex items-center space-x-4 p-4 bg-secondary-greenBackground rounded-md shadow-sm animate-fadeIn"
+                className="flex items-center space-x-4 p-4 bg-[hsl(var(--card))] rounded-md shadow-sm animate-fadeIn" // Match parent div's color
               >
                 {/* Replace with actual badge icons if available */}
-                <div className="w-12 h-12 bg-main-green rounded-full flex items-center justify-center text-white text-lg font-bold">
+                <div className="w-12 h-12 bg-[hsl(var(--primary))] rounded-full flex items-center justify-center text-white text-lg font-bold">
                   {badge.title.charAt(0)}
                 </div>
                 <div>
                   <span className="font-semibold">{badge.title}</span>
-                  <div className="text-sm text-gray-500">
+                  <div className="text-sm text-[hsl(var(--muted-foreground))]">
                     Earned on {new Date(badge.createdAt).toLocaleDateString()}
                   </div>
                 </div>
@@ -454,14 +462,14 @@ const ActivityStats: React.FC = () => {
             ))}
           </div>
         ) : (
-          <div className="text-gray-500">No badges earned yet.</div>
+          <div className="text-[hsl(var(--muted-foreground))]">No badges earned yet.</div>
         )}
       </Card>
 
       {/* Badges Over Time */}
       {badgeStats && badgeStats.badgesOverTime.length > 0 && (
-        <Card className="p-6 shadow-lg rounded-md animate-fadeIn">
-          <h2 className="text-xl font-semibold text-main-darkBlue mb-4">
+        <Card className="p-6 shadow-lg rounded-md animate-fadeIn bg-[hsl(var(--card))] text-[hsl(var(--card-foreground))]">
+          <h2 className="text-xl font-semibold text-[hsl(var(--primary))] mb-4">
             Badges Earned Over Time
           </h2>
           <ResponsiveContainer width="100%" height={300}>
@@ -471,6 +479,7 @@ const ActivityStats: React.FC = () => {
               aria-label="Badges Earned Over Time"
               role="img"
             >
+              {/* Retain original graph colors by removing CSS variables */}
               <CartesianGrid stroke="#ccc" strokeDasharray="5 5" />
               <XAxis
                 dataKey="month"
@@ -484,16 +493,19 @@ const ActivityStats: React.FC = () => {
                 angle={-45}
                 textAnchor="end"
                 height={60}
+                className="font-BAM"
               />
               <YAxis stroke="#2C3E50" />
               <Tooltip
                 formatter={(value: number) => [value, 'Badges']}
                 labelFormatter={(label: string) => label}
+                // Retain original tooltip styling or adjust as needed
+                contentStyle={{ backgroundColor: '#fff', color: '#000' }}
               />
               <Line
                 type="monotone"
                 dataKey="count"
-                stroke="#F1C40F"
+                stroke="#F1C40F" // Original yellow color
                 strokeWidth={2}
                 dot={{ r: 4 }}
                 activeDot={{ r: 8 }}
@@ -507,15 +519,15 @@ const ActivityStats: React.FC = () => {
       )}
 
       {/* **Worst Accuracy Questions** */}
-      <Card className="p-6 shadow-lg rounded-md animate-fadeIn">
-        <h2 className="text-xl font-semibold text-main-darkBlue mb-4">
+      <Card className="p-6 shadow-lg rounded-md animate-fadeIn bg-[hsl(var(--card))] text-[hsl(var(--card-foreground))]">
+        <h2 className="text-xl font-semibold text-[hsl(var(--primary))] mb-4">
           Questions with Worst Accuracy
         </h2>
         {worstAccuracyQuestions.length > 0 ? (
           <div className="flex flex-col items-center">
             {/* Question Display */}
             <div
-              className="w-full md:w-3/4 lg:w-2/3 bg-white p-6 rounded-md shadow-md"
+              className="w-full md:w-3/4 lg:w-2/3 p-6 rounded-md shadow-lg bg-[hsl(var(--card))]" // Match parent div's color and add shadow
               style={{ height: '60vh' }} // Set dynamic height relative to viewport
             >
               {/* Make the container a flex column to manage content */}
@@ -531,29 +543,33 @@ const ActivityStats: React.FC = () => {
                 )}
 
                 {/* Question Text */}
-                <h3 className="text-lg font-semibold mb-4 flex-grow">
+                <h3 className="text-lg font-semibold mb-4 font-BAM">
                   {worstAccuracyQuestions[currentQuestionIndex].questionText}
                 </h3>
 
                 {/* Simplified Answer Statistics */}
-                <div className="mb-4 w-24 text-center py-1 bg-red-500 text-white rounded-md">
+                <div className="mb-4 w-24 text-center py-1 bg-[hsl(var(--destructive))] text-[hsl(var(--destructive-foreground))] rounded-md">
                   {`${worstAccuracyQuestions[currentQuestionIndex].correctCount}/${worstAccuracyQuestions[currentQuestionIndex].wrongCount}`}
                 </div>
 
                 {/* Display Answers */}
                 <div className="space-y-2 flex-grow overflow-auto">
-                  {worstAccuracyQuestions[currentQuestionIndex].options.map((option, index) => (
-                    <div
-                      key={index}
-                      className={`p-2 rounded-md ${
-                        option === worstAccuracyQuestions[currentQuestionIndex].correctAnswer
-                          ? 'bg-green-200 border-2 border-green-400'
-                          : 'bg-gray-100'
-                      }`}
-                    >
-                      {option}
-                    </div>
-                  ))}
+                  {worstAccuracyQuestions[currentQuestionIndex].options.map((option, index) => {
+                    // Determine if the option is correct
+                    const isCorrect = option === worstAccuracyQuestions[currentQuestionIndex].correctAnswer;
+                    return (
+                      <div
+                        key={index}
+                        className={`p-2 rounded-md ${
+                          isCorrect
+                            ? 'bg-[hsl(var(--primary))] border-2 border-[hsl(var(--primary-foreground))] text-white'
+                            : 'bg-[hsl(var(--muted))]'
+                        }`}
+                      >
+                        {option}
+                      </div>
+                    );
+                  })}
                 </div>
 
                 {/* Navigation Arrows */}
@@ -561,20 +577,20 @@ const ActivityStats: React.FC = () => {
                   <div className="flex justify-between mt-6 items-center">
                     <button
                       onClick={goToPreviousQuestion}
-                      className="p-2 bg-gray-200 rounded-full hover:bg-gray-300 focus:outline-none"
+                      className="p-2 bg-[hsl(var(--muted))] rounded-full hover:bg-[hsl(var(--muted-foreground))] focus:outline-none"
                       aria-label="Previous Question"
                     >
-                      <ChevronLeftIcon className="h-6 w-6 text-gray-700" />
+                      <ChevronLeftIcon className="h-6 w-6 text-[hsl(var(--foreground))]" />
                     </button>
-                    <span className="text-gray-600">
+                    <span className="text-[hsl(var(--muted-foreground))]">
                       {currentQuestionIndex + 1} of {worstAccuracyQuestions.length}
                     </span>
                     <button
                       onClick={goToNextQuestion}
-                      className="p-2 bg-gray-200 rounded-full hover:bg-gray-300 focus:outline-none"
+                      className="p-2 bg-[hsl(var(--muted))] rounded-full hover:bg-[hsl(var(--muted-foreground))] focus:outline-none"
                       aria-label="Next Question"
                     >
-                      <ChevronRightIcon className="h-6 w-6 text-gray-700" />
+                      <ChevronRightIcon className="h-6 w-6 text-[hsl(var(--foreground))]" />
                     </button>
                   </div>
                 )}
@@ -582,7 +598,7 @@ const ActivityStats: React.FC = () => {
             </div>
           </div>
         ) : (
-          <div className="text-gray-500">No data available for worst accuracy questions.</div>
+          <div className="text-[hsl(var(--muted-foreground))]">No data available for worst accuracy questions.</div>
         )}
       </Card>
     </div>

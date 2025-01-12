@@ -34,7 +34,7 @@ const AdminLayout: React.FC = () => {
   ];
 
   return (
-    <div className="flex min-h-screen">
+    <div className="flex min-h-screen bg-[hsl(var(--background))]">
       {/* Sidebar */}
       <aside className="fixed top-0 left-0 w-64 h-screen bg-main-darkBlue text-secondary-lightGray flex flex-col">
         {/* Sidebar Header */}

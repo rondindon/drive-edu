@@ -313,17 +313,17 @@ const AdminUsers: React.FC = () => {
 
   return (
     <div className="p-6 space-y-4">
-      <h1 className="text-2xl font-bold">Users</h1>
+      <h1 className="text-2xl font-bold text-[hsl(var(--foreground))]">Users</h1>
       {/* Filters */}
-      <div className="flex items-center justify-between space-x-4">
-        <div className="flex">
+      <div className="flex items-center justify-between space-x-4 text-[hsl(var(--foreground))]">
+        <div className="flex space-x-4">
         <Input
           placeholder="Search by email or username..."
           value={search}
           onChange={(e) => {
             setSearch(e.target.value);
           }}
-          className="w-1/3"
+          className="w-64 text-[hsl(var(--foreground))]"
         />
 
         <div className="flex items-center space-x-2">
@@ -360,12 +360,12 @@ const AdminUsers: React.FC = () => {
         <table className="w-full border-collapse text-left">
           <thead>
             <tr className="border-b border-main-green text-gray-800">
-              <th className="py-2 px-4">ID</th>
-              <th className="py-2 px-4">Email</th>
-              <th className="py-2 px-4">Username</th>
-              <th className="py-2 px-4">Role</th>
-              <th className="py-2 px-4">Created At</th>
-              <th className="py-2 px-4">Actions</th>
+              <th className="py-2 px-4 text-[hsl(var(--foreground))]">ID</th>
+              <th className="py-2 px-4 text-[hsl(var(--foreground))]">Email</th>
+              <th className="py-2 px-4 text-[hsl(var(--foreground))]">Username</th>
+              <th className="py-2 px-4 text-[hsl(var(--foreground))]">Role</th>
+              <th className="py-2 px-4 text-[hsl(var(--foreground))]">Created At</th>
+              <th className="py-2 px-4 text-[hsl(var(--foreground))]">Actions</th>
             </tr>
           </thead>
           <tbody>

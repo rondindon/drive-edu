@@ -238,7 +238,7 @@ const AdminTests: React.FC = () => {
     <>
       {/* Header and Add/Refresh Button */}
       <div className="flex justify-between items-center mb-4">
-        <h1 className="text-2xl font-bold">User Tests</h1>
+        <h1 className="text-2xl font-bold text-[hsl(var(--foreground))]">User Tests</h1>
       </div>
 
       {/* Filters and Search Bar */}
@@ -271,15 +271,15 @@ const AdminTests: React.FC = () => {
         <table className="w-full border-collapse text-left">
           <thead>
             <tr className="border-b border-main-green text-gray-800">
-              <th className="py-2 px-4">ID</th>
-              <th className="py-2 px-4">User</th> {/* New Username Column */}
-              <th className="py-2 px-4">Email</th> {/* Renamed User to Email */}
-              <th className="py-2 px-4">Group</th>
-              <th className="py-2 px-4">Score</th>
-              <th className="py-2 px-4">Time Taken</th> {/* Reformatted Time */}
-              <th className="py-2 px-4">Passed</th>
-              <th className="py-2 px-4">Created At</th>
-              <th className="py-2 px-4">Actions</th>
+              <th className="py-2 px-4 text-[hsl(var(--foreground))]">ID</th>
+              <th className="py-2 px-4 text-[hsl(var(--foreground))]">User</th> {/* New Username Column */}
+              <th className="py-2 px-4 text-[hsl(var(--foreground))]">Email</th> {/* Renamed User to Email */}
+              <th className="py-2 px-4 text-[hsl(var(--foreground))]">Group</th>
+              <th className="py-2 px-4 text-[hsl(var(--foreground))]">Score</th>
+              <th className="py-2 px-4 text-[hsl(var(--foreground))]">Time Taken</th> {/* Reformatted Time */}
+              <th className="py-2 px-4 text-[hsl(var(--foreground))]">Passed</th>
+              <th className="py-2 px-4 text-[hsl(var(--foreground))]">Created At</th>
+              <th className="py-2 px-4 text-[hsl(var(--foreground))]">Actions</th>
             </tr>
           </thead>
           <tbody>

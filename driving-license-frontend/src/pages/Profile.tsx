@@ -1,5 +1,5 @@
 // src/pages/Profile.tsx
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import { useAuth } from "../context/AuthContext";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
@@ -17,7 +17,10 @@ import {
 import { Edit } from "lucide-react";
 import ActivityStats from "../components/ActivityStats"; // Import the ActivityStats component
 import CustomCalendar, { TestsPerDay } from "../components/CustomCalendar"; // Import the CustomCalendar component
+
 import axios from "axios"; // Import axios for API calls
+import { ThemeContext } from "../context/ThemeContext"; // Import ThemeContext
+import Toggle from "src/components/ToggleTheme";
 
 const Profile: React.FC = () => {
   const { user, username, role, updateUsername } = useAuth();
@@ -40,6 +43,9 @@ const Profile: React.FC = () => {
   const [testsPerDayError, setTestsPerDayError] = useState<string | null>(null);
 
   const token = localStorage.getItem('supabaseToken');
+
+  // **Access Theme Context**
+  const { theme, toggleTheme } = useContext(ThemeContext);
 
   // **Function to Fetch Test Summary**
   useEffect(() => {
@@ -112,14 +118,14 @@ const Profile: React.FC = () => {
   };
 
   return (
-    <div className="p-6 bg-secondary-lightGray min-h-screen flex flex-col items-center animate-fadeIn">
+    <div className="p-6 bg-[hsl(var(--background))] min-h-screen flex flex-col items-center animate-fadeIn text-[hsl(var(--foreground))]">
       <div className="max-w-5xl w-full">
-        <h1 className="text-3xl font-bold text-main-darkBlue text-center mb-6">
+        <h1 className="text-3xl font-bold text-center mb-6">
           My Account
         </h1>
 
         {/* Profile Card with Avatar and Calendar */}
-        <Card className="p-6 shadow-lg rounded-md flex flex-col md:flex-row justify-between items-start space-y-6 md:space-y-0 md:space-x-6 items-center justify-around">
+        <Card className="p-6 shadow-lg rounded-md flex flex-col md:flex-row justify-between items-start space-y-6 md:space-y-0 md:space-x-6 bg-[hsl(var(--card))] text-[hsl(var(--card-foreground))] items-center justify-around">
           {/* Avatar Section */}
           <div className="flex flex-col items-center md:items-start space-y-4">
             {/* Avatar */}
@@ -128,15 +134,15 @@ const Profile: React.FC = () => {
               <AvatarFallback>{username?.charAt(0).toUpperCase() || "U"}</AvatarFallback>
             </Avatar>
             <div className="flex flex-col space-y-1 items-center md:items-start">
-              <span className="text-lg font-bold text-main-darkBlue">{username || "Not set"}</span>
-              <span className="text-sm text-gray-500">{user?.email}</span>
+              <span className="text-lg font-bold">{username || "Not set"}</span>
+              <span className="text-sm">{user?.email}</span>
               {/* **Success Rate and Test Counts** */}
               {testStatsLoading ? (
                 <div className="text-gray-500">Loading success rate...</div>
               ) : testStatsError ? (
                 <div className="text-red-500">{testStatsError}</div>
               ) : (
-                <div className="flex items-center space-x-2 text-main-darkBlue font-semibold">
+                <div className="flex items-center space-x-2 font-semibold">
                   <span>{successRate.toFixed(2)}%</span>
                   <span>- {testsPassed}/{testsTaken}</span>
                 </div>
@@ -161,30 +167,30 @@ const Profile: React.FC = () => {
           <nav className="-mb-px flex space-x-4">
             <button
               onClick={() => setActiveTab("Profile Info")}
-              className={`px-3 py-2 text-main-darkBlue font-semibold ${
+              className={`px-3 py-2 font-semibold ${
                 activeTab === "Profile Info"
-                  ? "border-b-2 border-main-green"
-                  : "text-gray-500 hover:text-main-green"
+                  ? "border-b-2 border-main-green text-[hsl(var(--primary))]"
+                  : "text-gray-500 hover:text-[hsl(var(--primary))]"
               }`}
             >
               Profile Info
             </button>
             <button
               onClick={() => setActiveTab("Activity")}
-              className={`px-3 py-2 text-main-darkBlue font-semibold ${
+              className={`px-3 py-2 font-semibold ${
                 activeTab === "Activity"
-                  ? "border-b-2 border-main-green"
-                  : "text-gray-500 hover:text-main-green"
+                  ? "border-b-2 border-main-green text-[hsl(var(--primary))]"
+                  : "text-gray-500 hover:text-[hsl(var(--primary))]"
               }`}
             >
               Activity
             </button>
             <button
               onClick={() => setActiveTab("Settings")}
-              className={`px-3 py-2 text-main-darkBlue font-semibold ${
+              className={`px-3 py-2 font-semibold ${
                 activeTab === "Settings"
-                  ? "border-b-2 border-main-green"
-                  : "text-gray-500 hover:text-main-green"
+                  ? "border-b-2 border-main-green text-[hsl(var(--primary))]"
+                  : "text-gray-500 hover:text-[hsl(var(--primary))]"
               }`}
             >
               Settings
@@ -194,17 +200,17 @@ const Profile: React.FC = () => {
 
         {/* Tab Content */}
         {activeTab === "Profile Info" && (
-          <Card className="p-6 shadow-lg rounded-md animate-fadeIn">
+          <Card className="p-6 shadow-lg rounded-md animate-fadeIn bg-[hsl(var(--card))] text-[hsl(var(--card-foreground))]">
             <div className="space-y-6">
               {/* Role */}
               <div className="flex justify-between items-center">
-                <span className="text-main-darkBlue font-semibold">Role:</span>
+                <span className="font-semibold">Role:</span>
                 <span>{role}</span>
               </div>
 
               {/* Username */}
               <div className="flex justify-between items-center">
-                <span className="text-main-darkBlue font-semibold">
+                <span className="font-semibold">
                   Username:
                 </span>
                 {editing ? (
@@ -213,6 +219,7 @@ const Profile: React.FC = () => {
                       value={newUsername}
                       onChange={(e) => setNewUsername(e.target.value)}
                       placeholder="Enter new username"
+                      className="bg-[hsl(var(--input))] text-[hsl(var(--foreground))]"
                     />
 
                     {/* AlertDialog for Confirmation */}
@@ -220,12 +227,12 @@ const Profile: React.FC = () => {
                       <AlertDialogTrigger asChild>
                         <Button
                           size="sm"
-                          className="bg-main-green text-white hover:bg-main-darkGreen"
+                          className="bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] hover:bg-[hsl(var(--primary))]/90"
                         >
                           Save
                         </Button>
                       </AlertDialogTrigger>
-                      <AlertDialogContent>
+                      <AlertDialogContent className="bg-[hsl(var(--popover))] text-[hsl(var(--popover-foreground))]">
                         <AlertDialogHeader>
                           <AlertDialogTitle>Confirm Username Update</AlertDialogTitle>
                           <AlertDialogDescription>
@@ -237,12 +244,13 @@ const Profile: React.FC = () => {
                           <Button
                             variant="outline"
                             onClick={() => setDialogOpen(false)}
+                            className="bg-[hsl(var(--muted))] text-[hsl(var(--muted-foreground))] hover:bg-[hsl(var(--muted))]/90"
                           >
                             Cancel
                           </Button>
                           <Button
                             onClick={handleSave}
-                            className="bg-main-green text-white hover:bg-main-darkGreen"
+                            className="bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] hover:bg-[hsl(var(--primary))]/90"
                           >
                             Confirm
                           </Button>
@@ -254,7 +262,7 @@ const Profile: React.FC = () => {
                       variant="outline"
                       size="sm"
                       onClick={() => setEditing(false)}
-                      className="bg-gray-100 hover:bg-gray-200"
+                      className="bg-[hsl(var(--muted))] text-[hsl(var(--muted-foreground))] hover:bg-[hsl(var(--muted))]/90"
                     >
                       Cancel
                     </Button>
@@ -264,10 +272,10 @@ const Profile: React.FC = () => {
                     <span>{username || "Not set"}</span>
                     <button
                       onClick={() => setEditing(true)}
-                      className="p-1 rounded-full hover:bg-gray-100 transition-colors"
+                      className="p-1 rounded-full hover:bg-[hsl(var(--muted))] transition-colors"
                       aria-label="Edit Username"
                     >
-                      <Edit className="w-5 h-5 text-main-green" />
+                      <Edit className="w-5 h-5 text-[hsl(var(--accent-foreground))]" />
                     </button>
                   </div>
                 )}
@@ -281,8 +289,39 @@ const Profile: React.FC = () => {
         )}
 
         {activeTab === "Settings" && (
-          <Card className="p-6 shadow-lg rounded-md animate-fadeIn">
-            <p className="text-main-darkBlue">Settings content will go here.</p>
+          <Card className="p-6 shadow-lg rounded-md animate-fadeIn bg-[hsl(var(--card))] text-[hsl(var(--card-foreground))]">
+            <h2 className="text-xl font-semibold mb-4">
+              Settings
+            </h2>
+            <div className="space-y-4">
+              {/* Dark Mode Toggle */}
+              <Toggle
+                enabled={theme === 'dark'}
+                setEnabled={toggleTheme}
+                label="Enable Dark Mode"
+              />
+
+              {/* Additional Settings can be added here */}
+              {/* Example: Notification Preferences */}
+              {/* 
+              <div className="flex items-center justify-between">
+                <span className="font-semibold">Email Notifications:</span>
+                <ToggleSwitchComponent />
+              </div>
+              */}
+
+              {/* Example: Change Password */}
+              {/* 
+              <div className="flex items-center justify-between">
+                <span className="font-semibold">Change Password:</span>
+                <Button variant="outline" className="bg-[hsl(var(--muted))] text-[hsl(var(--muted-foreground))] hover:bg-[hsl(var(--muted))]/90">
+                  Update
+                </Button>
+              </div>
+              */}
+
+              {/* Add more settings options as needed */}
+            </div>
           </Card>
         )}
       </div>
@@ -290,7 +329,7 @@ const Profile: React.FC = () => {
       {message && (
         <div
           className={`mt-4 p-2 text-center rounded-md ${
-            message.includes("Error") ? "bg-red-200" : "bg-green-200"
+            message.includes("Error") ? "bg-[hsl(var(--destructive))] text-[hsl(var(--destructive-foreground))]" : "bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))]"
           }`}
         >
           {message}

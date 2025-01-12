@@ -8,7 +8,7 @@ import { FaLinkedin } from 'react-icons/fa'; // Optional: For additional social 
 
 const AboutPage: React.FC = () => {
     return (
-      <div className="min-h-screen bg-secondary-lightGray flex flex-col items-center justify-center p-4 animate-fadeIn">
+      <div className="min-h-screen flex flex-col items-center justify-center p-4 animate-fadeIn">
         {/* Main Content */}
         <Card className="max-w-lg w-full bg-white shadow-lg rounded-lg p-8 transform animate-scaleUp">
           <div className="flex flex-col items-center">

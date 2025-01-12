@@ -342,12 +342,12 @@ const AdminQuestions: React.FC = () => {
     <>
       {/* Header and Add/Refresh Buttons */}
       <div className="flex justify-between items-center mb-4">
-        <h1 className="text-2xl font-bold">Questions</h1>
+        <h1 className="text-2xl font-bold text-[hsl(var(--foreground))]">Questions</h1>
       </div>
 
       {/* Filters and Search Bar */}
       <div className="flex items-center space-x-4 mb-4 justify-between">
-        <div className="flex">
+        <div className="flex text-[hsl(var(--foreground))] space-x-4">
           <Input
             placeholder="Search questions..."
             value={search}
@@ -418,11 +418,11 @@ const AdminQuestions: React.FC = () => {
         <table className="w-full border-collapse text-left">
           <thead>
             <tr className="border-b border-main-green text-gray-800">
-              <th className="py-2 px-4">ID</th>
-              <th className="py-2 px-4">Text</th>
-              <th className="py-2 px-4">Category</th>
-              <th className="py-2 px-4">Difficulty</th>
-              <th className="py-2 px-4">Actions</th>
+              <th className="py-2 px-4 text-[hsl(var(--foreground))]">ID</th>
+              <th className="py-2 px-4 text-[hsl(var(--foreground))]">Text</th>
+              <th className="py-2 px-4 text-[hsl(var(--foreground))]">Category</th>
+              <th className="py-2 px-4 text-[hsl(var(--foreground))]">Difficulty</th>
+              <th className="py-2 px-4 text-[hsl(var(--foreground))]">Actions</th>
             </tr>
           </thead>
           <tbody>
