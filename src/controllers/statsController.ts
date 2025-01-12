@@ -266,3 +266,31 @@ export async function getWorstAccuracyQuestions(req: AuthenticatedRequest, res: 
       return res.status(500).json({ message: 'Internal Server Error: Unable to fetch worst accuracy questions.' });
     }
   }
+
+  export async function testsTakenAndPassedByUser(req: AuthenticatedRequest, res: Response) {
+    try {
+      const userId = req.user?.id;
+  
+      if (!userId) {
+        return res.status(401).json({ message: 'Unauthorized: User not authenticated.' });
+      }
+  
+      // **Fetch All Tests for the User:**
+      const tests = await prisma.test.findMany({
+        where: { userId },
+        select: { isPassed: true },
+      });
+  
+      if (tests.length === 0) {
+        return res.status(200).json({ testsTaken: 0, testsPassed: 0 });
+      }
+  
+      const testsTaken = tests.length;
+      const testsPassed = tests.filter(test => test.isPassed).length;
+  
+      return res.status(200).json({ testsTaken, testsPassed });
+    } catch (error) {
+      console.error('[testsTakenAndPassedByUser] Error:', error);
+      return res.status(500).json({ message: 'Internal Server Error: Unable to fetch tests taken and passed.' });
+    }
+  };

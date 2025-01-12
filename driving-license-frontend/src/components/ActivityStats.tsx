@@ -281,14 +281,6 @@ const ActivityStats: React.FC = () => {
   // **Early Returns for Loading and Error States**
   // These are placed after all hooks to maintain the hook order
 
-  if (loading) {
-    return (
-      <div className="flex justify-center items-center py-10 min-h-screen">
-        <LoadingSpinner /> {/* Replace with your actual Spinner component */}
-      </div>
-    );
-  }
-
   if (error) {
     return (
       <div className="text-center text-red-500 min-h-screen flex items-center justify-center">
@@ -301,6 +293,7 @@ const ActivityStats: React.FC = () => {
     <div className="space-y-6 min-h-screen px-4 py-6">
       {/* Test Performance Over Time */}
       <Card className="p-6 shadow-lg rounded-md animate-fadeIn">
+        {loading && <LoadingSpinner />}
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-xl font-semibold text-main-darkBlue">
             Test Performance Over Time ({selectedAggregation === 'month' ? 'Monthly' : 'Daily'})

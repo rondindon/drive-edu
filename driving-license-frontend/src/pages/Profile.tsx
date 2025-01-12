@@ -1,5 +1,5 @@
 // src/pages/Profile.tsx
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useAuth } from "../context/AuthContext";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
@@ -16,6 +16,8 @@ import {
 } from "../components/ui/alert-dialog";
 import { Edit } from "lucide-react";
 import ActivityStats from "../components/ActivityStats"; // Import the ActivityStats component
+import CustomCalendar, { TestsPerDay } from "../components/CustomCalendar"; // Import the CustomCalendar component
+import axios from "axios"; // Import axios for API calls
 
 const Profile: React.FC = () => {
   const { user, username, role, updateUsername } = useAuth();
@@ -24,6 +26,72 @@ const Profile: React.FC = () => {
   const [newUsername, setNewUsername] = useState(username || "");
   const [message, setMessage] = useState<string | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
+
+  // **State Variables for Test Statistics**
+  const [testsTaken, setTestsTaken] = useState<number>(0);
+  const [testsPassed, setTestsPassed] = useState<number>(0);
+  const [successRate, setSuccessRate] = useState<number>(0);
+  const [testStatsLoading, setTestStatsLoading] = useState<boolean>(true);
+  const [testStatsError, setTestStatsError] = useState<string | null>(null);
+
+  // **State Variables for Tests Per Day**
+  const [testsPerDay, setTestsPerDay] = useState<TestsPerDay[]>([]);
+  const [testsPerDayLoading, setTestsPerDayLoading] = useState<boolean>(true);
+  const [testsPerDayError, setTestsPerDayError] = useState<string | null>(null);
+
+  const token = localStorage.getItem('supabaseToken');
+
+  // **Function to Fetch Test Summary**
+  useEffect(() => {
+    const fetchTestSummary = async () => {
+      setTestStatsLoading(true);
+      try {
+        const response = await axios.get('http://localhost:4444/api/user/stats/test-summary', {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        const { testsTaken, testsPassed } = response.data;
+
+        setTestsTaken(testsTaken ?? 0);
+        setTestsPassed(testsPassed ?? 0);
+
+        if (testsTaken > 0) {
+          setSuccessRate((testsPassed / testsTaken) * 100);
+        } else {
+          setSuccessRate(0);
+        }
+      } catch (error) {
+        console.error('Error fetching test summary:', error);
+        setTestStatsError('Failed to load test statistics.');
+      } finally {
+        setTestStatsLoading(false);
+      }
+    };
+
+    fetchTestSummary();
+  }, [token]);
+
+  // **Function to Fetch Tests Per Day**
+  useEffect(() => {
+    const fetchTestsPerDay = async () => {
+      setTestsPerDayLoading(true);
+      try {
+        const response = await axios.get('http://localhost:4444/api/user/stats/tests', {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        setTestsPerDay(response.data.testsOverTimeDay ?? []);
+        console.log(response.data.testsOverTimeDay);
+      } catch (error) {
+        console.error('Error fetching tests per day:', error);
+        setTestsPerDayError('Failed to load daily test statistics.');
+      } finally {
+        setTestsPerDayLoading(false);
+      }
+    };
+
+    fetchTestsPerDay();
+  }, [token]);
 
   const handleSave = async () => {
     if (!newUsername.trim()) {
@@ -45,22 +113,46 @@ const Profile: React.FC = () => {
 
   return (
     <div className="p-6 bg-secondary-lightGray min-h-screen flex flex-col items-center animate-fadeIn">
-      <div className="max-w-3xl w-full">
+      <div className="max-w-5xl w-full">
         <h1 className="text-3xl font-bold text-main-darkBlue text-center mb-6">
           My Account
         </h1>
 
-        {/* Profile Card */}
-        <Card className="p-6 shadow-lg rounded-md flex items-center space-x-4">
-          {/* Avatar */}
-          <Avatar className="w-16 h-16">
-            <AvatarImage src={"https://github.com/shadcn.png"} alt={username || "Avatar"} />
-            <AvatarFallback>{username?.charAt(0).toUpperCase() || "U"}</AvatarFallback>
-          </Avatar>
-          <div className="flex flex-col space-y-1">
-            <span className="text-lg font-bold text-main-darkBlue">{username || "Not set"}</span>
-            <span className="text-sm text-gray-500">{user?.email}</span>
-            <div className="success-rate">65%</div>
+        {/* Profile Card with Avatar and Calendar */}
+        <Card className="p-6 shadow-lg rounded-md flex flex-col md:flex-row justify-between items-start space-y-6 md:space-y-0 md:space-x-6 items-center justify-around">
+          {/* Avatar Section */}
+          <div className="flex flex-col items-center md:items-start space-y-4">
+            {/* Avatar */}
+            <Avatar className="w-24 h-24">
+              <AvatarImage src={"https://github.com/shadcn.png"} alt={username || "Avatar"} />
+              <AvatarFallback>{username?.charAt(0).toUpperCase() || "U"}</AvatarFallback>
+            </Avatar>
+            <div className="flex flex-col space-y-1 items-center md:items-start">
+              <span className="text-lg font-bold text-main-darkBlue">{username || "Not set"}</span>
+              <span className="text-sm text-gray-500">{user?.email}</span>
+              {/* **Success Rate and Test Counts** */}
+              {testStatsLoading ? (
+                <div className="text-gray-500">Loading success rate...</div>
+              ) : testStatsError ? (
+                <div className="text-red-500">{testStatsError}</div>
+              ) : (
+                <div className="flex items-center space-x-2 text-main-darkBlue font-semibold">
+                  <span>{successRate.toFixed(2)}%</span>
+                  <span>- {testsPassed}/{testsTaken}</span>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Calendar Section */}
+          <div className="w-full md:w-1/2 flex items-center justify-center">
+            {testsPerDayLoading ? (
+              <div className="text-gray-500">Loading calendar...</div>
+            ) : testsPerDayError ? (
+              <div className="text-red-500">{testsPerDayError}</div>
+            ) : (
+              <CustomCalendar testsPerDay={testsPerDay} />
+            )}
           </div>
         </Card>
 
@@ -120,6 +212,7 @@ const Profile: React.FC = () => {
                     <Input
                       value={newUsername}
                       onChange={(e) => setNewUsername(e.target.value)}
+                      placeholder="Enter new username"
                     />
 
                     {/* AlertDialog for Confirmation */}
@@ -127,7 +220,7 @@ const Profile: React.FC = () => {
                       <AlertDialogTrigger asChild>
                         <Button
                           size="sm"
-                          className="bg-main-green text-white hover:bg-main-green/90"
+                          className="bg-main-green text-white hover:bg-main-darkGreen"
                         >
                           Save
                         </Button>
@@ -149,7 +242,7 @@ const Profile: React.FC = () => {
                           </Button>
                           <Button
                             onClick={handleSave}
-                            className="bg-main-green text-white hover:bg-main-green/90"
+                            className="bg-main-green text-white hover:bg-main-darkGreen"
                           >
                             Confirm
                           </Button>
@@ -172,6 +265,7 @@ const Profile: React.FC = () => {
                     <button
                       onClick={() => setEditing(true)}
                       className="p-1 rounded-full hover:bg-gray-100 transition-colors"
+                      aria-label="Edit Username"
                     >
                       <Edit className="w-5 h-5 text-main-green" />
                     </button>
@@ -183,7 +277,7 @@ const Profile: React.FC = () => {
         )}
 
         {activeTab === "Activity" && (
-          <ActivityStats /> // Render the ActivityStats component
+          <ActivityStats />
         )}
 
         {activeTab === "Settings" && (
