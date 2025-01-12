@@ -111,12 +111,29 @@ const TestPage: React.FC = () => {
       return;
     }
 
+    const questionStatsPromises: Promise<any>[] = [];
+
     // 1) Calculate final score
     let finalScore = 0;
     userAnswers.forEach((answer, idx) => {
+      const q = questions[idx];
+      const isCorrect = answer === q.correctAnswer;
       if (answer === questions[idx].correctAnswer) {
         finalScore += (questions[idx].points || 0);
       }
+      questionStatsPromises.push(
+        fetch('http://localhost:4444/api/question-stats', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            questionId: q.id,
+            isCorrect,
+          }),
+        })
+      );
     });
     const isPassed = finalScore >= 90;
     const timeTaken = totalDuration - timeLeft;
@@ -139,6 +156,8 @@ const TestPage: React.FC = () => {
     navigate('/results', {
       state: resultsData,
     });
+    
+    Promise.all(questionStatsPromises);
 
     // 4) In the background, send final test data to server
     // We'll put userAnswers in the payload as well

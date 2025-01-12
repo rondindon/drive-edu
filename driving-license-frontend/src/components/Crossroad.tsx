@@ -34,7 +34,7 @@ const Crossroad: React.FC<CrossroadProps> = ({ scenario, onCarClick, selectedOrd
         return (
           <div
             key={car.id}
-            className={`absolute w-[12%] h-[8%] flex items-center justify-center cursor-pointer`}
+            className={`absolute w-[5%] h-[9%] flex items-center justify-center cursor-pointer`}
             style={{
               top: `${car.position.x}%`,
               left: `${car.position.y}%`,

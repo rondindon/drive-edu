@@ -108,8 +108,8 @@ const ActivityStats: React.FC = () => {
         // Set Test Statistics
         setTestStatsDay(testsRes.data.testsOverTimeDay || []);
         setTestStatsMonth(testsRes.data.testsOverTimeMonth || []);
-        setAverageScore(testsRes.data.averageScore || null);
-        setPassRate(testsRes.data.passRate || null);
+        setAverageScore(testsRes.data.averageScore ?? null);
+        setPassRate(testsRes.data.passRate ?? null);
 
         // Set Answer Statistics
         setAnswerStats({
@@ -118,19 +118,25 @@ const ActivityStats: React.FC = () => {
           performanceByCategory: answersRes.data.performanceByCategory || [],
         });
 
+        console.log(worstQuestionsRes)
+
         // Set Badge Statistics
         setBadgeStats({
           badges: badgesRes.data.badges || [],
           badgesOverTime: badgesRes.data.badgesOverTime || [],
         });
 
+        if(worstQuestionsRes.data.worstAccuracyQuestions !== null) {
         // Set Worst Accuracy Questions with imageUrl converted to undefined if null
-        setWorstAccuracyQuestions(
-          worstQuestionsRes.data.worstAccuracyQuestions.map((q: WorstAccuracyQuestion) => ({
-            ...q,
-            imageUrl: q.imageUrl ?? undefined, // Convert null to undefined
-          })) || []
-        );
+          setWorstAccuracyQuestions(
+            worstQuestionsRes.data.worstAccuracyQuestions.map((q: WorstAccuracyQuestion) => ({
+              ...q,
+              imageUrl: q.imageUrl ?? undefined, // Convert null to undefined
+            })) || []
+          );
+        } else {
+          setWorstAccuracyQuestions([]);
+        }
       } catch (err) {
         console.error('Error fetching activity stats:', err);
         setError('Failed to load activity statistics.');
@@ -526,7 +532,7 @@ const ActivityStats: React.FC = () => {
                   <img
                     src={worstAccuracyQuestions[currentQuestionIndex].imageUrl}
                     alt={`Question ${currentQuestionIndex + 1} Image`}
-                    className="mb-4 w-full h-32 object-cover rounded-md flex-shrink-0"
+                    className="self-center mb-4 w-36 h-36 object-cover rounded-md flex-shrink-0"
                     loading="lazy"
                   />
                 )}
