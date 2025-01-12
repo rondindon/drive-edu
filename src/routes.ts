@@ -7,6 +7,7 @@ import { authenticate } from './middleware/auth';
 import { deleteUser, getAllUsers, updateUser } from './controllers/adminUserController';
 import {deleteTest, finishTest, getAllTests, recordQuestionStat, recordUserAnswer, startTest } from './controllers/testController';
 import { createReport, getAllReports, markReportResolved, markReportReviewed } from './controllers/reportController';
+import { getAnswerStats, getBadgeStats, getTestStats, getWorstAccuracyQuestions } from './controllers/statsController';
 
 const router: Router = Router();
 
@@ -37,5 +38,10 @@ router.post('/report', authenticate, createReport);
 router.get('/admin/report', authenticate, isAdmin, getAllReports);
 router.post('/admin/reports/:id/review', authenticate, isAdmin, markReportReviewed);
 router.post('/admin/reports/:id/resolve', authenticate, isAdmin, markReportResolved);
+
+router.get('/user/stats/tests', authenticate, getTestStats);
+router.get('/user/stats/answers', authenticate, getAnswerStats);
+router.get('/user/stats/badges', authenticate, getBadgeStats);
+router.get('/user/stats/worst-accuracy', authenticate, getWorstAccuracyQuestions);
 
 export default router;

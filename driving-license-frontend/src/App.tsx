@@ -16,12 +16,12 @@ import AdminLayout from './layouts/AdminLayout';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import AdminUsers from './pages/admin/users/AdminUsers';
 import AdminQuestions from './pages/admin/questions/AdminQuestions';
-import Profile from './pages/Profile';
 import AboutPage from './pages/AboutPage';
 import TestPage from './pages/tests/TestPage';
 import ResultsPage from './pages/tests/ResultsPage';
 import AdminTests from './pages/admin/tests/AdminTests';
 import AdminReports from './pages/admin/reports/AdminReports';
+import Profile from './pages/Profile';
 
 function App() {
   return (

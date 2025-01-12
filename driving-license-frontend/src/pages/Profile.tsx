@@ -1,3 +1,4 @@
+// src/pages/Profile.tsx
 import React, { useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import { Button } from "../components/ui/button";
@@ -14,6 +15,7 @@ import {
   AlertDialogDescription,
 } from "../components/ui/alert-dialog";
 import { Edit } from "lucide-react";
+import ActivityStats from "../components/ActivityStats"; // Import the ActivityStats component
 
 const Profile: React.FC = () => {
   const { user, username, role, updateUsername } = useAuth();
@@ -181,9 +183,7 @@ const Profile: React.FC = () => {
         )}
 
         {activeTab === "Activity" && (
-          <Card className="p-6 shadow-lg rounded-md animate-fadeIn">
-            <p className="text-main-darkBlue">Activity content will go here.</p>
-          </Card>
+          <ActivityStats /> // Render the ActivityStats component
         )}
 
         {activeTab === "Settings" && (

@@ -89,113 +89,96 @@ function shuffleArray<T>(array: T[]): T[] {
       let finalQuestions: any[] = [];
   
       for (const cat of categoriesConfig) {
-        // Load all questions for that category
-        const allCategoryQuestions = await prisma.question.findMany({
-          where: {
-            category: cat.category,
-            groups: { has: group },
-          },
-          include: {
-            questionStats: {
-              where: { userId }, // user-specific stats only
-            },
-          },
-        });
+        // 1) Normal random subset from DB
+        const normalPick = await prisma.$queryRawUnsafe<any[]>(`
+          SELECT *
+          FROM "Question"
+          WHERE "category" = '${cat.category}'
+            AND '${group}' = ANY("groups")
+          ORDER BY RANDOM()
+          LIMIT ${cat.count}
+        `);
   
-        const totalFound = allCategoryQuestions.length;
-        if (totalFound === 0) {
-          console.log(`   Category="${cat.category}": no questions found. Skipping.`);
+        if (!normalPick || normalPick.length === 0) {
+          console.log(`category="${cat.category}" => no normalPick found. Skipping.`);
           continue;
         }
   
-        // Shuffle everything
-        const shuffledAll = shuffleArray(allCategoryQuestions);
+        // 2) "Bad" subset logic (top 10 worst by ratio), etc.
+        const maxBadCandidates = 10;
+        const possibleBad = await prisma.$queryRawUnsafe<any[]>(`
+          SELECT q.*,
+            (CASE WHEN (COALESCE(s."correctCount",0) + COALESCE(s."wrongCount",0))=0 
+                  THEN 0
+                  ELSE (COALESCE(s."wrongCount",0)*1.0 / (s."correctCount" + s."wrongCount")) 
+            END) AS ratio,
+            COALESCE(s."wrongCount",0) AS "wCount",
+            COALESCE(s."correctCount",0) AS "cCount"
+          FROM "Question" q
+          LEFT JOIN "QuestionStat" s ON s."questionId" = q."id" AND s."userId" = ${userId}
+          WHERE q."category" = '${cat.category}'
+            AND '${group}' = ANY(q."groups")
+          ORDER BY ratio DESC
+          LIMIT ${maxBadCandidates};
+        `);
   
-        // Normal random pick => first cat.count
-        let randomPick = shuffledAll.slice(0, cat.count);
-  
-        // Identify "bad" candidates => ratio>0
-        // We'll define weight = ratio * log(totalAttempts+1)
-        // ratio = wrongCount / total
-        // total = correctCount + wrongCount
-        // If total=0 => never answered => ratio=0 => weight=0
-        const badCandidates = allCategoryQuestions
-          .map((q) => {
-            const stat = q.questionStats[0];
-            const correctCount = stat?.correctCount ?? 0;
-            const wrongCount = stat?.wrongCount ?? 0;
-            const total = correctCount + wrongCount;
-            if (total === 0) {
-              return null; // ratio=0 => not "bad"
-            }
-            const ratio = wrongCount / total;
-            if (ratio <= 0) {
-              return null;
-            }
-            // Weighted approach
-            const weight = ratio * Math.log(total + 1); // e.g. ratio * ln(total+1)
-            return { question: q, weight };
+        // Weighted items
+        const badCandidates = possibleBad
+          .map((row) => {
+            const total = Number(row.cCount) + Number(row.wCount);
+            if (total === 0) return null;
+            const ratio = Number(row.ratio);
+            if (ratio <= 0) return null;
+            const weight = ratio * Math.log(total + 1);
+            return { question: row, weight };
           })
-          .filter((obj) => obj !== null) as { question: any; weight: number }[];
-        
-        console.log(`   Category="${cat.category}": totalFound=${totalFound}, badCandidates=${badCandidates.length}`);
-        // We only want to pick up to 2 or, say, 30% of cat.count, whichever is smaller
-        const maxBadAbsolute = 2; // limit of 2
-        const maxBadPercent = Math.floor(cat.count * 0.2); 
-        const maxBadToInject = Math.min(maxBadAbsolute, maxBadPercent, badCandidates.length);
+          .filter(Boolean) as { question: any; weight: number }[];
   
-        // Weighted random pick from these badCandidates
-        if (maxBadToInject > 0) {
-          const pickedBad = pickWeighted(badCandidates, maxBadToInject);
-          console.log(`   Category="${cat.category}": Injecting ${pickedBad.length} bad questions`);
+        // Randomly decide how many to inject (0,1,2) with 50% chance for 0, etc.
+        let howManyToInject = 0;
+        const roll = Math.random();
+        if (roll < 0.5) {
+          howManyToInject = 0;
+        } else if (roll < 0.75) {
+          howManyToInject = 1;
+        } else {
+          howManyToInject = 2;
+        }
   
-          // Now replace random items in randomPick
+        // Also respect 50% of cat.count
+        const limitPercent = Math.floor(cat.count * 0.5);
+        howManyToInject = Math.min(howManyToInject, limitPercent, badCandidates.length);
+  
+        if (howManyToInject > 0) {
+          const pickedBad = pickWeighted(badCandidates, howManyToInject);
           for (const badObj of pickedBad) {
             const bq = badObj.question;
-            // skip if randomPick already has it
-            if (randomPick.some((x) => x.id === bq.id)) continue;
-            // replace random item
-            const randIndex = Math.floor(Math.random() * randomPick.length);
-            randomPick[randIndex] = bq;
+            if (normalPick.some((x) => x.id === bq.id)) continue;
+            const randIndex = Math.floor(Math.random() * normalPick.length);
+            normalPick[randIndex] = bq;
           }
         }
   
-        finalQuestions.push(...randomPick);
+        finalQuestions.push(...normalPick);
       }
   
-      const totalSelected = finalQuestions.length;
-      console.log(`[startTest] totalSelected=${totalSelected}`);
-  
-      // Optionally shuffle finalQuestions across categories
-      // shuffleArray(finalQuestions);
-  
-      // Randomize each question’s options
+      // randomize each question's options
       const randomizedQuestions = finalQuestions.map((q) => {
-        // We assume q.correctAnswer is letter-based ("A", "B", "C", etc.)
-        const oldLetterIndex = letterMap.indexOf(q.correctAnswer);
-        if (oldLetterIndex < 0) {
-          console.log(`   [WARNING] Q ID=${q.id} has correctAnswer="${q.correctAnswer}", not in letterMap.`);
-          return q; // fallback: no change
-        }
-  
-        // Original correct option text
-        const correctOptionText = q.options[oldLetterIndex];
-  
-        // Shuffle the q.options array
-        const newOptions = shuffleArray(q.options);
-  
-        // Where did correctOptionText land?
-        const newIndex = newOptions.indexOf(correctOptionText);
-        const newCorrectLetter = letterMap[newIndex] ?? 'A';
+        const oldIndex = letterMap.indexOf(q.correctAnswer);
+        if (oldIndex < 0) return q;
+        const correctText = q.options[oldIndex];
+        const newOpts = shuffleArray([...q.options]);
+        const newIndex = newOpts.indexOf(correctText);
+        const newCorrectLetter = letterMap[newIndex] || 'A';
   
         return {
           ...q,
-          options: newOptions,
+          options: newOpts,
           correctAnswer: newCorrectLetter,
         };
       });
   
-      // Create the Test
+      // Create the Test record
       const newTest = await prisma.test.create({
         data: {
           userId,
@@ -207,88 +190,145 @@ function shuffleArray<T>(array: T[]): T[] {
         },
       });
   
-      // Insert testQuestion
-      for (const q of randomizedQuestions) {
-        await prisma.testQuestion.create({
-          data: {
-            testId: newTest.id,
-            questionId: q.id,
-          },
-        });
-      }
-  
-      return res.status(200).json({
+      // **STEP 1**: Return an immediate response so the client can load
+      // the test page right away, with "questions" data
+      res.status(200).json({
         message: 'Test started successfully',
         testId: newTest.id,
         questions: randomizedQuestions,
       });
-    } catch (error) {
-      console.error('[startTest] Error:', error);
+      setImmediate(async () => {
+        try {
+          await prisma.testQuestion.createMany({
+            data: randomizedQuestions.map((qq) => ({
+              testId: newTest.id,
+              questionId: qq.id,
+            })),
+          });
+          console.log(`[startTest background] Inserted ${randomizedQuestions.length} testQuestion rows`);
+        } catch (bgErr) {
+          console.error('[startTest background insert] error:', bgErr);
+          // You might handle retries, logging, etc. here
+        }
+      });
+  
+    } catch (err) {
+      console.error('[startTest] Error:', err);
       return res.status(500).json({ message: 'Error starting test' });
     }
   }
 
   export async function finishTest(req: AuthenticatedRequest, res: Response) {
-    try {
-      const userId = req.user?.id;
-      const { testId, score, timeTaken, isPassed, userAnswers } = req.body;
-  
-      if (!userId) {
-        return res.status(401).json({ message: 'Not authenticated' });
-      }
-      if (!testId) {
-        return res.status(400).json({ message: 'testId is required' });
-      }
-  
-      // 1) Update the Test record
-      const updatedTest = await prisma.test.update({
-        where: { id: testId },
-        data: {
-          score: score || 0, 
-          timeTaken: timeTaken || 0,
-          isPassed: Boolean(isPassed),
-        },
-      });
-  
-      // 2) If userAnswers array is provided, upsert them in the UserAnswer table
-      if (Array.isArray(userAnswers)) {
-        for (const ans of userAnswers) {
-          // Each ans = { questionId, selected, isCorrect }
-          // Use your named unique constraint "user_question_test_unique"
-          // so we can upsert on (userId, questionId, testId).
-          await prisma.userAnswer.upsert({
-            where: {
-              user_question_test_unique: {
-                userId: userId,
-                questionId: ans.questionId,
-                testId: testId,
-              },
-            },
-            update: {
-              selected: ans.selected,
-              isCorrect: ans.isCorrect,
-            },
-            create: {
-              userId: userId,
-              questionId: ans.questionId,
-              testId: testId,
-              selected: ans.selected,
-              isCorrect: ans.isCorrect,
-            },
-          });
-        }
-      }
-  
-      // 3) Return success response
+  try {
+    const userId = req.user?.id;
+    const { testId, score, timeTaken, isPassed, userAnswers } = req.body;
+
+    if (!userId) {
+      return res.status(401).json({ message: 'Not authenticated' });
+    }
+    if (!testId) {
+      return res.status(400).json({ message: 'testId is required' });
+    }
+
+    // 1) Update the Test record
+    const updatedTest = await prisma.test.update({
+      where: { id: testId },
+      data: {
+        score: score || 0,
+        timeTaken: timeTaken || 0,
+        isPassed: Boolean(isPassed),
+      },
+    });
+
+    // If no userAnswers provided, just return
+    if (!Array.isArray(userAnswers) || userAnswers.length === 0) {
       return res.json({
-        message: 'Test finished!',
+        message: 'Test finished (no userAnswers to store)',
         test: updatedTest,
       });
-    } catch (error) {
-      console.error('[finishTest] Error:', error);
-      return res.status(500).json({ message: 'Error finishing test', error: String(error) });
     }
+
+    // 2) Find which userAnswers already exist
+    //    We have a unique constraint on (userId, testId, questionId).
+    const questionIds = userAnswers.map((ua) => ua.questionId);
+    const existingRecords = await prisma.userAnswer.findMany({
+      where: {
+        userId,
+        testId,
+        questionId: { in: questionIds },
+      },
+    });
+    // Map existing questionIds -> userAnswer record
+    const existingMap = new Map<number, typeof existingRecords[number]>();
+    for (const rec of existingRecords) {
+      existingMap.set(rec.questionId, rec);
+    }
+
+    // 3) Separate new vs. existing
+    const newAnswers = [];
+    const updateAnswers = [];
+    for (const ans of userAnswers) {
+      const existing = existingMap.get(ans.questionId);
+      if (existing) {
+        // We'll need to update
+        updateAnswers.push(ans);
+      } else {
+        // We'll need to create
+        newAnswers.push(ans);
+      }
+    }
+
+    // 4) Create all "new" records at once using createMany
+    //    (If none are new, skip)
+    if (newAnswers.length > 0) {
+      // createMany in a single query
+      await prisma.userAnswer.createMany({
+        data: newAnswers.map((ans) => ({
+          userId,
+          testId,
+          questionId: ans.questionId,
+          selected: ans.selected,
+          isCorrect: ans.isCorrect,
+        })),
+      });
+    }
+
+    // 5) Update all "existing" records in a single transaction
+    //    (One .update call per record, but at least it's inside one transaction.)
+    if (updateAnswers.length > 0) {
+      await prisma.$transaction(
+        updateAnswers.map((ans) =>
+          prisma.userAnswer.update({
+            where: {
+              user_question_test_unique: {
+                userId,
+                questionId: ans.questionId,
+                testId,
+              },
+            },
+            data: {
+              selected: ans.selected,
+              isCorrect: ans.isCorrect,
+            },
+          })
+        )
+      );
+    }
+
+    // 6) Return success response
+    return res.json({
+      message: 'Test finished!',
+      test: updatedTest,
+      createdCount: newAnswers.length,
+      updatedCount: updateAnswers.length,
+    });
+  } catch (error) {
+    console.error('[finishTest] Error:', error);
+    return res
+      .status(500)
+      .json({ message: 'Error finishing test', error: String(error) });
   }
+}
 
   export async function recordQuestionStat(req: AuthenticatedRequest, res: Response) {
     try {
