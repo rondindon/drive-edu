@@ -386,7 +386,7 @@ const AdminReports: React.FC = () => {
                     </td>
                     <td className="py-2 px-4">
                       <div className="flex items-center space-x-4">
-                        <span className="w-32 text-gray-700 dark:text-gray-300">
+                        <span className="w-40 text-gray-700 dark:text-gray-300">
                           {report.question?.text.slice(0, 30)}...
                         </span>
                         <a
@@ -425,14 +425,14 @@ const AdminReports: React.FC = () => {
                         <>
                           <Button
                             variant="outline"
-                            className="bg-yellow-200 hover:bg-yellow-300 text-[hsl(var(--muted))] hover:text-[hsl(var(--muted))] transition-colors duration-200 w-24"
+                            className="bg-yellow-200 hover:bg-yellow-300 text-black transition-colors duration-200 w-24"
                             onClick={() => handleApprove(report.id)}
                           >
                             Review
                           </Button>
                           <Button
                             variant="outline"
-                            className="bg-green-200 hover:bg-green-300 text-[hsl(var(--muted))] hover:text-[hsl(var(--muted))] transition-colors duration-200 w-24"
+                            className="bg-green-200 hover:bg-green-300 text-black transition-colors duration-200 w-24"
                             onClick={() => handleResolve(report.id)}
                           >
                             Resolve
@@ -450,7 +450,7 @@ const AdminReports: React.FC = () => {
                         <>
                           <Button
                             variant="outline"
-                            className="bg-green-200 hover:bg-green-300 text-[hsl(var(--muted))] hover:text-[hsl(var(--muted))] transition-colors duration-200 w-24"
+                            className="bg-green-200 hover:bg-green-300 text-black transition-colors duration-200 w-24"
                             onClick={() => handleResolve(report.id)}
                           >
                             Resolve

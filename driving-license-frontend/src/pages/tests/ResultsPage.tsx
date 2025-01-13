@@ -66,7 +66,7 @@ const ResultsPage: React.FC = () => {
   const selectedQuestion = questions.find((q) => q.id === selectedQuestionId);
 
   const handleQuestionClick = (qId: number) => {
-    setSelectedQuestionId(qId === selectedQuestionId ? null : qId);
+    setSelectedQuestionId(qId);
   };
 
   // Bottom Buttons
