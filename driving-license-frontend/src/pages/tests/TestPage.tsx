@@ -11,7 +11,7 @@ interface Question {
   options: string[];
   correctAnswer: string;
   points: number;
-  imageUrl?: string; 
+  imageUrl?: string;
 }
 
 const TestPage: React.FC = () => {
@@ -19,24 +19,82 @@ const TestPage: React.FC = () => {
   const { state } = useLocation();
   const token = localStorage.getItem('supabaseToken');
 
-  // Deconstruct or default
   const {
     questions = [],
     testId = null,
   }: { questions: Question[]; testId: number | null } = state || {};
 
-  const letterMap = ['A', 'B', 'C'];
+  // Track if the test is fully finished (so we don’t prompt user again)
+  const [testFinished, setTestFinished] = useState(false);
 
+  // Standard local states
   const [currentIndex, setCurrentIndex] = useState(0);
   const [score, setScore] = useState(0);
-  const [timeLeft, setTimeLeft] = useState(30 * 60);
-
-  // userAnswers[i] => 'A'|'B'|'C'
+  const [timeLeft, setTimeLeft] = useState(30 * 60); // 30 min in seconds
   const [userAnswers, setUserAnswers] = useState<string[]>(
     new Array(questions.length).fill('')
   );
 
-  // === 30 min Timer ===
+  const letterMap = ['A', 'B', 'C'];
+
+  // ================================
+  // 1. Intercept Browser “Back”
+  // ================================
+  useEffect(() => {
+    const handlePopState = (e: PopStateEvent) => {
+      if (!testFinished) {
+        // This intercepts the user pressing the back button
+        e.preventDefault();
+
+        const confirmLeave = window.confirm(
+          'Are you sure you want to go back? The test is not finished. ' +
+          'If you confirm, the test will be submitted and you will leave this page.'
+        );
+        if (confirmLeave) {
+          finishTest(true); // finish the test, then navigate(-1)
+          navigate(-1);
+        } else {
+          window.history.pushState(null, '', window.location.href);
+        }
+      }
+    };
+
+    // We push a dummy state so the user can always go “back” in a controlled manner
+    window.history.pushState(null, '', window.location.href);
+
+    window.addEventListener('popstate', handlePopState);
+
+    return () => {
+      window.removeEventListener('popstate', handlePopState);
+    };
+  }, [testFinished]);
+
+  // ================================
+  // 2. Beforeunload Prompt
+  // ================================
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (!testFinished) {
+        e.preventDefault();
+        e.returnValue = ''; // Some browsers ignore custom text
+        // Attempt minimal send if you like:
+        if (testId) {
+          const quickPayload = JSON.stringify({ testId, message: 'User forcibly left. Partial data?' });
+          const blob = new Blob([quickPayload], { type: 'application/json' });
+          navigator.sendBeacon('http://localhost:4444/api/tests/finish-quick', blob);
+        }
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  }, [testFinished, testId]);
+
+  // ================================
+  // 3. Timer => auto-submit
+  // ================================
   useEffect(() => {
     if (!questions.length) return;
 
@@ -44,7 +102,7 @@ const TestPage: React.FC = () => {
       setTimeLeft((prev) => {
         if (prev <= 1) {
           clearInterval(timer);
-          finishTest();
+          finishTest(); // auto-finish
           return 0;
         }
         return prev - 1;
@@ -52,20 +110,23 @@ const TestPage: React.FC = () => {
     }, 1000);
 
     return () => clearInterval(timer);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [questions]);
 
+  // For the progress bar
   const totalDuration = 30 * 60; // 1800
   const progressValue = (timeLeft / totalDuration) * 100;
-
-  // user can see min:sec
+  // For display
   const minutes = Math.floor(timeLeft / 60);
   const seconds = timeLeft % 60;
 
+  // Unique categories in the question set
   const categories = Array.from(new Set(questions.map((q) => q.category)));
 
-  // === handleAnswer ===
+  // ================================
+  // 4. Handling answers
+  // ================================
   const handleAnswer = (selectedIndex: number) => {
+    if (!questions.length) return;
     const q = questions[currentIndex];
     const chosenLetter = letterMap[selectedIndex];
     const isCorrect = chosenLetter === q.correctAnswer;
@@ -76,6 +137,7 @@ const TestPage: React.FC = () => {
       return updated;
     });
 
+    // Optionally track local score
     if (isCorrect) {
       setScore((prev) => prev + (q.points || 0));
     } else {
@@ -83,7 +145,7 @@ const TestPage: React.FC = () => {
     }
   };
 
-  // === Next/Prev ===
+  // Next/Prev
   const nextQuestion = () => {
     if (currentIndex < questions.length - 1) {
       setCurrentIndex((prev) => prev + 1);
@@ -102,43 +164,44 @@ const TestPage: React.FC = () => {
     }
   };
 
-  // === Finish Test with sendBeacon ===
-  const finishTest = () => {
-    // If no valid test
+  // Jump to category
+  const jumpToCategory = (cat: string) => {
+    const idx = questions.findIndex((q) => q.category === cat);
+    if (idx !== -1) setCurrentIndex(idx);
+  };
+
+  // ================================
+  // 5. Finishing the Test
+  // ================================
+  const finishTest = (navigateBackAfter?: boolean) => {
+    // If no valid test or already finished, just return or navigate away
     if (!testId) {
       alert('No valid testId found. Returning to homepage.');
       navigate('/');
       return;
     }
 
-    const questionStatsPromises: Promise<any>[] = [];
-
-    // 1) Calculate final score
+    // 1) compute final
     let finalScore = 0;
+    const questionStatsPromises: Promise<any>[] = [];
     userAnswers.forEach((answer, idx) => {
       const q = questions[idx];
       const isCorrect = answer === q.correctAnswer;
-      if (answer === questions[idx].correctAnswer) {
-        finalScore += (questions[idx].points || 0);
-      }
+      if (isCorrect) finalScore += (q.points || 0);
+
+      // background stats
       questionStatsPromises.push(
         fetch('http://localhost:4444/api/question-stats', {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({
-            questionId: q.id,
-            isCorrect,
-          }),
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+          body: JSON.stringify({ questionId: q.id, isCorrect }),
         })
       );
     });
     const isPassed = finalScore >= 90;
     const timeTaken = totalDuration - timeLeft;
 
-    // 2) Prepare results data
+    // 2) Build results data
     const resultsData = {
       isPassed,
       score: finalScore,
@@ -152,15 +215,15 @@ const TestPage: React.FC = () => {
       })),
     };
 
-    // 3) Immediately show results (so user doesn't wait)
+    // 3) Show results
     navigate('/results', {
       state: resultsData,
     });
-    
+
+    // 4) Fire off questionStats
     Promise.all(questionStatsPromises);
 
-    // 4) In the background, send final test data to server
-    // We'll put userAnswers in the payload as well
+    // 5) final test data
     const payload = JSON.stringify({
       testId,
       score: finalScore,
@@ -173,21 +236,27 @@ const TestPage: React.FC = () => {
       })),
     });
 
-    // fallback to a normal fetch
     fetch('http://localhost:4444/api/tests/finish', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
-      },
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
       body: payload,
     })
       .then((res) => res.json())
-      .then((data) => console.log('[finishTest] fetch =>', data))
-      .catch((err) => console.error('[finishTest] fetch error =>', err));
+      .then((data) => console.log('[finishTest] =>', data))
+      .catch((err) => console.error('[finishTest] error =>', err));
+
+    // Mark test as finished => no more prompts
+    setTestFinished(true);
+
+    // If we came from the "popstate" scenario, go back
+    if (navigateBackAfter) {
+      navigate(-1);
+    }
   };
 
-  // === Reporting Logic ===
+  // ================================
+  // 6. Reporting logic
+  // ================================
   const [showReportPopup, setShowReportPopup] = useState(false);
   const [reportDescription, setReportDescription] = useState('');
   const [reportQuestionId, setReportQuestionId] = useState<number | null>(null);
@@ -203,13 +272,6 @@ const TestPage: React.FC = () => {
     setReportDescription('');
   };
 
-  const jumpToCategory = (cat: string) => {
-    const idx = questions.findIndex((q) => q.category === cat);
-    if (idx !== -1) {
-      setCurrentIndex(idx);
-    }
-  };
-
   const submitReport = async () => {
     if (!reportQuestionId || !reportDescription.trim()) {
       alert('Please provide a description');
@@ -219,10 +281,7 @@ const TestPage: React.FC = () => {
     try {
       const resp = await fetch('http://localhost:4444/api/report', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({
           questionId: reportQuestionId,
           description: reportDescription,
@@ -244,24 +303,31 @@ const TestPage: React.FC = () => {
   // If no questions
   if (!questions.length) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-secondary-lightGray text-main-darkBlue">
+      <div className="flex items-center justify-center min-h-screen bg-[hsl(var(--background))] text-[hsl(var(--foreground))]">
         <p className="p-4">No questions loaded. Please start a test from the landing page.</p>
       </div>
     );
   }
 
-  // current question
+  // Current question details
   const currentQuestion = questions[currentIndex];
   const selectedAnswer = userAnswers[currentIndex];
 
+  // answered vs. active highlight
+  const isAnswered = (i: number) => !!userAnswers[i];
+  const isActive = (i: number) => i === currentIndex;
+
   return (
-    <div className="flex flex-col items-center justify-start min-h-screen bg-secondary-lightGray text-main-darkBlue px-4 py-8">
+    <div className="flex flex-col items-center justify-start min-h-screen bg-[hsl(var(--background))] text-[hsl(var(--foreground))] px-4 py-8">
       {/* Timer + progress + question points */}
       <div className="mb-6 w-[70%] flex items-center justify-between gap-4">
         <div className="flex items-center w-2/3 gap-2">
-          <Progress value={progressValue} className="h-2 w-full" />
-          <span className="text-sm font-medium text-main-darkBlue">
-            {Math.floor(timeLeft / 60)}:{String(timeLeft % 60).padStart(2, '0')}
+          <Progress
+            value={progressValue}
+            className="h-2 w-full bg-[hsl(var(--muted))] data-[state=fill]:bg-[hsl(var(--primary))]"
+          />
+          <span className="text-sm font-medium text-[hsl(var(--foreground))]">
+            {minutes}:{String(seconds).padStart(2, '0')}
           </span>
         </div>
         <div className="text-sm font-medium text-right w-1/3">
@@ -269,167 +335,176 @@ const TestPage: React.FC = () => {
         </div>
       </div>
 
-      <div className="w-[70%]">
-        <div className="flex gap-6 items-start">
-          {/* Categories */}
-          <aside
-            className="
-              bg-white
-              rounded
-              shadow
-              p-4
-              text-left
-              w-56
-              h-[39rem]
-              overflow-auto
-              shrink-0
-            "
-          >
-            <div className="flex flex-col gap-2">
-              {categories.map((cat) => (
-                <Button
-                  key={cat}
-                  variant="secondary"
-                  size="reactive"
-                  className="
-                    w-full
-                    text-xs
-                    whitespace-normal
-                    break-words
-                    text-left
-                    leading-tight
-                    bg-[#ECF0F1]
-                    hover:bg-[#BDC3C7]
-                    text-main-darkBlue
-                    px-4 py-2
-                  "
-                  onClick={() => jumpToCategory(cat)}
-                >
-                  {cat}
-                </Button>
-              ))}
-            </div>
-          </aside>
+      <div className="w-[70%] flex gap-6 items-start">
+        {/* Categories */}
+        <aside
+          className="
+            bg-[hsl(var(--card))] text-[hsl(var(--card-foreground))]
+            rounded shadow p-4
+            text-left
+            w-56 h-[39rem]
+            overflow-auto
+            shrink-0
+          "
+        >
+          <div className="flex flex-col gap-2">
+            {categories.map((cat) => (
+              <Button
+                key={cat}
+                variant="secondary"
+                size="reactive"
+                className="
+                  w-full text-xs whitespace-normal
+                  bg-[hsl(var(--muted))] text-[hsl(var(--foreground))]
+                  hover:bg-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--background))]
+                  break-words text-left leading-tight
+                  px-4 py-2
+                "
+                onClick={() => jumpToCategory(cat)}
+              >
+                {cat}
+              </Button>
+            ))}
+          </div>
+        </aside>
 
-          {/* Main column */}
-          <main className="flex-1 flex flex-col gap-4">
-            {/* Navigation row of question numbers */}
-            <div className="flex flex-wrap gap-2 shrink-0">
-              {questions.map((_, i) => {
-                const isActive = i === currentIndex;
+        {/* Main column */}
+        <main className="flex-1 flex flex-col gap-4">
+          {/* Navigation row of question numbers */}
+          <div className="flex flex-wrap gap-2">
+            {questions.map((_, i) => {
+              let bgClass = 'bg-[hsl(var(--card))] text-[hsl(var(--foreground))]';
+              if (isActive(i)) {
+                // Darker green if active
+                bgClass = 'bg-main-green text-white';
+              } else if (isAnswered(i)) {
+                // Lighter green if answered
+                bgClass = 'bg-main-green/50 text-white';
+              }
+
+              return (
+                <Button
+                  key={i}
+                  variant="secondary"
+                  className={`
+                    w-10 h-10
+                    flex items-center justify-center
+                    text-sm
+                    hover:bg-main-green
+                    hover:text-white
+                    ${bgClass}
+                  `}
+                  onClick={() => jumpToQuestion(i)}
+                >
+                  {i + 1}
+                </Button>
+              );
+            })}
+          </div>
+
+          {/* Question content */}
+          <div className="relative bg-[hsl(var(--card))] text-[hsl(var(--card-foreground))] rounded shadow p-6 flex-1 overflow-auto">
+            {/* Report icon at top-right */}
+            <Button
+              variant="outline"
+              className="absolute top-4 right-6 h-8 px-2 flex items-center justify-center hover:bg-[hsl(var(--destructive))] hover:text-[hsl(var(--destructive-foreground))]"
+              onClick={() => openReportPopup(currentQuestion.id)}
+              title="Report an issue with this question"
+            >
+              <FaFlag className="text-[hsl(var(--destructive))]" />
+            </Button>
+
+            <h2 className="text-xl font-bold mb-4 whitespace-normal break-words max-w-3xl">
+              {currentQuestion.text}
+            </h2>
+            {currentQuestion.imageUrl && (
+              <div className="mb-4">
+                <img
+                  src={currentQuestion.imageUrl}
+                  alt="question"
+                  className="max-w-full h-auto rounded shadow-sm"
+                />
+              </div>
+            )}
+
+            <div className="space-y-2 mb-4">
+              {currentQuestion.options.map((option, idx) => {
+                const letter = letterMap[idx];
+                const isSelected = selectedAnswer === letter;
                 return (
                   <Button
-                    key={i}
-                    variant="secondary"
+                    key={option}
+                    variant="outline"
+                    size="reactive"
                     className={`
-                      w-10 h-10
-                      flex items-center justify-center
-                      text-sm
-                      ${isActive ? 'bg-main-green text-white' : 'bg-white'}
+                      text-black
+                      w-full text-left justify-start
+                      whitespace-normal break-words
+                      px-4 py-3 text-xs
+                      bg-secondary-greenBackground
+                      hover:bg-main-green
+                      hover:text-white
+                      ${isSelected ? 'bg-main-green text-white' : ''}
                     `}
-                    onClick={() => jumpToQuestion(i)}
+                    onClick={() => handleAnswer(idx)}
                   >
-                    {i + 1}
+                    {option}
                   </Button>
                 );
               })}
             </div>
 
-            {/* Question content */}
-            <div className="relative bg-white rounded shadow p-6 flex-1 overflow-auto">
-              {/* Report icon at the top right of question box */}
+            <div className="flex justify-between">
               <Button
-                variant="outline"
-                className="absolute top-4 right-6 h-8 px-2 flex items-center justify-center"
-                onClick={() => openReportPopup(currentQuestion.id)}
-                title="Report an issue with this question"
+                onClick={prevQuestion}
+                disabled={currentIndex === 0}
+                className="hover:bg-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--background))]"
               >
-                <FaFlag className="text-red-500" />
+                Previous
               </Button>
-
-              <h2 className="text-xl font-bold mb-4 whitespace-normal break-words max-w-3xl">
-                {currentQuestion.text}
-              </h2>
-              {currentQuestion.imageUrl && (
-                <div className="mb-4">
-                  <img
-                    src={currentQuestion.imageUrl}
-                    alt="question"
-                    className="max-w-full h-auto rounded shadow-sm"
-                  />
-                </div>
-              )}
-
-              <div className="space-y-2 mb-4">
-                {currentQuestion.options.map((option, idx) => {
-                  const letter = letterMap[idx];
-                  const isSelected = selectedAnswer === letter;
-                  return (
-                    <Button
-                      key={option}
-                      variant="outline"
-                      size="reactive"
-                      className={`
-                        w-full
-                        text-left
-                        justify-start
-                        bg-secondary-greenBackground
-                        hover:bg-secondary.red
-                        hover:text-white
-                        whitespace-normal
-                        break-words
-                        px-4 py-3
-                        max-w-3xl
-                        text-xs
-                        ${isSelected ? 'bg-main-green text-white' : ''}
-                      `}
-                      onClick={() => handleAnswer(idx)}
-                    >
-                      {option}
-                    </Button>
-                  );
-                })}
-              </div>
-
-              <div className="flex justify-between">
-                <Button onClick={prevQuestion} disabled={currentIndex === 0}>
-                  Previous
+              {currentIndex < questions.length - 1 ? (
+                <Button
+                  onClick={nextQuestion}
+                  className="hover:bg-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--background))]"
+                >
+                  Next
                 </Button>
-                {currentIndex < questions.length - 1 ? (
-                  <Button onClick={nextQuestion}>Next</Button>
-                ) : (
-                  <Button
-                    onClick={finishTest}
-                    className="bg-main-green text-white hover:bg-green-700"
-                  >
-                    Finish Test
-                  </Button>
-                )}
-              </div>
+              ) : (
+                <Button
+                  onClick={() => finishTest()}
+                  className="bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] hover:bg-[hsl(var(--primary))]/90"
+                >
+                  Finish Test
+                </Button>
+              )}
             </div>
-          </main>
-        </div>
+          </div>
+        </main>
       </div>
 
       {/* Report Popup */}
       {showReportPopup && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded p-6 w-[300px] shadow">
+        <div className="fixed inset-0 bg-[hsl(var(--foreground))]/50 flex items-center justify-center z-50">
+          <div className="bg-[hsl(var(--card))] text-[hsl(var(--card-foreground))] rounded p-6 w-[300px] shadow-lg">
             <h3 className="text-lg font-semibold mb-2">Report Issue</h3>
             <textarea
-              className="w-full h-24 p-2 border border-gray-300 rounded mb-4"
+              className="w-full h-24 p-2 border border-[hsl(var(--muted))] rounded mb-4 bg-[hsl(var(--background))] text-[hsl(var(--foreground))]"
               placeholder="Describe the issue..."
               value={reportDescription}
               onChange={(e) => setReportDescription(e.target.value)}
             />
             <div className="flex justify-end gap-2">
-              <Button variant="outline" onClick={closeReportPopup}>
+              <Button
+                variant="outline"
+                onClick={closeReportPopup}
+                className="hover:bg-[hsl(var(--muted))] hover:text-[hsl(var(--foreground))]"
+              >
                 Cancel
               </Button>
               <Button
                 variant="default"
                 onClick={submitReport}
-                className="bg-red-500 text-white"
+                className="bg-[hsl(var(--destructive))] text-[hsl(var(--destructive-foreground))] hover:bg-[hsl(var(--destructive))]/90"
               >
                 Submit
               </Button>

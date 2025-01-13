@@ -1,18 +1,20 @@
 // src/pages/admin/reports/AdminReports.tsx
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useContext } from "react";
 import { Button } from "src/components/ui/button";
 import { Input } from "src/components/ui/input";
 import { Card } from "src/components/ui/card";
-import {
-  DropdownMenu,
-  DropdownMenuTrigger,
-  DropdownMenuContent,
-  DropdownMenuItem,
-} from "src/components/ui/dropdown-menu";
 import { useAuth } from "src/context/AuthContext";
 import { useNavigate } from "react-router-dom";
-import { MoreVertical } from "lucide-react";
+import {
+  User,
+  ClipboardList,
+  ClipboardCheck,
+  BarChart as LucideBarChart, // Alias Lucide's BarChart
+  RefreshCw,
+  ExternalLink, // Import ExternalLink icon
+} from "lucide-react";
+import { Skeleton } from "src/components/ui/skeleton"; // Import Skeleton
 import {
   Select,
   SelectTrigger,
@@ -20,10 +22,9 @@ import {
   SelectItem,
   SelectValue,
 } from "src/components/ui/select";
-import { Skeleton } from "src/components/ui/skeleton";
 
-import { Report, ReportStatus, ReportType } from "./ReportTypes";
-import ReportDetailModal from "./ReportDetailModal";
+import { Report, ReportStatus } from "./ReportTypes";
+import { ThemeContext } from "src/context/ThemeContext";
 
 // Example status/type arrays
 const reportStatuses: ReportStatus[] = ["Pending", "Reviewed", "Resolved"];
@@ -48,6 +49,9 @@ const SkeletonRow: React.FC = () => (
     </td>
     <td className="py-2 px-4">
       <Skeleton className="w-8 h-4" />
+    </td>
+    <td className="py-2 px-4">
+      <Skeleton className="w-24 h-6" />
     </td>
   </tr>
 );
@@ -74,10 +78,10 @@ const AdminReports: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
 
   const [statusFilter, setStatusFilter] = useState<string>("All");
-  const [typeFilter, setTypeFilter] = useState<string>("All");
   const [searchTerm, setSearchTerm] = useState<string>("");
 
   const token = localStorage.getItem("supabaseToken");
+  const { theme } = useContext(ThemeContext);
 
   // Local cache key
   const cacheKey = "adminReportsCache";
@@ -114,7 +118,7 @@ const AdminReports: React.FC = () => {
 
     // If no valid cache, fetch from server
     try {
-      // Here we call GET /api/report
+      // Here we call GET /api/admin/report
       const response = await fetch("http://localhost:4444/api/admin/report", {
         headers: {
           "Content-Type": "application/json",
@@ -136,6 +140,10 @@ const AdminReports: React.FC = () => {
 
       // We only want the array inside data.reports
       const fetchedReports = data.reports; // this is an array
+
+      fetchedReports.sort((a : any, b : any) => {
+        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+      });
 
       setReports(fetchedReports);
 
@@ -177,11 +185,6 @@ const AdminReports: React.FC = () => {
       temp = temp.filter((report) => report.status === statusFilter);
     }
 
-    // Filter by type
-    if (typeFilter !== "All") {
-      temp = temp.filter((report) => report.type === typeFilter);
-    }
-
     // Search term
     if (searchTerm.trim() !== "") {
       const search = searchTerm.toLowerCase();
@@ -195,9 +198,9 @@ const AdminReports: React.FC = () => {
     }
 
     setFilteredReports(temp);
-  }, [reports, statusFilter, typeFilter, searchTerm]);
+  }, [reports, statusFilter, searchTerm]);
 
-  // === 5) Handlers for Approve, Resolve, Delete (like your old code) ===
+  // === 5) Handlers for Approve, Resolve, Delete ===
 
   const handleApprove = async (reportId: number) => {
     try {
@@ -268,7 +271,7 @@ const AdminReports: React.FC = () => {
 
     try {
       const response = await fetch(
-        `http://localhost:4444/api/admin/reports/${reportId}`,
+        `http://localhost:4444/api/admin/reports/${reportId}/delete`,
         {
           method: "DELETE",
           headers: {
@@ -289,10 +292,6 @@ const AdminReports: React.FC = () => {
     }
   };
 
-  // === 6) Detail Modal handling
-  const [selectedReport, setSelectedReport] = useState<Report | null>(null);
-  const [isDetailModalOpen, setIsDetailModalOpen] = useState<boolean>(false);
-
   // === 7) Refresh button
   const handleRefresh = () => {
     localStorage.removeItem(cacheKey);
@@ -306,40 +305,40 @@ const AdminReports: React.FC = () => {
         <h1 className="text-2xl font-bold text-[hsl(var(--foreground))]">Reports</h1>
       </div>
       <div className="flex justify-between">
-      {/* Filters and Search */}
-      <div className="flex items-center space-x-4 mb-4 text-[hsl(var(--foreground))]">
-        <Input
-          placeholder="Search by user, report ID, or question ID..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="w-72"
-        />
+        {/* Filters and Search */}
+        <div className="flex items-center space-x-4 mb-4 text-[hsl(var(--foreground))]">
+          <Input
+            placeholder="Search by user, report ID, or question ID..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-72"
+          />
 
-        {/* Status Filter */}
-        <div className="flex items-center space-x-2">
-          <span>Status:</span>
-          <Select
-            value={statusFilter}
-            onValueChange={(val) => setStatusFilter(val)}
-          >
-            <SelectTrigger className="w-32">
-              <SelectValue placeholder="All" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="All">All</SelectItem>
-              {reportStatuses.map((status) => (
-                <SelectItem key={status} value={status}>
-                  {status}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+          {/* Status Filter */}
+          <div className="flex items-center space-x-2">
+            <span>Status:</span>
+            <Select
+              value={statusFilter}
+              onValueChange={(val) => setStatusFilter(val)}
+            >
+              <SelectTrigger className="w-32">
+                <SelectValue placeholder="All" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="All">All</SelectItem>
+                {reportStatuses.map((status) => (
+                  <SelectItem key={status} value={status}>
+                    {status}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
         </div>
         <div className="flex space-x-2">
           <Button
             onClick={handleRefresh}
-            className="bg-main-blue text-white hover:bg-main-blue/90"
+            className="bg-main-blue text-white hover:bg-main-blue/90 transition-colors duration-200 hover:text-white w-24"
           >
             Refresh
           </Button>
@@ -377,22 +376,29 @@ const AdminReports: React.FC = () => {
                 {filteredReports.map((report) => (
                   <tr
                     key={report.id}
-                    className="border-b border-gray-200 hover:bg-gray-50"
+                    className={`border-b border-gray-200 ${
+                      theme === "light" ? "hover:bg-gray-100" : "hover:bg-green-300/50"
+                    }`}
                   >
                     <td className="py-2 px-4">{report.id}</td>
                     <td className="py-2 px-4">
                       {report.user?.username} ({report.user?.email})
                     </td>
                     <td className="py-2 px-4">
-                      {/* Link to question detail? */}
-                      <a
-                        href={`/question/${report.question?.id}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-blue-500 underline"
-                      >
-                        {report.question?.text.slice(0, 50)}...
-                      </a>
+                      <div className="flex items-center space-x-4">
+                        <span className="w-32 text-gray-700 dark:text-gray-300">
+                          {report.question?.text.slice(0, 30)}...
+                        </span>
+                        <a
+                          href={`/question/${report.question?.id}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-main-blue hover:text-main-blue/80"
+                          aria-label="View Question"
+                        >
+                          <ExternalLink className="w-4 h-4" />
+                        </a>
+                      </div>
                     </td>
                     <td className="py-2 px-4">
                       {report.description?.slice(0, 100)}...
@@ -402,7 +408,7 @@ const AdminReports: React.FC = () => {
                     </td>
                     <td className="py-2 px-4">
                       <span
-                        className={`px-2 py-1 rounded ${
+                        className={`px-2 py-1 block text-center w-24 rounded ${
                           report.status === "Resolved"
                             ? "bg-green-200 text-green-800"
                             : report.status === "Reviewed"
@@ -413,19 +419,20 @@ const AdminReports: React.FC = () => {
                         {report.status}
                       </span>
                     </td>
-                    <td className="py-2 px-4 flex items-center pt-4">
+                    <td className="py-4 px-4 flex items-center space-x-2">
+                      {/* Centered Buttons */}
                       {report.status === "Pending" && (
                         <>
                           <Button
                             variant="outline"
-                            className="mr-2 bg-yellow-200 hover:bg-yellow-300"
+                            className="bg-yellow-200 hover:bg-yellow-300 text-[hsl(var(--muted))] hover:text-[hsl(var(--muted))] transition-colors duration-200 w-24"
                             onClick={() => handleApprove(report.id)}
                           >
                             Review
                           </Button>
                           <Button
                             variant="outline"
-                            className="mr-2 bg-green-200 hover:bg-green-300"
+                            className="bg-green-200 hover:bg-green-300 text-[hsl(var(--muted))] hover:text-[hsl(var(--muted))] transition-colors duration-200 w-24"
                             onClick={() => handleResolve(report.id)}
                           >
                             Resolve
@@ -433,6 +440,7 @@ const AdminReports: React.FC = () => {
                           <Button
                             variant="destructive"
                             onClick={() => handleDelete(report.id)}
+                            className="bg-red-200 hover:bg-red-300 text-black transition-colors duration-200 w-24"
                           >
                             Delete
                           </Button>
@@ -442,7 +450,7 @@ const AdminReports: React.FC = () => {
                         <>
                           <Button
                             variant="outline"
-                            className="mr-2 bg-green-200 hover:bg-green-300 text-[hsl(var(--muted))]"
+                            className="bg-green-200 hover:bg-green-300 text-[hsl(var(--muted))] hover:text-[hsl(var(--muted))] transition-colors duration-200 w-24"
                             onClick={() => handleResolve(report.id)}
                           >
                             Resolve
@@ -450,7 +458,7 @@ const AdminReports: React.FC = () => {
                           <Button
                             variant="destructive"
                             onClick={() => handleDelete(report.id)}
-                            className="text-[hsl(var(--foreground))]"
+                            className="bg-red-200 hover:bg-red-300 text-black transition-colors duration-200 w-24"
                           >
                             Delete
                           </Button>
@@ -460,7 +468,7 @@ const AdminReports: React.FC = () => {
                         <Button
                           variant="destructive"
                           onClick={() => handleDelete(report.id)}
-                          className="text-[hsl(var(--foreground))]"
+                          className="bg-red-200 hover:bg-red-300 text-black transition-colors duration-200 w-24"
                         >
                           Delete
                         </Button>

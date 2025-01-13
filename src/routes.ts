@@ -6,8 +6,8 @@ import { getQuestionById } from './controllers/questionController';
 import { authenticate } from './middleware/auth';
 import { deleteUser, getAllUsers, updateUser } from './controllers/adminUserController';
 import {deleteTest, finishTest, getAllTests, recordQuestionStat, recordUserAnswer, startTest } from './controllers/testController';
-import { createReport, getAllReports, markReportResolved, markReportReviewed } from './controllers/reportController';
-import { getAnswerStats, getBadgeStats, getTestStats, getWorstAccuracyQuestions, testsTakenAndPassedByUser } from './controllers/statsController';
+import { createReport, deleteReport, getAllReports, markReportResolved, markReportReviewed } from './controllers/reportController';
+import { getAdminTestStats, getAnswerStats, getBadgeStats, getTestStats, getWorstAccuracyQuestions, testsTakenAndPassedByUser } from './controllers/statsController';
 
 const router: Router = Router();
 
@@ -38,11 +38,13 @@ router.post('/report', authenticate, createReport);
 router.get('/admin/report', authenticate, isAdmin, getAllReports);
 router.post('/admin/reports/:id/review', authenticate, isAdmin, markReportReviewed);
 router.post('/admin/reports/:id/resolve', authenticate, isAdmin, markReportResolved);
+router.delete('/admin/reports/:id/delete', authenticate, isAdmin, deleteReport);
 
 router.get('/user/stats/tests', authenticate, getTestStats);
 router.get('/user/stats/answers', authenticate, getAnswerStats);
 router.get('/user/stats/badges', authenticate, getBadgeStats);
 router.get('/user/stats/worst-accuracy', authenticate, getWorstAccuracyQuestions);
 router.get('/user/stats/test-summary', authenticate, testsTakenAndPassedByUser);
+router.get('/admin/stats/tests', authenticate, isAdmin, getAdminTestStats);
 
 export default router;

@@ -1,5 +1,4 @@
 // src/pages/Register.tsx
-
 import React, { useState } from "react";
 import { supabase } from "../services/supabase";
 import { AuthError, User } from "@supabase/supabase-js";
@@ -12,21 +11,23 @@ import { FcGoogle } from "react-icons/fc"; // Google icon for styling
 const Register: React.FC = () => {
   const [email, setEmail] = useState<string>("");
   const [password, setPassword] = useState<string>("");
-  const [username, setUsername] = useState<string>(""); // Add username state
+  const [username, setUsername] = useState<string>("");
   const [message, setMessage] = useState<string | null>(null);
   const [showAlert, setShowAlert] = useState<boolean>(false);
-  const [isSubmitting, setIsSubmitting] = useState<boolean>(false); // To handle multiple submissions
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
 
     try {
-      const { data, error }: { data: { user: User | null }; error: AuthError | null } =
-        await supabase.auth.signUp({
-          email,
-          password,
-        });
+      const {
+        data,
+        error,
+      }: { data: { user: User | null }; error: AuthError | null } = await supabase.auth.signUp({
+        email,
+        password,
+      });
 
       if (error) {
         setMessage(`Error: ${error.message}`);
@@ -41,7 +42,7 @@ const Register: React.FC = () => {
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({ email, username }), // Send username to backend
+          body: JSON.stringify({ email, username }),
         });
 
         if (!response.ok) {
@@ -53,7 +54,6 @@ const Register: React.FC = () => {
       setShowAlert(true);
     } finally {
       setIsSubmitting(false);
-      // Hide alert after 5 seconds
       setTimeout(() => setShowAlert(false), 5000);
     }
   };
@@ -61,20 +61,18 @@ const Register: React.FC = () => {
   const handleGoogleRegister = async () => {
     try {
       await supabase.auth.signInWithOAuth({ provider: "google" });
-      // No need to set message here; the AuthProvider handles it via onAuthStateChange
     } catch (err: any) {
       setMessage(`Google sign-up failed: ${err.message || err}`);
       setShowAlert(true);
-      // Hide alert after 5 seconds
       setTimeout(() => setShowAlert(false), 5000);
     }
   };
 
   return (
-    <div className="flex items-center justify-center h-screen bg-secondary-lightGray">
-      <Card className="w-full max-w-md shadow-lg transform hover:scale-105 transition-transform duration-300">
+    <div className="flex items-center justify-center h-screen bg-[hsl(var(--background))] text-[hsl(var(--foreground))]">
+      <Card className="w-full max-w-md shadow-lg transform hover:scale-105 transition-transform duration-300 bg-[hsl(var(--card))] text-[hsl(var(--card-foreground))]">
         <CardHeader>
-          <CardTitle className="text-center text-xl font-semibold text-main-darkBlue">
+          <CardTitle className="text-center text-xl font-semibold text-[hsl(var(--foreground))]">
             Register
           </CardTitle>
         </CardHeader>
@@ -85,15 +83,15 @@ const Register: React.FC = () => {
               showAlert ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-10 h-0"
             }`}
             style={{
-              height: showAlert ? "auto" : "0", // Smoothly adjusts height
+              height: showAlert ? "auto" : "0",
             }}
           >
             {message && (
               <Alert
                 className={`mb-4 ${
                   message.includes("Error") || message.includes("failed")
-                    ? "bg-secondary-red text-white border-secondary-red"
-                    : "bg-secondary-greenBackground text-main-green border-main-green"
+                    ? "bg-[hsl(var(--destructive))] text-[hsl(var(--destructive-foreground))] border-[hsl(var(--destructive))]"
+                    : "bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] border-[hsl(var(--primary))]"
                 }`}
               >
                 <AlertTitle className="font-bold">
@@ -107,7 +105,7 @@ const Register: React.FC = () => {
           {/* Registration Form */}
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
-              <label htmlFor="username" className="block text-sm font-medium text-main-darkBlue">
+              <label htmlFor="username" className="block text-sm font-medium text-[hsl(var(--foreground))]">
                 Username
               </label>
               <Input
@@ -117,11 +115,11 @@ const Register: React.FC = () => {
                 onChange={(e) => setUsername(e.target.value)}
                 placeholder="Enter your username"
                 required
-                className="transition-colors duration-200 focus:border-main-green focus:ring focus:ring-main-green"
+                className="transition-colors duration-200 focus:border-[hsl(var(--primary))] focus:ring-[hsl(var(--primary))]"
               />
             </div>
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-main-darkBlue">
+              <label htmlFor="email" className="block text-sm font-medium text-[hsl(var(--foreground))]">
                 Email
               </label>
               <Input
@@ -131,11 +129,11 @@ const Register: React.FC = () => {
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="Enter your email"
                 required
-                className="transition-colors duration-200 focus:border-main-green focus:ring focus:ring-main-green"
+                className="transition-colors duration-200 focus:border-[hsl(var(--primary))] focus:ring-[hsl(var(--primary))]"
               />
             </div>
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-main-darkBlue">
+              <label htmlFor="password" className="block text-sm font-medium text-[hsl(var(--foreground))]">
                 Password
               </label>
               <Input
@@ -145,13 +143,20 @@ const Register: React.FC = () => {
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="Enter your password"
                 required
-                className="transition-colors duration-200 focus:border-main-green focus:ring focus:ring-main-green"
+                className="transition-colors duration-200 focus:border-[hsl(var(--primary))] focus:ring-[hsl(var(--primary))]"
               />
             </div>
             <Button
               type="submit"
               disabled={isSubmitting}
-              className="w-full py-2 px-4 bg-main-green text-white font-semibold rounded-lg shadow-md hover:bg-main-darkBlue transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
+              className={`
+                w-full py-2 px-4
+                bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))]
+                font-semibold rounded-lg shadow-md
+                hover:bg-[hsl(var(--primary))]/90
+                transition-all duration-300 transform hover:scale-105
+                disabled:opacity-50 disabled:cursor-not-allowed
+              `}
             >
               {isSubmitting ? "Registering..." : "Register"}
             </Button>
@@ -160,20 +165,27 @@ const Register: React.FC = () => {
           {/* Separator */}
           <div className="relative my-6">
             <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-gray-300"></div>
+              <div className="w-full border-t border-[hsl(var(--muted))]"></div>
             </div>
             <div className="relative flex justify-center text-sm">
-              <span className="px-2 bg-white text-main-darkBlue">OR</span>
+              {/* We can keep a small 'box' with card background color */}
+              <span className="px-2 bg-[hsl(var(--card))] text-[hsl(var(--foreground))]">
+                OR
+              </span>
             </div>
           </div>
 
           {/* Google Register */}
           <Button
             onClick={handleGoogleRegister}
-            className="w-full flex items-center justify-center space-x-2 bg-white border border-gray-300 shadow hover:bg-gray-100 transition-all duration-300"
+            className="
+              w-full flex items-center justify-center space-x-2
+              bg-[hsl(var(--background))] border border-[hsl(var(--muted))]
+              shadow hover:bg-[hsl(var(--muted-foreground))] transition-all duration-300
+            "
           >
             <FcGoogle className="w-6 h-6" />
-            <span className="text-main-darkBlue font-semibold">Continue with Google</span>
+            <span className="text-[hsl(var(--foreground))] font-semibold">Continue with Google</span>
           </Button>
         </CardContent>
       </Card>

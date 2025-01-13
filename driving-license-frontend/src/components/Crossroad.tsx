@@ -50,11 +50,11 @@ const Crossroad: React.FC<CrossroadProps> = ({ scenario, onCarClick, selectedOrd
             >
               {/* Left Blinker */}
               {car.blinker === 'left' && (
-                <div className="absolute top-1/2 left-0 w-2 h-2 bg-yellow-400 animate-blink transform -translate-y-1/2"></div>
+                <div className="absolute top-1/3 left-0 w-2 h-2 bg-yellow-400 animate-blink transform -translate-y-1/2"></div>
               )}
               {/* Right Blinker */}
               {car.blinker === 'right' && (
-                <div className="absolute top-1/2 right-0 w-2 h-2 bg-yellow-400 animate-blink transform -translate-y-1/2"></div>
+                <div className="absolute top-1/3 right-0 w-2 h-2 bg-yellow-400 animate-blink transform -translate-y-1/2"></div>
               )}
             </div>
 

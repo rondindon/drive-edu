@@ -1,6 +1,6 @@
 // src/pages/admin/tests/AdminTests.tsx
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useContext } from "react";
 import { Button } from "src/components/ui/button";
 import { Input } from "src/components/ui/input";
 import { Card } from "src/components/ui/card";
@@ -15,6 +15,7 @@ import { useNavigate } from "react-router-dom";
 import { MoreVertical } from "lucide-react";
 import { Skeleton } from "src/components/ui/skeleton";
 import TestDetailsDialog from "./TestDetailsDialog"; // Ensure the path is correct
+import { ThemeContext } from "src/context/ThemeContext";
 
 // Updated User Interface with 'username'
 export interface User {
@@ -64,6 +65,8 @@ const AdminTests: React.FC = () => {
   // State for Test Details Dialog
   const [selectedTest, setSelectedTest] = useState<Test | null>(null);
   const [openDetailsDialog, setOpenDetailsDialog] = useState(false);
+
+  const { theme } = useContext(ThemeContext);
 
   // Caching
   const getCacheKey = () => {
@@ -291,7 +294,7 @@ const AdminTests: React.FC = () => {
                 {filteredTests.map((t) => (
                   <tr
                     key={t.id}
-                    className="border-b border-gray-200 hover:bg-gray-50"
+                    className={`border-b border-gray-200 ${theme === 'light' ? "hover:bg-gray-100" : "hover:bg-green-300/50"} `}
                   >
                     <td className="py-2 px-4">{t.id}</td>
                     <td className="py-2 px-4">

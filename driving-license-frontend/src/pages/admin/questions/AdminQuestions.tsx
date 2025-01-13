@@ -1,5 +1,5 @@
 // src/pages/admin/questions/AdminQuestions.tsx
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useContext } from "react";
 import { Button } from "src/components/ui/button";
 import { Input } from "src/components/ui/input";
 import { Card } from "src/components/ui/card";
@@ -21,6 +21,7 @@ import {
   SelectValue,
 } from "src/components/ui/select";
 import { Skeleton } from "src/components/ui/skeleton";
+import { ThemeContext } from "src/context/ThemeContext";
 
 // Updated Question Interface
 export interface Question {
@@ -118,6 +119,7 @@ const AdminQuestions: React.FC = () => {
 
   // Define a single Cache Key
   const cacheKey = "adminQuestionsCache";
+  const { theme } = useContext(ThemeContext);
 
   // Fetch Questions Function with Caching
   const fetchQuestions = useCallback(async () => {
@@ -434,7 +436,7 @@ const AdminQuestions: React.FC = () => {
                 {filteredQuestions.map((q) => (
                   <tr
                     key={q.id}
-                    className="border-b border-gray-200 hover:bg-gray-50"
+                    className={`border-b border-gray-200 ${theme === 'light' ? "hover:bg-gray-100" : "hover:bg-green-300/50"} `}
                   >
                     <td className="py-2 px-4">{q.id}</td>
                     <td className="py-2 px-4">

@@ -43,7 +43,7 @@ function App() {
       {/* Public Routes with PublicLayout */}
       <Route element={<PublicLayout />}>
         <Route path="/" element={<LandingPage />} />
-        <Route path="/question/:id" element={<QuestionDetails />} />
+        <Route path="/question/:id" element={<ProtectedRoute allowedRoles={['ADMIN']}><QuestionDetails /></ProtectedRoute>} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/simulator" element={<CrossroadSimulator />} />

@@ -52,6 +52,9 @@ const Navbar: React.FC = () => {
           <a href="/about" className={isActive("/about")}>
             About
           </a>
+          <a href="/simulator" className={isActive("/simulator")}>
+            Simulator
+          </a>
           {/* <a href="/contact" className={isActive("/contact")}>Contact</a> */}
         </div>
 
@@ -153,6 +156,12 @@ const Navbar: React.FC = () => {
                   className={`block px-2 py-1 rounded ${isActive("/about")}`}
                 >
                   About
+                </a>
+                <a
+                  href="/simulator"
+                  className={`block px-2 py-1 rounded ${isActive("/simulator")}`}
+                >
+                  Simulator
                 </a>
                 {/* <a
                   href="/contact"

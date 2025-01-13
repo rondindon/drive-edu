@@ -38,7 +38,6 @@ export async function createReport(req: AuthenticatedRequest, res: Response) {
   }
 
 export async function getAllReports(req: AuthenticatedRequest, res: Response) {
-    console.log('getAllReports');
     try {
       const reports = await prisma.reports.findMany({
         include: {
@@ -132,5 +131,41 @@ export async function getAllReports(req: AuthenticatedRequest, res: Response) {
     } catch (error) {
       console.error('[markReportResolved] Error:', error);
       return res.status(500).json({ message: 'Error updating report status' });
+    }
+  }
+
+  export async function deleteReport(req: AuthenticatedRequest, res: Response) {
+    try {
+      const userId = req.user?.id; // User ID from auth
+      const reportId = parseInt(req.params.id, 10); // Report ID from URL params
+  
+      if (!userId) {
+        return res.status(401).json({ message: 'Not authenticated' });
+      }
+  
+      if (isNaN(reportId)) {
+        return res.status(400).json({ message: 'Invalid report ID' });
+      }
+  
+      // Check if the report exists
+      const existingReport = await prisma.reports.findUnique({
+        where: { id: reportId },
+      });
+  
+      if (!existingReport) {
+        return res.status(404).json({ message: 'Report not found' });
+      }
+  
+      // Delete the report
+      await prisma.reports.delete({
+        where: { id: reportId },
+      });
+  
+      return res.status(200).json({
+        message: 'Report deleted successfully',
+      });
+    } catch (error) {
+      console.error('[deleteReport] Error:', error);
+      return res.status(500).json({ message: 'Error deleting report' });
     }
   }

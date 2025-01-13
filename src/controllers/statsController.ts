@@ -294,3 +294,51 @@ export async function getWorstAccuracyQuestions(req: AuthenticatedRequest, res: 
       return res.status(500).json({ message: 'Internal Server Error: Unable to fetch tests taken and passed.' });
     }
   };
+
+  export async function getAdminTestStats(req: AuthenticatedRequest, res: Response) {
+    try {
+      // Fetch all tests
+      const tests = await prisma.test.findMany({
+        select: { createdAt: true, score: true, isPassed: true }, // Adjust based on your schema
+        orderBy: { createdAt: 'asc' },
+      });
+  
+      // Group tests by month
+      const testsByMonthMap: { [key: string]: { count: number; totalScore: number; passed: number } } = {};
+  
+      tests.forEach((test) => {
+        const month = `${test.createdAt.getFullYear()}-${(test.createdAt.getMonth() + 1).toString().padStart(2, '0')}`; // YYYY-MM
+        if (!testsByMonthMap[month]) {
+          testsByMonthMap[month] = { count: 0, totalScore: 0, passed: 0 };
+        }
+        testsByMonthMap[month].count += 1;
+        testsByMonthMap[month].totalScore += test.score;
+        if (test.isPassed) {
+          testsByMonthMap[month].passed += 1;
+        }
+      });
+  
+      const testsOverTimeMonth = Object.keys(testsByMonthMap)
+        .sort()
+        .map((month) => ({
+          period: month,
+          count: testsByMonthMap[month].count,
+        }));
+  
+      const testPerformanceByMonth = Object.keys(testsByMonthMap)
+        .sort()
+        .map((month) => ({
+          period: month,
+          averageScore: parseFloat((testsByMonthMap[month].totalScore / testsByMonthMap[month].count).toFixed(2)),
+          passRate: parseFloat(((testsByMonthMap[month].passed / testsByMonthMap[month].count) * 100).toFixed(2)),
+        }));
+  
+      return res.status(200).json({
+        testsOverTimeMonth,
+        testPerformanceByMonth,
+      });
+    } catch (error) {
+      console.error('[getAdminTestStats] Error:', error);
+      return res.status(500).json({ message: 'Error fetching admin test statistics' });
+    }
+  }

@@ -1,5 +1,5 @@
 // src/pages/admin/users/AdminUsers.tsx
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useContext } from "react";
 import { Button } from "src/components/ui/button";
 import { Input } from "src/components/ui/input";
 import { Card } from "src/components/ui/card";
@@ -20,6 +20,7 @@ import {
   SelectValue,
 } from "src/components/ui/select";
 import { Skeleton } from "src/components/ui/skeleton"; // Import Skeleton
+import { ThemeContext } from "src/context/ThemeContext";
 
 // Updated User Interface with 'username'
 interface User {
@@ -95,6 +96,7 @@ const AdminUsers: React.FC = () => {
   const [hasMore, setHasMore] = useState<boolean>(true);
   const limit = 100;
   const token = localStorage.getItem("supabaseToken");
+  const { theme } = useContext(ThemeContext);
 
   // Caching
   const getCacheKey = () => {
@@ -376,7 +378,7 @@ const AdminUsers: React.FC = () => {
                 {filteredUsers.map((u) => (
                   <tr
                     key={u.id}
-                    className="border-b border-gray-200 hover:bg-gray-50"
+                    className={`border-b border-gray-200 ${theme === 'light' ? "hover:bg-gray-100" : "hover:bg-green-300/50"} `}
                   >
                     <td className="py-2 px-4">{u.id}</td>
                     <td className="py-2 px-4">{u.email}</td>

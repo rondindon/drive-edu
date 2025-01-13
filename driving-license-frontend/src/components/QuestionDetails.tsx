@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+// src/pages/QuestionDetails.tsx
+import React, { useState, useEffect } from "react";
+import { useParams, useNavigate } from "react-router-dom";
 
 interface Question {
   id: number;
@@ -16,7 +17,8 @@ interface Question {
 
 const QuestionDetails: React.FC = () => {
   const { id } = useParams<{ id: string }>(); // Current question ID from the URL
-  const navigate = useNavigate(); // Navigation for next question
+  const navigate = useNavigate(); // Navigation for next/previous question
+
   const [question, setQuestion] = useState<Question | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -28,13 +30,13 @@ const QuestionDetails: React.FC = () => {
     try {
       const response = await fetch(`http://localhost:4444/api/question/${questionId}`);
       if (!response.ok) {
-        throw new Error('Failed to fetch the question');
+        throw new Error("Failed to fetch the question");
       }
       const data: Question = await response.json();
       setQuestion(data);
       setLoading(false);
     } catch (err) {
-      setError('Could not fetch the question');
+      setError("Could not fetch the question");
       setLoading(false);
     }
   };
@@ -46,62 +48,123 @@ const QuestionDetails: React.FC = () => {
 
   // Handler for moving to the next question
   const handleNextQuestion = () => {
-    const nextId = Number(id) + 1; // Increment ID to get the next question
-    navigate(`/question/${nextId}`); // Navigate to the next question
+    const nextId = Number(id) + 1;
+    navigate(`/question/${nextId}`);
+  };
+
+  // Handler for moving to the previous question
+  const handlePreviousQuestion = () => {
+    const prevId = Number(id) - 1;
+    if (prevId > 0) {
+      navigate(`/question/${prevId}`);
+    }
   };
 
   if (loading) {
-    return <p>Loading...</p>;
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-[hsl(var(--background))] text-[hsl(var(--foreground))]">
+        <p className="text-lg">Loading...</p>
+      </div>
+    );
   }
 
   if (error) {
-    return <p>{error}</p>;
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-[hsl(var(--background))] text-[hsl(var(--foreground))]">
+        <p className="text-lg">{error}</p>
+      </div>
+    );
   }
 
   if (!question) {
-    return <p>Question not found</p>;
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-[hsl(var(--background))] text-[hsl(var(--foreground))]">
+        <p className="text-lg">Question not found</p>
+      </div>
+    );
   }
 
   return (
-    <div>
-      <h2>Question Details</h2>
-      <p><strong>ID:</strong> {question.id}</p>
-      <p><strong>Category:</strong> {question.category}</p>
-      <p><strong>Groups:</strong> {question.groups.join(', ')}</p>
-      <p><strong>Text:</strong> {question.text}</p>
-      <p><strong>Options:</strong></p>
-      <ul>
-        {question.options.map((option, index) => (
-          <li key={index}>{option}</li>
-        ))}
-      </ul>
-      <p><strong>Correct Answer:</strong> {question.correctAnswer}</p>
-      {question.imageUrl && (
-        <div>
-          <strong>Image:</strong>
-          <img src={question.imageUrl} alt="Question related" style={{ maxWidth: '100%', height: 'auto', marginTop: '10px' }} />
-        </div>
-      )}
-      <p><strong>Difficulty:</strong> {question.difficulty}</p>
-      <p><strong>Explanation:</strong> {question.explanation}</p>
-      <p><strong>Points:</strong> {question.points}</p>
+    <div className="min-h-screen bg-[hsl(var(--background))] text-[hsl(var(--foreground))] p-4 flex items-center justify-center">
+      <div className="w-full max-w-3xl bg-[hsl(var(--card))] text-[hsl(var(--card-foreground))] rounded-md shadow-lg p-6 space-y-4 animate-fadeIn">
+        <h2 className="text-2xl font-bold mb-2">Question Details</h2>
 
-      {/* Next Question Button */}
-      <button
-        onClick={handleNextQuestion}
-        style={{
-          padding: '10px 20px',
-          fontSize: '16px',
-          marginTop: '20px',
-          backgroundColor: '#4CAF50',
-          color: 'white',
-          border: 'none',
-          borderRadius: '5px',
-          cursor: 'pointer',
-        }}
-      >
-        Next Question
-      </button>
+        <div className="space-y-2">
+          <p>
+            <strong>ID:</strong> {question.id}
+          </p>
+          <p>
+            <strong>Category:</strong> {question.category}
+          </p>
+          <p>
+            <strong>Groups:</strong> {question.groups.join(", ")}
+          </p>
+          <p>
+            <strong>Text:</strong> {question.text}
+          </p>
+
+          <p>
+            <strong>Options:</strong>
+          </p>
+          <ul className="list-disc ml-5 space-y-1">
+            {question.options.map((option, index) => (
+              <li key={index}>{option}</li>
+            ))}
+          </ul>
+
+          <p>
+            <strong>Correct Answer:</strong> {question.correctAnswer}
+          </p>
+
+          {question.imageUrl && (
+            <div className="mt-3">
+              <strong>Image:</strong>
+              <img
+                src={question.imageUrl}
+                alt="Question related"
+                className="rounded shadow-sm mt-2 max-w-full h-auto"
+              />
+            </div>
+          )}
+
+          <p>
+            <strong>Difficulty:</strong> {question.difficulty}
+          </p>
+          <p>
+            <strong>Explanation:</strong> {question.explanation}
+          </p>
+          <p>
+            <strong>Points:</strong> {question.points}
+          </p>
+        </div>
+
+        {/* Navigation Buttons */}
+        <div className="flex justify-end gap-4 mt-6">
+          <button
+            onClick={handlePreviousQuestion}
+            disabled={Number(id) <= 1}
+            className={`
+              px-4 py-2 rounded-md shadow
+              bg-[hsl(var(--muted))] text-[hsl(var(--foreground))]
+              hover:bg-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--background))]
+              disabled:bg-gray-300 disabled:text-gray-600 disabled:cursor-not-allowed
+            `}
+          >
+            Previous
+          </button>
+
+          <button
+            onClick={handleNextQuestion}
+            className={`
+              px-4 py-2 rounded-md shadow
+              bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))]
+              hover:bg-[hsl(var(--primary))]/90
+            `}
+          >
+            Next Question
+          </button>
+        </div>
+      </div>
     </div>
   );
 };
