@@ -1,5 +1,5 @@
 // src/components/ActivityStats.tsx
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState, useMemo, useContext } from 'react';
 import axios from 'axios';
 import {
   LineChart,
@@ -20,6 +20,7 @@ import { Card } from './ui/card';
 import LoadingSpinner from './LoadingSpinner';
 import { addDays, subDays, parseISO } from 'date-fns'; // Ensure date-fns is installed
 import { ChevronLeftIcon, ChevronRightIcon } from 'lucide-react';
+import { ThemeContext } from '../context/ThemeContext'; // <-- Import theme context
 
 // Define TypeScript interfaces for the data
 interface TestStat {
@@ -69,6 +70,15 @@ interface WorstAccuracyQuestion {
 const COLORS = ['#27AE60', '#E74C3C', '#F1C40F', '#2C3E50'];
 
 const ActivityStats: React.FC = () => {
+  // Access theme
+  const { theme } = useContext(ThemeContext);
+
+  // Decide stroke colors based on theme
+  const axisStroke = theme === 'dark' ? '#fff' : '#2C3E50';
+  const gridStroke = theme === 'dark' ? '#555' : '#ccc';
+  const tooltipBg = theme === 'dark' ? '#333' : '#fff';
+  const tooltipColor = theme === 'dark' ? '#fff' : '#000';
+
   // **State Declarations**
   const [testStatsDay, setTestStatsDay] = useState<TestStat[]>([]);
   const [testStatsMonth, setTestStatsMonth] = useState<TestStat[]>([]);
@@ -145,9 +155,6 @@ const ActivityStats: React.FC = () => {
 
     fetchStats();
   }, [token]);
-
-  // **Memoized Values:**
-  // These hooks are called unconditionally at the top of the component
 
   // Determine Current Test Stats Based on Aggregation
   const currentTestStats = useMemo(() => {
@@ -236,7 +243,7 @@ const ActivityStats: React.FC = () => {
 
   const paddedTestStats = useMemo(() => addPadding(currentTestStats, 4, selectedAggregation), [currentTestStats, selectedAggregation]);
 
-  // Function to Format X-Axis Labels
+  // Format X-Axis Labels
   const formatXAxis = (period: string): string => {
     if (selectedAggregation === 'day') {
       const date = parseISO(period);
@@ -248,21 +255,20 @@ const ActivityStats: React.FC = () => {
     }
   };
 
-  // **Toggle Button Handler**
+  // Toggle Button Handler
   const toggleAggregation = () => {
     setSelectedAggregation(prev => (prev === 'month' ? 'day' : 'month'));
   };
 
-  // **Carousel Navigation Handlers**
+  // Carousel Navigation
   const goToPreviousQuestion = () => {
     setCurrentQuestionIndex(prevIndex => (prevIndex === 0 ? worstAccuracyQuestions.length - 1 : prevIndex - 1));
   };
-
   const goToNextQuestion = () => {
     setCurrentQuestionIndex(prevIndex => (prevIndex === worstAccuracyQuestions.length - 1 ? 0 : prevIndex + 1));
   };
 
-  // **Keyboard Navigation for Carousel (Optional Enhancement)**
+  // Keyboard Navigation for Carousel
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'ArrowLeft') {
@@ -276,9 +282,7 @@ const ActivityStats: React.FC = () => {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [worstAccuracyQuestions]);
 
-  // **Early Returns for Loading and Error States**
-  // These are placed after all hooks to maintain the hook order
-
+  // Early Returns for Loading and Error States
   if (error) {
     return (
       <div className="text-center text-red-500 min-h-screen flex items-center justify-center">
@@ -312,11 +316,10 @@ const ActivityStats: React.FC = () => {
               aria-label={`Test Performance Over Time (${selectedAggregation === 'month' ? 'Monthly' : 'Daily'})`}
               role="img"
             >
-              {/* Retain original graph colors by removing CSS variables */}
-              <CartesianGrid stroke="#ccc" strokeDasharray="5 5" />
+              <CartesianGrid stroke={theme === 'dark' ? '#555' : '#ccc'} strokeDasharray="5 5" />
               <XAxis
                 dataKey="period"
-                stroke="#2C3E50"
+                stroke={theme === 'dark' ? '#fff' : '#2C3E50'}
                 tickFormatter={formatXAxis}
                 interval={Math.floor(paddedTestStats.length / 10)} // Adjust to limit number of ticks
                 angle={-45}
@@ -324,17 +327,19 @@ const ActivityStats: React.FC = () => {
                 height={60}
                 className="font-BAM"
               />
-              <YAxis stroke="#2C3E50" domain={[0, upperBound]} />
+              <YAxis stroke={theme === 'dark' ? '#fff' : '#2C3E50'} domain={[0, upperBound]} />
               <Tooltip
                 formatter={(value: number) => [value, 'Tests']}
                 labelFormatter={(label: string) => label}
-                // Retain original tooltip styling or adjust as needed
-                contentStyle={{ backgroundColor: '#fff', color: '#000' }}
+                contentStyle={{
+                  backgroundColor: theme === 'dark' ? '#333' : '#fff',
+                  color: theme === 'dark' ? '#fff' : '#000',
+                }}
               />
               <Line
                 type="monotone"
                 dataKey="count"
-                stroke="#27AE60" // Original green color
+                stroke="#27AE60" // Original line color
                 strokeWidth={2}
                 dot={{ r: 4 }}
                 activeDot={{ r: 8 }}
@@ -397,11 +402,14 @@ const ActivityStats: React.FC = () => {
                   { name: 'Correct', value: answerStats.correctCount },
                   { name: 'Wrong', value: answerStats.wrongCount },
                 ].map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} /> // Retain original colors
+                  <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} /> // Original colors
                 ))}
               </Pie>
               <Tooltip
-                contentStyle={{ backgroundColor: '#fff', color: '#000' }} // Original tooltip colors
+                contentStyle={{
+                  backgroundColor: theme === 'dark' ? '#333' : '#fff',
+                  color: theme === 'dark' ? '#fff' : '#000',
+                }}
               />
               <Legend verticalAlign="bottom" height={36} />
             </PieChart>
@@ -419,16 +427,19 @@ const ActivityStats: React.FC = () => {
         {answerStats && answerStats.performanceByCategory.length > 0 ? (
           <ResponsiveContainer width="100%" height={300}>
             <BarChart data={answerStats.performanceByCategory}>
-              <CartesianGrid stroke="#ccc" strokeDasharray="5 5" /> {/* Original grid color */}
-              <XAxis dataKey="category" stroke="#2C3E50" /> {/* Original axis color */}
-              <YAxis domain={[0, 100]} stroke="#2C3E50" /> {/* Original axis color */}
+              <CartesianGrid stroke={gridStroke} strokeDasharray="5 5" /> 
+              <XAxis dataKey="category" stroke={axisStroke} />
+              <YAxis domain={[0, 100]} stroke={axisStroke} />
               <Tooltip
                 formatter={(value: number) => [value + '%', 'Accuracy']}
                 labelFormatter={(label: string) => label}
-                contentStyle={{ backgroundColor: '#fff', color: '#000' }} // Original tooltip colors
+                contentStyle={{
+                  backgroundColor: theme === 'dark' ? '#333' : '#fff',
+                  color: theme === 'dark' ? '#fff' : '#000',
+                }}
               />
               <Legend verticalAlign="top" height={36} />
-              <Bar dataKey="accuracy" fill="#27AE60" name="Accuracy (%)" animationDuration={6000} /> {/* Original bar color */}
+              <Bar dataKey="accuracy" fill="#27AE60" name="Accuracy (%)" animationDuration={6000} /> 
             </BarChart>
           </ResponsiveContainer>
         ) : (
@@ -446,9 +457,9 @@ const ActivityStats: React.FC = () => {
             {badgeStats.badges.map((badge, index) => (
               <div
                 key={index}
-                className="flex items-center space-x-4 p-4 bg-[hsl(var(--card))] rounded-md shadow-sm animate-fadeIn" // Match parent div's color
+                className="flex items-center space-x-4 p-4 bg-[hsl(var(--card))] rounded-md shadow-sm animate-fadeIn"
               >
-                {/* Replace with actual badge icons if available */}
+                {/* Badge Icon */}
                 <div className="w-12 h-12 bg-[hsl(var(--primary))] rounded-full flex items-center justify-center text-white text-lg font-bold">
                   {badge.title.charAt(0)}
                 </div>
@@ -479,33 +490,34 @@ const ActivityStats: React.FC = () => {
               aria-label="Badges Earned Over Time"
               role="img"
             >
-              {/* Retain original graph colors by removing CSS variables */}
-              <CartesianGrid stroke="#ccc" strokeDasharray="5 5" />
+              <CartesianGrid stroke={gridStroke} strokeDasharray="5 5" />
               <XAxis
                 dataKey="month"
-                stroke="#2C3E50"
+                stroke={axisStroke}
                 tickFormatter={(month) => {
                   const [year, monthNum] = month.split('-').map(Number);
                   const date = new Date(year, monthNum - 1);
                   return date.toLocaleString('default', { month: 'short', year: 'numeric' });
                 }}
-                interval={Math.floor(badgeStats.badgesOverTime.length / 10)} // Adjust to limit number of ticks
+                interval={Math.floor(badgeStats.badgesOverTime.length / 10)}
                 angle={-45}
                 textAnchor="end"
                 height={60}
                 className="font-BAM"
               />
-              <YAxis stroke="#2C3E50" />
+              <YAxis stroke={axisStroke} />
               <Tooltip
                 formatter={(value: number) => [value, 'Badges']}
                 labelFormatter={(label: string) => label}
-                // Retain original tooltip styling or adjust as needed
-                contentStyle={{ backgroundColor: '#fff', color: '#000' }}
+                contentStyle={{
+                  backgroundColor: theme === 'dark' ? '#333' : '#fff',
+                  color: theme === 'dark' ? '#fff' : '#000',
+                }}
               />
               <Line
                 type="monotone"
                 dataKey="count"
-                stroke="#F1C40F" // Original yellow color
+                stroke="#F1C40F"
                 strokeWidth={2}
                 dot={{ r: 4 }}
                 activeDot={{ r: 8 }}
@@ -518,7 +530,7 @@ const ActivityStats: React.FC = () => {
         </Card>
       )}
 
-      {/* **Worst Accuracy Questions** */}
+      {/* Worst Accuracy Questions */}
       <Card className="p-6 shadow-lg rounded-md animate-fadeIn bg-[hsl(var(--card))] text-[hsl(var(--card-foreground))]">
         <h2 className="text-xl font-semibold text-[hsl(var(--primary))] mb-4">
           Questions with Worst Accuracy
@@ -527,10 +539,9 @@ const ActivityStats: React.FC = () => {
           <div className="flex flex-col items-center">
             {/* Question Display */}
             <div
-              className="w-full md:w-3/4 lg:w-2/3 p-6 rounded-md shadow-lg bg-[hsl(var(--card))]" // Match parent div's color and add shadow
-              style={{ height: '60vh' }} // Set dynamic height relative to viewport
+              className="w-full md:w-3/4 lg:w-2/3 p-6 rounded-md shadow-lg bg-[hsl(var(--card))]"
+              style={{ height: '60vh' }}
             >
-              {/* Make the container a flex column to manage content */}
               <div className="flex flex-col h-full">
                 {/* Image (if available) */}
                 {worstAccuracyQuestions[currentQuestionIndex].imageUrl && (
@@ -554,17 +565,19 @@ const ActivityStats: React.FC = () => {
 
                 {/* Display Answers */}
                 <div className="space-y-2 flex-grow overflow-auto">
-                  {worstAccuracyQuestions[currentQuestionIndex].options.map((option, index) => {
-                    // Determine if the option is correct
+                  {worstAccuracyQuestions[currentQuestionIndex].options.map((option, idx) => {
                     const isCorrect = option === worstAccuracyQuestions[currentQuestionIndex].correctAnswer;
                     return (
                       <div
-                        key={index}
-                        className={`p-2 rounded-md ${
-                          isCorrect
-                            ? 'bg-[hsl(var(--primary))] border-2 border-[hsl(var(--primary-foreground))] text-white'
-                            : 'bg-[hsl(var(--muted))]'
-                        }`}
+                        key={idx}
+                        className={`
+                          p-2 rounded-md
+                          ${
+                            isCorrect
+                              ? 'bg-[hsl(var(--primary))] border-2 border-[hsl(var(--primary-foreground))] text-white'
+                              : 'bg-[hsl(var(--muted))]'
+                          }
+                        `}
                       >
                         {option}
                       </div>

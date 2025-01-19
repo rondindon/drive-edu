@@ -1,23 +1,22 @@
 import React, { useRef, useState, useEffect, useContext } from "react";
-import { Canvas, context } from "@react-three/fiber";
+import { Canvas } from "@react-three/fiber";
 import { useGLTF } from "@react-three/drei";
 import { Suspense } from "react";
 import * as THREE from "three";
 import { ThemeContext } from "src/context/ThemeContext";
 
 interface Props {
-  group: string | null; // Group can be null or string
+  group: string | null;
 }
 
 const models: { [key: string]: string } = {
-  B: "/models/car.glb", // Path to car model
-  C: "/models/truck.glb", // Path to truck model
+  B: "/models/car.glb",
+  C: "/models/truck.glb",
 };
 
-// Function to generate a shade of the default color
 const getShadeOfColor = (baseColor: THREE.Color): THREE.Color => {
   const shade = baseColor.clone();
-  const lightnessVariation = Math.random() * 0.3 - 0.15; // Varies between -0.15 and +0.15
+  const lightnessVariation = Math.random() * 0.3 - 0.15; 
   shade.offsetHSL(0, 0, lightnessVariation);
   return shade;
 };
@@ -72,9 +71,10 @@ const Viewer: React.FC<Props> = ({ group }) => {
   const [rotation, setRotation] = useState<[number, number, number]>([0, 0, 0]);
   const [targetRotation, setTargetRotation] = useState<[number, number, number]>([0, 0, 0]);
   const [isMouseOver, setIsMouseOver] = useState(false);
-  const [currentColor, setCurrentColor] = useState(new THREE.Color(1, 1, 1)); // Default white color
-  const [targetColor, setTargetColor] = useState(new THREE.Color(1, 1, 1)); // Default target color
+  const [currentColor, setCurrentColor] = useState(new THREE.Color(1, 1, 1));
+  const [targetColor, setTargetColor] = useState(new THREE.Color(1, 1, 1));
   const { theme } = useContext(ThemeContext);
+
   const calculateContinuousAngle = (current: number, target: number): number => {
     while (target - current > Math.PI) target -= Math.PI * 2;
     while (target - current < -Math.PI) target += Math.PI * 2;
@@ -158,7 +158,8 @@ const Viewer: React.FC<Props> = ({ group }) => {
         onMouseMove={handleMouseMove}
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
-        className="rounded-md border shadow-lg overflow-hidden"
+        // The classes below add a smooth hover scale effect
+        className="rounded-md border shadow-lg overflow-hidden transform transition-transform duration-300 hover:scale-105 hover:cursor-move"
         style={{
           width: "66%",
           height: "35rem",
@@ -167,7 +168,13 @@ const Viewer: React.FC<Props> = ({ group }) => {
         }}
       >
         {group && group in models ? (
-          <Suspense fallback={<p className="text-center text-[hsl(var(--muted-foreground))]">Loading 3D model...</p>}>
+          <Suspense
+            fallback={
+              <p className="text-center text-[hsl(var(--muted-foreground))]">
+                Loading 3D model...
+              </p>
+            }
+          >
             <Canvas
               camera={{
                 position: [0, 50, 500],
@@ -180,7 +187,12 @@ const Viewer: React.FC<Props> = ({ group }) => {
               <ambientLight intensity={theme === "dark" ? 0.25 : 0.5} />
               <directionalLight intensity={theme === "dark" ? 0.6 : 0.8} position={[2, 2, 2]} />
               <group position={[0, -50, 0]} scale={1.2}>
-                <Model url={models[group]} rotation={rotation} currentColor={currentColor} targetColor={targetColor} />
+                <Model
+                  url={models[group]}
+                  rotation={rotation}
+                  currentColor={currentColor}
+                  targetColor={targetColor}
+                />
               </group>
             </Canvas>
           </Suspense>

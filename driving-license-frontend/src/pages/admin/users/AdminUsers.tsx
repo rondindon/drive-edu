@@ -351,7 +351,7 @@ const AdminUsers: React.FC = () => {
         {/* Refresh Button */}
         <Button
           onClick={handleRefresh}
-          className="bg-main-blue text-white hover:bg-main-blue/90"
+          className="bg-main-green text-white hover:bg-main-green/90"
         >
           Refresh
         </Button>

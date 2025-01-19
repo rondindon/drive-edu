@@ -338,7 +338,7 @@ const AdminReports: React.FC = () => {
         <div className="flex space-x-2">
           <Button
             onClick={handleRefresh}
-            className="bg-main-blue text-white hover:bg-main-blue/90 transition-colors duration-200 hover:text-white w-24"
+            className="bg-main-green text-white hover:bg-main-green/90 transition-colors duration-200 hover:text-white w-24"
           >
             Refresh
           </Button>
@@ -393,7 +393,7 @@ const AdminReports: React.FC = () => {
                           href={`/question/${report.question?.id}`}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="text-main-blue hover:text-main-blue/80"
+                          className="text-main-green hover:text-main-green/80"
                           aria-label="View Question"
                         >
                           <ExternalLink className="w-4 h-4" />

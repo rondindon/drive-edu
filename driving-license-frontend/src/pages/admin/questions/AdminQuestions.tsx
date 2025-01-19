@@ -402,7 +402,7 @@ const AdminQuestions: React.FC = () => {
         <div className="flex space-x-2">
           <Button
             onClick={handleRefresh}
-            className="bg-main-blue text-white hover:bg-main-blue/90"
+            className="bg-main-green text-white hover:bg-main-green/90"
           >
             Refresh
           </Button>

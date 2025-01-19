@@ -202,12 +202,12 @@ const AdminDashboard: React.FC = () => {
     <div className="space-y-6">
       {/* Quick Actions at the Top */}
       <div>
-        <h2 className="text-xl font-semibold mb-4 text-[hsl(var(--primary))]">Quick Actions</h2>
+        <h2 className="text-2xl font-semibold mb-4 text-[hsl(var(--primary))]">Quick Actions</h2>
         <div className="flex flex-wrap gap-4">
           <Button
             onClick={() => navigate("/admin/users")}
             variant="outline"
-            className="text-main-green hover:bg-main-green/10 flex items-center"
+            className="text-main-green hover:bg-main-green/10 flex items-center border-main-green"
           >
             <User className="mr-2" />
             Manage Users
@@ -215,7 +215,7 @@ const AdminDashboard: React.FC = () => {
           <Button
             onClick={() => navigate("/admin/tests")}
             variant="outline"
-            className="text-main-green hover:bg-main-green/10 flex items-center"
+            className="text-main-green hover:bg-main-green/10 flex items-center border-main-green"
           >
             <ClipboardList className="mr-2" />
             Manage Tests
@@ -223,7 +223,7 @@ const AdminDashboard: React.FC = () => {
           <Button
             onClick={() => navigate("/admin/questions")}
             variant="outline"
-            className="text-main-green hover:bg-main-green/10 flex items-center"
+            className="text-main-green hover:bg-main-green/10 flex items-center border-main-green"
           >
             <ClipboardCheck className="mr-2" />
             Manage Questions
@@ -231,7 +231,7 @@ const AdminDashboard: React.FC = () => {
           <Button
             onClick={() => navigate("/admin/reports")}
             variant="outline"
-            className="text-main-green hover:bg-main-green/10 flex items-center"
+            className="text-main-green hover:bg-main-green/10 flex items-center border-main-green"
           >
             <LucideBarChart className="mr-2" />
             Review Reports

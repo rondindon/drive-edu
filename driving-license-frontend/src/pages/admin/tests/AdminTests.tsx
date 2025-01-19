@@ -261,7 +261,7 @@ const AdminTests: React.FC = () => {
               // Optionally, clear cache to force fresh fetch
               localStorage.removeItem(getCacheKey());
             }}
-            className="bg-main-blue text-white hover:bg-main-blue/90 cursor-pointer"
+            className="bg-main-green text-white hover:bg-main-green/90 cursor-pointer"
           >
             Refresh
           </Button>

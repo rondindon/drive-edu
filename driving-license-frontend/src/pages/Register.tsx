@@ -181,7 +181,7 @@ const Register: React.FC = () => {
             className="
               w-full flex items-center justify-center space-x-2
               bg-[hsl(var(--background))] border border-[hsl(var(--muted))]
-              shadow hover:bg-[hsl(var(--muted-foreground))] transition-all duration-300
+              shadow transition-all duration-300
             "
           >
             <FcGoogle className="w-6 h-6" />
