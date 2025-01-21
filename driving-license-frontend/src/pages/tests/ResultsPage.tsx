@@ -75,7 +75,7 @@ const ResultsPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen w-full bg-[hsl(var(--background))] text-[hsl(var(--foreground))]">
+    <div className="min-h-screen w-full bg-[hsl(var(--background))] text-[hsl(var(--foreground))] animate-fadeIn">
       <div className="max-w-5xl mx-auto px-6 py-10">
         {/* Pass/Fail + Basic Info */}
         <div className="text-center mb-10">

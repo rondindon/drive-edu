@@ -24,32 +24,34 @@ const TestPage: React.FC = () => {
     testId = null,
   }: { questions: Question[]; testId: number | null } = state || {};
 
-  // ========================
+  // Track if the test is fully finished (so we don’t prompt user again)
+  const [testFinished, setTestFinished] = useState(false);
+
   // Standard local states
-  // ========================
-  const [testFinished, setTestFinished] = useState(false); // to skip prompts if finished
   const [currentIndex, setCurrentIndex] = useState(0);
   const [score, setScore] = useState(0);
-  const [timeLeft, setTimeLeft] = useState(30 * 60); // 30 min
+  const [timeLeft, setTimeLeft] = useState(30 * 60); // 30 min in seconds
   const [userAnswers, setUserAnswers] = useState<string[]>(
     new Array(questions.length).fill('')
   );
 
   const letterMap = ['A', 'B', 'C'];
 
-  // ========================
+  // ================================
   // 1. Intercept Browser “Back”
-  // ========================
+  // ================================
   useEffect(() => {
     const handlePopState = (e: PopStateEvent) => {
       if (!testFinished) {
+        // This intercepts the user pressing the back button
         e.preventDefault();
+
         const confirmLeave = window.confirm(
           'Are you sure you want to go back? The test is not finished. ' +
           'If you confirm, the test will be submitted and you will leave this page.'
         );
         if (confirmLeave) {
-          finishTest(true);
+          finishTest(true); // finish the test, then navigate(-1)
           navigate(-1);
         } else {
           window.history.pushState(null, '', window.location.href);
@@ -57,8 +59,9 @@ const TestPage: React.FC = () => {
       }
     };
 
-    // Push dummy state so we intercept
+    // We push a dummy state so the user can always go “back” in a controlled manner
     window.history.pushState(null, '', window.location.href);
+
     window.addEventListener('popstate', handlePopState);
 
     return () => {
@@ -66,15 +69,15 @@ const TestPage: React.FC = () => {
     };
   }, [testFinished]);
 
-  // ========================
+  // ================================
   // 2. Beforeunload Prompt
-  // ========================
+  // ================================
   useEffect(() => {
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
       if (!testFinished) {
         e.preventDefault();
-        e.returnValue = '';
-        // Optional partial data beacon
+        e.returnValue = ''; // Some browsers ignore custom text
+        // Attempt minimal send if you like:
         if (testId) {
           const quickPayload = JSON.stringify({ testId, message: 'User forcibly left. Partial data?' });
           const blob = new Blob([quickPayload], { type: 'application/json' });
@@ -89,6 +92,9 @@ const TestPage: React.FC = () => {
     };
   }, [testFinished, testId]);
 
+  // ================================
+  // 3. Timer => auto-submit
+  // ================================
   useEffect(() => {
     if (!questions.length) return;
 
@@ -106,20 +112,19 @@ const TestPage: React.FC = () => {
     return () => clearInterval(timer);
   }, [questions]);
 
-  // For the timer display & progress bar
-  const totalDuration = 30 * 60; // 1800 seconds
+  // For the progress bar
+  const totalDuration = 30 * 60; // 1800
   const progressValue = (timeLeft / totalDuration) * 100;
+  // For display
   const minutes = Math.floor(timeLeft / 60);
   const seconds = timeLeft % 60;
 
-  // ========================
-  // Unique categories
-  // ========================
+  // Unique categories in the question set
   const categories = Array.from(new Set(questions.map((q) => q.category)));
 
-  // ========================
-  // 4. Handle answers
-  // ========================
+  // ================================
+  // 4. Handling answers
+  // ================================
   const handleAnswer = (selectedIndex: number) => {
     if (!questions.length) return;
     const q = questions[currentIndex];
@@ -140,6 +145,7 @@ const TestPage: React.FC = () => {
     }
   };
 
+  // Next/Prev
   const nextQuestion = () => {
     if (currentIndex < questions.length - 1) {
       setCurrentIndex((prev) => prev + 1);
@@ -150,92 +156,27 @@ const TestPage: React.FC = () => {
       setCurrentIndex((prev) => prev - 1);
     }
   };
-  const jumpToQuestion = (idx: number) => {
-    if (idx >= 0 && idx < questions.length) {
-      setCurrentIndex(idx);
+
+  // Jump to question
+  const jumpToQuestion = (index: number) => {
+    if (index >= 0 && index < questions.length) {
+      setCurrentIndex(index);
     }
   };
+
+  // Jump to category
   const jumpToCategory = (cat: string) => {
     const idx = questions.findIndex((q) => q.category === cat);
     if (idx !== -1) setCurrentIndex(idx);
   };
 
-  // ========================
-  // 5. Animated “Finish” states
-  // ========================
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [submitProgress, setSubmitProgress] = useState(0);
-  const [didPass, setDidPass] = useState<boolean | null>(null);
-
-  // We'll also track a small pause at 70%
-  const [pauseAtSeventy, setPauseAtSeventy] = useState(false);
-
-  const handleFinishClick = () => {
-    if (!questions.length) return;
-
-    // Compute pass/fail quickly
-    let localScore = 0;
-    userAnswers.forEach((answer, idx) => {
-      if (answer === questions[idx].correctAnswer) {
-        localScore += (questions[idx].points || 0);
-      }
-    });
-    setDidPass(localScore >= 90);
-
-    // Start the animation
-    setIsSubmitting(true);
-    setSubmitProgress(0);
-    setPauseAtSeventy(false);
-  };
-
-  // ========================
-  // 6. useEffect to increment progress
-  // ========================
-  useEffect(() => {
-    let interval: NodeJS.Timeout | null = null;
-
-    if (isSubmitting && submitProgress < 100) {
-      // If we're not paused at 70, keep incrementing
-      if (!pauseAtSeventy) {
-        interval = setInterval(() => {
-          setSubmitProgress((prev) => {
-            const nextVal = prev + 1;
-            if (nextVal === 80) {
-              // We'll pause at 70
-              setPauseAtSeventy(true);
-            }
-            return Math.min(nextVal, 100);
-          });
-        }, 30); // speed of fill (lower = smoother/faster)
-      }
-      // If we just hit 70, do a short pause
-      else if (pauseAtSeventy && submitProgress === 80) {
-        // Pause for e.g. 800ms
-        interval = setTimeout(() => {
-          setPauseAtSeventy(false); // resume
-        }, 800);
-      }
-    }
-    // Once we hit 100, do a short final pause
-    else if (isSubmitting && submitProgress === 100) {
-      const timeoutId = setTimeout(() => {
-        finishTest(); // finalize
-      }, 400); // wait 600ms so they see final color
-      return () => clearTimeout(timeoutId);
-    }
-
-    return () => {
-      // Clear either setInterval or setTimeout
-      if (interval) clearInterval(interval as number | NodeJS.Timeout);
-    };
-  }, [isSubmitting, submitProgress, pauseAtSeventy]);
-
-  // ========================
-  // 7. Finishing the Test
-  // ========================
+  // ================================
+  // 5. Finishing the Test
+  // ================================
   const finishTest = (navigateBackAfter?: boolean) => {
+    // If no valid test or already finished, just return or navigate away
     if (!testId) {
-      alert('No valid testId found. Returning home.');
+      alert('No valid testId found. Returning to homepage.');
       navigate('/');
       return;
     }
@@ -248,6 +189,7 @@ const TestPage: React.FC = () => {
       const isCorrect = answer === q.correctAnswer;
       if (isCorrect) finalScore += (q.points || 0);
 
+      // background stats
       questionStatsPromises.push(
         fetch('http://localhost:4444/api/question-stats', {
           method: 'POST',
@@ -303,15 +245,18 @@ const TestPage: React.FC = () => {
       .then((data) => console.log('[finishTest] =>', data))
       .catch((err) => console.error('[finishTest] error =>', err));
 
+    // Mark test as finished => no more prompts
     setTestFinished(true);
+
+    // If we came from the "popstate" scenario, go back
     if (navigateBackAfter) {
       navigate(-1);
     }
   };
 
-  // ========================
-  // 8. Reporting logic
-  // ========================
+  // ================================
+  // 6. Reporting logic
+  // ================================
   const [showReportPopup, setShowReportPopup] = useState(false);
   const [reportDescription, setReportDescription] = useState('');
   const [reportQuestionId, setReportQuestionId] = useState<number | null>(null);
@@ -332,6 +277,7 @@ const TestPage: React.FC = () => {
       alert('Please provide a description');
       return;
     }
+
     try {
       const resp = await fetch('http://localhost:4444/api/report', {
         method: 'POST',
@@ -354,56 +300,22 @@ const TestPage: React.FC = () => {
     }
   };
 
-  // ========================
-  // 9. Rendering
-  // ========================
+  // If no questions
   if (!questions.length) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
+      <div className="flex items-center justify-center min-h-screen bg-[hsl(var(--background))] text-[hsl(var(--foreground))]">
         <p className="p-4">No questions loaded. Please start a test from the landing page.</p>
       </div>
     );
   }
 
-  // Current question
+  // Current question details
   const currentQuestion = questions[currentIndex];
   const selectedAnswer = userAnswers[currentIndex];
+
+  // answered vs. active highlight
   const isAnswered = (i: number) => !!userAnswers[i];
   const isActive = (i: number) => i === currentIndex;
-
-  // ========================
-  // Button background logic
-  // ========================
-  // Using these colors (feel free to adjust):
-  const NEUTRAL_COLOR = '#7a8ef0'; // neutral gray
-  const PASS_COLOR    = '#22c55e'; // green-500
-  const FAIL_COLOR    = '#ef4444'; // red-500
-  const UNFILLED      = '#e2e8f0'; // slate-200
-
-  const fill = Math.min(Math.max(submitProgress, 0), 100);
-  let buttonBackground = NEUTRAL_COLOR; // default: neutral for idle
-
-  if (isSubmitting) {
-    if (fill < 80) {
-      // 0..fill => NEUTRAL, fill..100 => UNFILLED
-      buttonBackground = `linear-gradient(to right,
-        ${NEUTRAL_COLOR} 0%,
-        ${NEUTRAL_COLOR} ${fill}%,
-        ${UNFILLED} ${fill}%,
-        ${UNFILLED} 100%
-      )`;
-    } else {
-      const colorAfter70 = didPass ? PASS_COLOR : FAIL_COLOR;
-      buttonBackground = `linear-gradient(to right,
-        ${NEUTRAL_COLOR} 0%,
-        ${NEUTRAL_COLOR} 80%,
-        ${colorAfter70} 80%,
-        ${colorAfter70} ${fill}%,
-        ${UNFILLED} ${fill}%,
-        ${UNFILLED} 100%
-      )`;
-    }
-  }
 
   return (
     <div className="flex flex-col items-center justify-start min-h-screen bg-[hsl(var(--background))] text-[hsl(var(--foreground))] px-4 py-8">
@@ -412,9 +324,9 @@ const TestPage: React.FC = () => {
         <div className="flex items-center w-2/3 gap-2">
           <Progress
             value={progressValue}
-            className="h-2 w-full bg-[hsl(var(--muted))]"
+            className="h-2 w-full bg-[hsl(var(--muted))] data-[state=fill]:bg-[hsl(var(--primary))]"
           />
-          <span className="text-sm font-medium">
+          <span className="text-sm font-medium text-[hsl(var(--foreground))]">
             {minutes}:{String(seconds).padStart(2, '0')}
           </span>
         </div>
@@ -427,8 +339,12 @@ const TestPage: React.FC = () => {
         {/* Categories */}
         <aside
           className="
-            bg-[hsl(var(--card))] rounded shadow p-4
-            w-56 h-[39rem] overflow-auto shrink-0
+            bg-[hsl(var(--card))] text-[hsl(var(--card-foreground))]
+            rounded shadow p-4
+            text-left
+            w-56 h-[39rem]
+            overflow-auto
+            shrink-0
           "
         >
           <div className="flex flex-col gap-2">
@@ -437,6 +353,13 @@ const TestPage: React.FC = () => {
                 key={cat}
                 variant="secondary"
                 size="reactive"
+                className="
+                  w-full text-xs whitespace-normal
+                  bg-[hsl(var(--muted))] text-[hsl(var(--foreground))]
+                  hover:bg-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--background))]
+                  break-words text-left leading-tight
+                  px-4 py-2
+                "
                 onClick={() => jumpToCategory(cat)}
               >
                 {cat}
@@ -445,24 +368,30 @@ const TestPage: React.FC = () => {
           </div>
         </aside>
 
-        {/* Main Column */}
+        {/* Main column */}
         <main className="flex-1 flex flex-col gap-4">
-          {/* Question navigation buttons */}
+          {/* Navigation row of question numbers */}
           <div className="flex flex-wrap gap-2">
             {questions.map((_, i) => {
-              let bgClass = 'bg-[hsl(var(--card))]';
+              let bgClass = 'bg-[hsl(var(--card))] text-[hsl(var(--foreground))]';
               if (isActive(i)) {
-                bgClass = 'bg-green-600 text-white';
+                // Darker green if active
+                bgClass = 'bg-main-green text-white';
               } else if (isAnswered(i)) {
-                bgClass = 'bg-green-300 text-white';
+                // Lighter green if answered
+                bgClass = 'bg-main-green/50 text-white';
               }
+
               return (
                 <Button
                   key={i}
                   variant="secondary"
                   className={`
-                    w-10 h-10 flex items-center justify-center text-sm
-                    hover:bg-green-500 hover:text-white
+                    w-10 h-10
+                    flex items-center justify-center
+                    text-sm
+                    hover:bg-main-green
+                    hover:text-white
                     ${bgClass}
                   `}
                   onClick={() => jumpToQuestion(i)}
@@ -473,19 +402,19 @@ const TestPage: React.FC = () => {
             })}
           </div>
 
-          {/* Question card */}
-          <div className="relative bg-[hsl(var(--card))] rounded shadow p-6 flex-1 overflow-auto">
-            {/* Report button */}
+          {/* Question content */}
+          <div className="relative bg-[hsl(var(--card))] text-[hsl(var(--card-foreground))] rounded shadow p-6 flex-1 overflow-auto">
+            {/* Report icon at top-right */}
             <Button
               variant="outline"
-              className="absolute top-4 right-6 h-8 px-2 flex items-center justify-center"
+              className="absolute top-4 right-6 h-8 px-2 flex items-center justify-center hover:bg-[hsl(var(--destructive))] hover:text-[hsl(var(--destructive-foreground))]"
               onClick={() => openReportPopup(currentQuestion.id)}
               title="Report an issue with this question"
             >
-              <FaFlag className="text-red-600" />
+              <FaFlag className="text-[hsl(var(--destructive))]" />
             </Button>
 
-            <h2 className="text-xl font-bold mb-4 max-w-3xl">
+            <h2 className="text-xl font-bold mb-4 whitespace-normal break-words max-w-3xl">
               {currentQuestion.text}
             </h2>
             {currentQuestion.imageUrl && (
@@ -498,7 +427,6 @@ const TestPage: React.FC = () => {
               </div>
             )}
 
-            {/* Options */}
             <div className="space-y-2 mb-4">
               {currentQuestion.options.map((option, idx) => {
                 const letter = letterMap[idx];
@@ -509,8 +437,14 @@ const TestPage: React.FC = () => {
                     variant="outline"
                     size="reactive"
                     className={`
+                      text-black
                       w-full text-left justify-start
-                      ${isSelected ? 'bg-green-500 text-white' : ''}
+                      whitespace-normal break-words
+                      px-4 py-3 text-xs
+                      bg-secondary-greenBackground
+                      hover:bg-main-green
+                      hover:text-white
+                      ${isSelected ? 'bg-main-green text-white' : ''}
                     `}
                     onClick={() => handleAnswer(idx)}
                   >
@@ -521,30 +455,27 @@ const TestPage: React.FC = () => {
             </div>
 
             <div className="flex justify-between">
-              {/* Prev */}
               <Button
                 onClick={prevQuestion}
                 disabled={currentIndex === 0}
+                className="hover:bg-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--background))]"
               >
                 Previous
               </Button>
-              {/* Next or Finish */}
               {currentIndex < questions.length - 1 ? (
-                <Button onClick={nextQuestion}>
+                <Button
+                  onClick={nextQuestion}
+                  className="hover:bg-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--background))]"
+                >
                   Next
                 </Button>
               ) : (
-                <button
-                  onClick={handleFinishClick}
-                  disabled={isSubmitting}
-                  className="relative text-white font-semibold py-2 px-4 rounded"
-                  style={{
-                    background: buttonBackground,
-                    transition: 'background 0.3s linear',
-                  }}
+                <Button
+                  onClick={() => finishTest()}
+                  className="bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] hover:bg-[hsl(var(--primary))]/90"
                 >
-                  {isSubmitting ? 'Submitting...' : 'Finish Test'}
-                </button>
+                  Finish Test
+                </Button>
               )}
             </div>
           </div>
@@ -553,20 +484,28 @@ const TestPage: React.FC = () => {
 
       {/* Report Popup */}
       {showReportPopup && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white rounded p-6 w-[300px] shadow-lg">
+        <div className="fixed inset-0 bg-[hsl(var(--foreground))]/50 flex items-center justify-center z-50">
+          <div className="bg-[hsl(var(--card))] text-[hsl(var(--card-foreground))] rounded p-6 w-[45vw] shadow-lg">
             <h3 className="text-lg font-semibold mb-2">Report Issue</h3>
             <textarea
-              className="w-full h-24 p-2 border border-gray-300 rounded mb-4"
+              className="w-full h-32 p-2 border border-[hsl(var(--muted))] rounded mb-4 bg-[hsl(var(--background))] text-[hsl(var(--foreground))]"
               placeholder="Describe the issue..."
               value={reportDescription}
               onChange={(e) => setReportDescription(e.target.value)}
             />
             <div className="flex justify-end gap-2">
-              <Button variant="outline" onClick={closeReportPopup}>
+              <Button
+                variant="outline"
+                onClick={closeReportPopup}
+                className="hover:bg-[hsl(var(--muted))] hover:text-[hsl(var(--foreground))]"
+              >
                 Cancel
               </Button>
-              <Button variant="default" onClick={submitReport} className="bg-red-600 text-white">
+              <Button
+                variant="default"
+                onClick={submitReport}
+                className="bg-[hsl(var(--destructive))] text-[hsl(var(--destructive-foreground))] hover:bg-[hsl(var(--destructive))]/90"
+              >
                 Submit
               </Button>
             </div>
