@@ -15,11 +15,10 @@ import {
   AlertDialogDescription,
 } from "../components/ui/alert-dialog";
 import { Edit } from "lucide-react";
-import ActivityStats from "../components/ActivityStats"; // Import the ActivityStats component
-import CustomCalendar, { TestsPerDay } from "../components/CustomCalendar"; // Import the CustomCalendar component
-
-import axios from "axios"; // Import axios for API calls
-import { ThemeContext } from "../context/ThemeContext"; // Import ThemeContext
+import ActivityStats from "../components/ActivityStats"; 
+import CustomCalendar, { TestsPerDay } from "../components/CustomCalendar"; 
+import axios from "axios";
+import { ThemeContext } from "../context/ThemeContext"; 
 import Toggle from "src/components/ToggleTheme";
 
 const Profile: React.FC = () => {
@@ -43,11 +42,9 @@ const Profile: React.FC = () => {
   const [testsPerDayError, setTestsPerDayError] = useState<string | null>(null);
 
   const token = localStorage.getItem('supabaseToken');
-
-  // **Access Theme Context**
   const { theme, toggleTheme } = useContext(ThemeContext);
 
-  // **Function to Fetch Test Summary**
+  // Fetch Test Summary
   useEffect(() => {
     const fetchTestSummary = async () => {
       setTestStatsLoading(true);
@@ -77,7 +74,7 @@ const Profile: React.FC = () => {
     fetchTestSummary();
   }, [token]);
 
-  // **Function to Fetch Tests Per Day**
+  // Fetch Tests Per Day
   useEffect(() => {
     const fetchTestsPerDay = async () => {
       setTestsPerDayLoading(true);
@@ -87,7 +84,6 @@ const Profile: React.FC = () => {
         });
 
         setTestsPerDay(response.data.testsOverTimeDay ?? []);
-        console.log(response.data.testsOverTimeDay);
       } catch (error) {
         console.error('Error fetching tests per day:', error);
         setTestsPerDayError('Failed to load daily test statistics.');
@@ -99,6 +95,7 @@ const Profile: React.FC = () => {
     fetchTestsPerDay();
   }, [token]);
 
+  // Save Updated Username
   const handleSave = async () => {
     if (!newUsername.trim()) {
       alert("Username cannot be empty.");
@@ -106,14 +103,14 @@ const Profile: React.FC = () => {
     }
 
     try {
-      await updateUsername(newUsername); // Use the context function to update username
+      await updateUsername(newUsername);
       setMessage("Username updated successfully!");
       setEditing(false);
     } catch (error) {
       setMessage("Error updating username. Please try again.");
       console.error(error);
     } finally {
-      setDialogOpen(false); // Close the dialog after processing
+      setDialogOpen(false);
     }
   };
 
@@ -125,7 +122,7 @@ const Profile: React.FC = () => {
         </h1>
 
         {/* Profile Card with Avatar and Calendar */}
-        <Card className="p-6 shadow-lg rounded-md flex flex-col md:flex-row justify-between items-start space-y-6 md:space-y-0 md:space-x-6 bg-[hsl(var(--card))] text-[hsl(var(--card-foreground))] items-center justify-around">
+        <Card className="p-8 shadow-lg rounded-md flex flex-col md:flex-row justify-between items-start space-y-6 md:space-y-0 md:space-x-6 bg-[hsl(var(--card))] text-[hsl(var(--card-foreground))] items-center justify-around">
           {/* Avatar Section */}
           <div className="flex flex-col items-center md:items-start space-y-4">
             {/* Avatar */}
@@ -207,6 +204,14 @@ const Profile: React.FC = () => {
                 <span className="font-semibold">Role:</span>
                 <span>{role}</span>
               </div>
+
+              {/* Created At */}
+              {user?.created_at && (
+                <div className="flex justify-between items-center">
+                  <span className="font-semibold">Created At:</span>
+                  <span>{new Date(user.created_at).toLocaleString()}</span>
+                </div>
+              )}
 
               {/* Username */}
               <div className="flex justify-between items-center">

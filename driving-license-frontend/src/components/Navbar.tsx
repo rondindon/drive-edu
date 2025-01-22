@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useContext } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Button } from "./ui/button";
 import {
@@ -7,14 +7,19 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
 } from "./ui/dropdown-menu";
+import { Switch } from "./ui/switch"; // <-- shadcn switch import
 import { useAuth } from "../context/AuthContext";
-import { User, Menu } from "lucide-react"; // Import Menu icon for hamburger
+import { ThemeContext } from "../context/ThemeContext"; // <-- import your theme context
+import { User, Menu, Sun, Moon } from "lucide-react";     // <-- import sun & moon icons
 import { toast } from "react-toastify";
 
 const Navbar: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { user, role, username, logout } = useAuth();
+
+  // Grab the current theme and toggle function from context
+  const { theme, toggleTheme } = useContext(ThemeContext);
 
   const isActive = (path: string) =>
     location.pathname === path
@@ -55,10 +60,9 @@ const Navbar: React.FC = () => {
           <a href="/simulator" className={isActive("/simulator")}>
             Simulator
           </a>
-          {/* <a href="/contact" className={isActive("/contact")}>Contact</a> */}
         </div>
 
-        {/* Right Section: Profile Dropdown and Admin Panel (Visible on md and above) */}
+        {/* Right Section: Profile Dropdown, Admin Panel, and Theme Toggle (Visible on md and above) */}
         <div className="hidden md:flex flex-1 justify-end items-center space-x-4">
           {/* Profile Dropdown */}
           <DropdownMenu>
@@ -126,6 +130,26 @@ const Navbar: React.FC = () => {
               Admin Panel
             </Button>
           )}
+
+          {/* Theme Toggle (Far Right) */}
+          <div className="flex items-center space-x-2">
+            <Sun
+              className={`w-5 h-5 ${
+                theme === "dark" ? "text-gray-500" : "text-yellow-400"
+              } transition-colors`}
+            />
+            <Switch
+              checked={theme === "dark"}
+              onCheckedChange={toggleTheme}
+              // Force switch track to stay white
+              className="bg-white border border-gray-300 data-[state=checked]:bg-white"
+            />
+            <Moon
+              className={`w-5 h-5 ${
+                theme === "light" ? "text-gray-500" : "text-gray-300"
+              } transition-colors`}
+            />
+          </div>
         </div>
 
         {/* Mobile Section: Hamburger Menu (Visible below md) */}
@@ -163,16 +187,10 @@ const Navbar: React.FC = () => {
                 >
                   Simulator
                 </a>
-                {/* <a
-                  href="/contact"
-                  className={`block px-2 py-1 rounded ${isActive("/contact")}`}
-                >
-                  Contact
-                </a> */}
               </div>
 
               {/* User Options */}
-              <div className="px-4 py-2">
+              <div className="px-4 py-2 border-b border-main-green">
                 {!user ? (
                   <>
                     <a
@@ -215,6 +233,26 @@ const Navbar: React.FC = () => {
                     )}
                   </>
                 )}
+              </div>
+
+              {/* Theme Toggle (Mobile) */}
+              <div className="flex items-center space-x-2 px-4 py-2">
+                <Sun
+                  className={`w-5 h-5 ${
+                    theme === "dark" ? "text-gray-500" : "text-yellow-400"
+                  } transition-colors`}
+                />
+                <Switch
+                  checked={theme === "dark"}
+                  onCheckedChange={toggleTheme}
+                  // Force switch track to stay white
+                  className="bg-white border border-gray-300 data-[state=checked]:bg-white"
+                />
+                <Moon
+                  className={`w-5 h-5 ${
+                    theme === "light" ? "text-gray-500" : "text-gray-300"
+                  } transition-colors`}
+                />
               </div>
             </DropdownMenuContent>
           </DropdownMenu>

@@ -153,7 +153,7 @@ const CustomCalendar: React.FC<CustomCalendarProps> = ({ testsPerDay }) => {
   };
 
   return (
-    <div className="w-full max-w-md rounded-md shadow-lg bg-[hsl(var(--card))] text-[hsl(var(--card-foreground))]">
+    <div className="w-full max-w-md rounded-md shadow-lg bg-[hsl(var(--card))] text-[hsl(var(--card-foreground))] px-3">
       {renderHeader()}
       {renderDays()}
       {renderCells()}

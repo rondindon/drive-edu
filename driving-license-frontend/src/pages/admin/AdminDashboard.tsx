@@ -311,7 +311,7 @@ const AdminDashboard: React.FC = () => {
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={300}>
-              <RechartsBarChart data={testsTakenPerMonth}>
+              <RechartsBarChart data={testsTakenPerMonth} className="text-black">
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="period" />
                 <YAxis allowDecimals={false} />
