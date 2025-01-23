@@ -5,7 +5,7 @@ import { createQuestion, deleteQuestion, getAllQuestions, isAdmin, updateQuestio
 import { getQuestionById } from './controllers/questionController';
 import { authenticate } from './middleware/auth';
 import { deleteUser, getAllUsers, updateUser } from './controllers/adminUserController';
-import {deleteTest, finishTest, getAllTests, recordQuestionStat, recordUserAnswer, startTest } from './controllers/testController';
+import {deleteTest, finishTest, getAllTests, getUserTests, recordQuestionStat, recordUserAnswer, startTest } from './controllers/testController';
 import { createReport, deleteReport, getAllReports, markReportResolved, markReportReviewed } from './controllers/reportController';
 import { getAdminTestStats, getAnswerStats, getBadgeStats, getTestStats, getWorstAccuracyQuestions, testsTakenAndPassedByUser } from './controllers/statsController';
 
@@ -28,6 +28,7 @@ router.delete('/admin/questions/:id',authenticate, isAdmin, deleteQuestion);
 
 router.post('/tests/start', authenticate, startTest);
 router.post('/tests/finish', authenticate, finishTest);
+router.get('/user/tests', authenticate, getUserTests);
 router.post('/question-stats', authenticate, recordQuestionStat);
 router.post('/user-answers', authenticate, recordUserAnswer);
 //ADMIN

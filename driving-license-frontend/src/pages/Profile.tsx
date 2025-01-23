@@ -1,6 +1,9 @@
 // src/pages/Profile.tsx
 import React, { useState, useEffect, useContext } from "react";
+import axios from "axios";
+import { Edit } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
+import { ThemeContext } from "../context/ThemeContext";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Card } from "../components/ui/card";
@@ -14,47 +17,59 @@ import {
   AlertDialogTitle,
   AlertDialogDescription,
 } from "../components/ui/alert-dialog";
-import { Edit } from "lucide-react";
-import ActivityStats from "../components/ActivityStats"; 
-import CustomCalendar, { TestsPerDay } from "../components/CustomCalendar"; 
-import axios from "axios";
-import { ThemeContext } from "../context/ThemeContext"; 
-import Toggle from "src/components/ToggleTheme";
+import {
+  Drawer,
+  DrawerTrigger,
+  DrawerContent,
+  DrawerHeader,
+  DrawerFooter,
+  DrawerTitle,
+  DrawerDescription,
+} from "../components/ui/drawer";
+
+import ActivityStats from "../components/ActivityStats";
+import CustomCalendar, { TestsPerDay } from "../components/CustomCalendar";
 
 const Profile: React.FC = () => {
   const { user, username, role, updateUsername } = useAuth();
-  const [activeTab, setActiveTab] = useState("Profile Info");
+  const [activeTab, setActiveTab] = useState<"Profile Info" | "Activity" | "History">("Profile Info");
   const [editing, setEditing] = useState(false);
   const [newUsername, setNewUsername] = useState(username || "");
   const [message, setMessage] = useState<string | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
 
-  // **State Variables for Test Statistics**
+  // ** Test Summary State **
   const [testsTaken, setTestsTaken] = useState<number>(0);
   const [testsPassed, setTestsPassed] = useState<number>(0);
   const [successRate, setSuccessRate] = useState<number>(0);
   const [testStatsLoading, setTestStatsLoading] = useState<boolean>(true);
   const [testStatsError, setTestStatsError] = useState<string | null>(null);
 
-  // **State Variables for Tests Per Day**
+  // ** Tests Per Day State **
   const [testsPerDay, setTestsPerDay] = useState<TestsPerDay[]>([]);
   const [testsPerDayLoading, setTestsPerDayLoading] = useState<boolean>(true);
   const [testsPerDayError, setTestsPerDayError] = useState<string | null>(null);
 
-  const token = localStorage.getItem('supabaseToken');
+  // ** History State **
+  const [userTests, setUserTests] = useState<any[]>([]);
+  const [userTestsLoading, setUserTestsLoading] = useState<boolean>(false);
+  const [userTestsError, setUserTestsError] = useState<string | null>(null);
+
+  const token = localStorage.getItem("supabaseToken");
   const { theme, toggleTheme } = useContext(ThemeContext);
 
-  // Fetch Test Summary
+  // --------------------
+  // FETCH TEST SUMMARY
+  // --------------------
   useEffect(() => {
     const fetchTestSummary = async () => {
       setTestStatsLoading(true);
       try {
-        const response = await axios.get('http://localhost:4444/api/user/stats/test-summary', {
+        const response = await axios.get("http://localhost:4444/api/user/stats/test-summary", {
           headers: { Authorization: `Bearer ${token}` },
         });
 
         const { testsTaken, testsPassed } = response.data;
-
         setTestsTaken(testsTaken ?? 0);
         setTestsPassed(testsPassed ?? 0);
 
@@ -64,8 +79,8 @@ const Profile: React.FC = () => {
           setSuccessRate(0);
         }
       } catch (error) {
-        console.error('Error fetching test summary:', error);
-        setTestStatsError('Failed to load test statistics.');
+        console.error("Error fetching test summary:", error);
+        setTestStatsError("Failed to load test statistics.");
       } finally {
         setTestStatsLoading(false);
       }
@@ -74,19 +89,21 @@ const Profile: React.FC = () => {
     fetchTestSummary();
   }, [token]);
 
-  // Fetch Tests Per Day
+  // --------------------
+  // FETCH TESTS PER DAY (Calendar)
+  // --------------------
   useEffect(() => {
     const fetchTestsPerDay = async () => {
       setTestsPerDayLoading(true);
       try {
-        const response = await axios.get('http://localhost:4444/api/user/stats/tests', {
+        const response = await axios.get("http://localhost:4444/api/user/stats/tests", {
           headers: { Authorization: `Bearer ${token}` },
         });
 
         setTestsPerDay(response.data.testsOverTimeDay ?? []);
       } catch (error) {
-        console.error('Error fetching tests per day:', error);
-        setTestsPerDayError('Failed to load daily test statistics.');
+        console.error("Error fetching tests per day:", error);
+        setTestsPerDayError("Failed to load daily test statistics.");
       } finally {
         setTestsPerDayLoading(false);
       }
@@ -95,7 +112,35 @@ const Profile: React.FC = () => {
     fetchTestsPerDay();
   }, [token]);
 
-  // Save Updated Username
+  // --------------------
+  // FETCH USER TEST HISTORY (when History tab is clicked)
+  // --------------------
+  useEffect(() => {
+    const fetchUserTests = async () => {
+      if (activeTab !== "History") return; // Only fetch when History tab is active
+      setUserTestsLoading(true);
+      setUserTestsError(null);
+
+      try {
+        // Replace with your route that calls getUserTests
+        const response = await axios.get("http://localhost:4444/api/user/tests", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        setUserTests(response.data);
+      } catch (error) {
+        console.error("Error fetching user tests:", error);
+        setUserTestsError("Failed to fetch test history.");
+      } finally {
+        setUserTestsLoading(false);
+      }
+    };
+
+    fetchUserTests();
+  }, [activeTab, token]);
+
+  // --------------------
+  // SAVE UPDATED USERNAME
+  // --------------------
   const handleSave = async () => {
     if (!newUsername.trim()) {
       alert("Username cannot be empty.");
@@ -117,9 +162,7 @@ const Profile: React.FC = () => {
   return (
     <div className="p-6 bg-[hsl(var(--background))] min-h-screen flex flex-col items-center animate-fadeIn text-[hsl(var(--foreground))]">
       <div className="max-w-5xl w-full">
-        <h1 className="text-3xl font-bold text-center mb-6">
-          My Account
-        </h1>
+        <h1 className="text-3xl font-bold text-center mb-6">My Account</h1>
 
         {/* Profile Card with Avatar and Calendar */}
         <Card className="p-8 shadow-lg rounded-md flex flex-col md:flex-row justify-between items-start space-y-6 md:space-y-0 md:space-x-6 bg-[hsl(var(--card))] text-[hsl(var(--card-foreground))] items-center justify-around">
@@ -127,13 +170,18 @@ const Profile: React.FC = () => {
           <div className="flex flex-col items-center md:items-start space-y-4">
             {/* Avatar */}
             <Avatar className="w-24 h-24">
-              <AvatarImage src={"https://github.com/shadcn.png"} alt={username || "Avatar"} />
-              <AvatarFallback>{username?.charAt(0).toUpperCase() || "U"}</AvatarFallback>
+              <AvatarImage
+                src={"https://github.com/shadcn.png"}
+                alt={username || "Avatar"}
+              />
+              <AvatarFallback>
+                {username?.charAt(0).toUpperCase() || "U"}
+              </AvatarFallback>
             </Avatar>
             <div className="flex flex-col space-y-1 items-center md:items-start">
               <span className="text-lg font-bold">{username || "Not set"}</span>
               <span className="text-sm">{user?.email}</span>
-              {/* **Success Rate and Test Counts** */}
+              {/* Success Rate and Test Counts */}
               {testStatsLoading ? (
                 <div className="text-gray-500">Loading success rate...</div>
               ) : testStatsError ? (
@@ -172,6 +220,7 @@ const Profile: React.FC = () => {
             >
               Profile Info
             </button>
+
             <button
               onClick={() => setActiveTab("Activity")}
               className={`px-3 py-2 font-semibold ${
@@ -182,20 +231,26 @@ const Profile: React.FC = () => {
             >
               Activity
             </button>
+
+            {/* "History" tab */}
             <button
-              onClick={() => setActiveTab("Settings")}
+              onClick={() => setActiveTab("History")}
               className={`px-3 py-2 font-semibold ${
-                activeTab === "Settings"
+                activeTab === "History"
                   ? "border-b-2 border-main-green text-[hsl(var(--primary))]"
                   : "text-gray-500 hover:text-[hsl(var(--primary))]"
               }`}
             >
-              Settings
+              History
             </button>
           </nav>
         </div>
 
-        {/* Tab Content */}
+        {/* ---------------- */}
+        {/* TAB CONTENT      */}
+        {/* ---------------- */}
+
+        {/* PROFILE INFO TAB */}
         {activeTab === "Profile Info" && (
           <Card className="p-6 shadow-lg rounded-md animate-fadeIn bg-[hsl(var(--card))] text-[hsl(var(--card-foreground))]">
             <div className="space-y-6">
@@ -215,9 +270,7 @@ const Profile: React.FC = () => {
 
               {/* Username */}
               <div className="flex justify-between items-center">
-                <span className="font-semibold">
-                  Username:
-                </span>
+                <span className="font-semibold">Username:</span>
                 {editing ? (
                   <div className="flex items-center space-x-2">
                     <Input
@@ -289,44 +342,86 @@ const Profile: React.FC = () => {
           </Card>
         )}
 
-        {activeTab === "Activity" && (
-          <ActivityStats />
-        )}
+        {/* ACTIVITY TAB */}
+        {activeTab === "Activity" && <ActivityStats />}
 
-        {activeTab === "Settings" && (
+        {/* HISTORY TAB */}
+        {activeTab === "History" && (
           <Card className="p-6 shadow-lg rounded-md animate-fadeIn bg-[hsl(var(--card))] text-[hsl(var(--card-foreground))]">
-            <h2 className="text-xl font-semibold mb-4">
-              Settings
-            </h2>
-            <div className="space-y-4">
-              {/* Dark Mode Toggle */}
-              <Toggle
-                enabled={theme === 'dark'}
-                setEnabled={toggleTheme}
-                label="Enable Dark Mode"
-              />
+            <h2 className="text-xl font-semibold mb-4">My Test History</h2>
 
-              {/* Additional Settings can be added here */}
-              {/* Example: Notification Preferences */}
-              {/* 
-              <div className="flex items-center justify-between">
-                <span className="font-semibold">Email Notifications:</span>
-                <ToggleSwitchComponent />
+            {userTestsLoading ? (
+              <div className="text-gray-500">Loading test history...</div>
+            ) : userTestsError ? (
+              <div className="text-red-500">{userTestsError}</div>
+            ) : userTests.length === 0 ? (
+              <div>No completed tests found.</div>
+            ) : (
+              <div className="space-y-4">
+                {userTests.map((test) => {
+                  const passed = test.isPassed;
+                  const bgColor = passed ? "bg-green-100" : "bg-red-100";
+
+                  return (
+                    <Drawer key={test.id}>
+                      {/* DrawerTrigger asChild => we wrap our clickable div */}
+                      <DrawerTrigger asChild>
+                        <div
+                          className={`p-4 rounded-md cursor-pointer ${bgColor}`}
+                        >
+                          {/* Group */}
+                          <p className="font-medium mb-1">
+                            Group: {test.group}
+                          </p>
+                          {/* Score / totalPoints */}
+                          <p className="font-semibold">
+                            {test.score}/{100} points
+                          </p>
+                          <p>{passed ? "Passed" : "Failed"}</p>
+                        </div>
+                      </DrawerTrigger>
+
+                      {/* Drawer Content for Details */}
+                      <DrawerContent>
+                        <DrawerHeader>
+                          <DrawerTitle>Test Details</DrawerTitle>
+                          <DrawerDescription>
+                            Information about your test
+                          </DrawerDescription>
+                        </DrawerHeader>
+
+                        {/* 
+                          We turn the detail section into a simple 
+                          two-column "horizontal" design using grid.
+                        */}
+                        <div className="py-4 grid grid-cols-2 gap-y-2 gap-x-4">
+                          <div className="font-medium">Group:</div>
+                          <div>{test.group}</div>
+
+                          <div className="font-medium">Score:</div>
+                          <div>
+                            {test.score}/100
+                          </div>
+
+                          <div className="font-medium">Passed:</div>
+                          <div>{passed ? "Yes" : "No"}</div>
+
+                          <div className="font-medium">Time Taken:</div>
+                          <div>{test.timeTaken} seconds</div>
+
+                          <div className="font-medium">Date:</div>
+                          <div>{new Date(test.createdAt).toLocaleString()}</div>
+                        </div>
+
+                        <DrawerFooter>
+                          {/* Optional footer actions */}
+                        </DrawerFooter>
+                      </DrawerContent>
+                    </Drawer>
+                  );
+                })}
               </div>
-              */}
-
-              {/* Example: Change Password */}
-              {/* 
-              <div className="flex items-center justify-between">
-                <span className="font-semibold">Change Password:</span>
-                <Button variant="outline" className="bg-[hsl(var(--muted))] text-[hsl(var(--muted-foreground))] hover:bg-[hsl(var(--muted))]/90">
-                  Update
-                </Button>
-              </div>
-              */}
-
-              {/* Add more settings options as needed */}
-            </div>
+            )}
           </Card>
         )}
       </div>
@@ -334,7 +429,9 @@ const Profile: React.FC = () => {
       {message && (
         <div
           className={`mt-4 p-2 text-center rounded-md ${
-            message.includes("Error") ? "bg-[hsl(var(--destructive))] text-[hsl(var(--destructive-foreground))]" : "bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))]"
+            message.includes("Error")
+              ? "bg-[hsl(var(--destructive))] text-[hsl(var(--destructive-foreground))]"
+              : "bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))]"
           }`}
         >
           {message}

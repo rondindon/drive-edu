@@ -444,3 +444,27 @@ try {
   res.status(500).json({ message: 'Error deleting test' });
 }
 }
+
+export async function getUserTests(req: AuthenticatedRequest, res: Response) {
+  try {
+    const userId = req.user?.id;
+    if (!userId) {
+      return res.status(401).json({ message: 'User not authenticated' });
+    }
+
+    // Fetch all tests belonging to this user.
+    const tests = await prisma.test.findMany({
+      where: { userId },
+      include: {
+        // If you want to also include user answers or user info:
+        // user: true,
+        // userAnswers: true,
+      },
+    });
+
+    return res.status(200).json(tests);
+  } catch (error) {
+    console.error('[getUserTests] Error:', error);
+    return res.status(500).json({ message: 'Error retrieving user tests' });
+  }
+}
