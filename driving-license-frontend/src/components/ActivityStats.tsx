@@ -21,6 +21,7 @@ import LoadingSpinner from './LoadingSpinner';
 import { addDays, subDays, parseISO } from 'date-fns'; // Ensure date-fns is installed
 import { ChevronLeftIcon, ChevronRightIcon } from 'lucide-react';
 import { ThemeContext } from '../context/ThemeContext'; // <-- Import theme context
+import { motion } from 'framer-motion'; // <-- Import framer-motion
 
 // Define TypeScript interfaces for the data
 interface TestStat {
@@ -282,6 +283,22 @@ const ActivityStats: React.FC = () => {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [worstAccuracyQuestions]);
 
+  // **Animation Variants**
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.2,
+      },
+    },
+  };
+
+  const cardVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: 'easeOut' } },
+  };
+
   // Early Returns for Loading and Error States
   if (error) {
     return (
@@ -292,329 +309,359 @@ const ActivityStats: React.FC = () => {
   }
 
   return (
-    <div className="space-y-6 min-h-screen px-4 py-6">
-      {/* Test Performance Over Time */}
-      <Card className="p-6 shadow-lg rounded-md animate-fadeIn bg-[hsl(var(--card))] text-[hsl(var(--card-foreground))]">
-        {loading && <LoadingSpinner />}
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xl font-semibold text-[hsl(var(--primary))]">
-            Test Performance Over Time ({selectedAggregation === 'month' ? 'Monthly' : 'Daily'})
-          </h2>
-          <button
-            onClick={toggleAggregation}
-            className="bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] px-4 py-2 rounded-md hover:bg-[hsl(var(--primary))]/90 transition-colors"
-            aria-label={`Switch to ${selectedAggregation === 'month' ? 'Daily' : 'Monthly'} View`}
-          >
-            {selectedAggregation === 'month' ? 'Daily View' : 'Monthly View'}
-          </button>
-        </div>
-        {paddedTestStats.length > 0 ? (
-          <ResponsiveContainer width="100%" height={300}>
-            <LineChart
-              data={paddedTestStats}
-              margin={{ top: 20, right: 30, left: 20, bottom: 60 }}
-              aria-label={`Test Performance Over Time (${selectedAggregation === 'month' ? 'Monthly' : 'Daily'})`}
-              role="img"
-            >
-              <CartesianGrid stroke={theme === 'dark' ? '#555' : '#ccc'} strokeDasharray="5 5" />
-              <XAxis
-                dataKey="period"
-                stroke={theme === 'dark' ? '#fff' : '#2C3E50'}
-                tickFormatter={formatXAxis}
-                interval={Math.floor(paddedTestStats.length / 10)} // Adjust to limit number of ticks
-                angle={-45}
-                textAnchor="end"
-                height={60}
-                className="font-BAM"
-              />
-              <YAxis stroke={theme === 'dark' ? '#fff' : '#2C3E50'} domain={[0, upperBound]} />
-              <Tooltip
-                formatter={(value: number) => [value, 'Tests']}
-                labelFormatter={(label: string) => label}
-                contentStyle={{
-                  backgroundColor: theme === 'dark' ? '#333' : '#fff',
-                  color: theme === 'dark' ? '#fff' : '#000',
-                }}
-              />
-              <Line
-                type="monotone"
-                dataKey="count"
-                stroke="#27AE60" // Original line color
-                strokeWidth={2}
-                dot={{ r: 4 }}
-                activeDot={{ r: 8 }}
-                animationDuration={3000}
-                strokeLinejoin="round"
-                strokeLinecap="round"
-              />
-            </LineChart>
-          </ResponsiveContainer>
-        ) : (
-          <div className="text-[hsl(var(--muted-foreground))]">No test data available.</div>
-        )}
-      </Card>
+    <motion.div
+      className="space-y-6 min-h-screen px-4 py-6"
+      initial="hidden"
+      animate={loading ? 'hidden' : 'visible'}
+      variants={containerVariants}
+    >
+      {/* Only render cards after loading is complete */}
+      {!loading && (
+        <>
+          {/* Test Performance Over Time */}
+          <motion.div variants={cardVariants}>
+            <Card className="p-6 shadow-lg rounded-md bg-[hsl(var(--card))] text-[hsl(var(--card-foreground))]">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-xl font-semibold text-[hsl(var(--primary))]">
+                  Test Performance Over Time ({selectedAggregation === 'month' ? 'Monthly' : 'Daily'})
+                </h2>
+                <button
+                  onClick={toggleAggregation}
+                  className="bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] px-4 py-2 rounded-md hover:bg-[hsl(var(--primary))]/90 transition-colors"
+                  aria-label={`Switch to ${selectedAggregation === 'month' ? 'Daily' : 'Monthly'} View`}
+                >
+                  {selectedAggregation === 'month' ? 'Daily View' : 'Monthly View'}
+                </button>
+              </div>
+              {paddedTestStats.length > 0 ? (
+                <ResponsiveContainer width="100%" height={300}>
+                  <LineChart
+                    data={paddedTestStats}
+                    margin={{ top: 20, right: 30, left: 20, bottom: 60 }}
+                    aria-label={`Test Performance Over Time (${selectedAggregation === 'month' ? 'Monthly' : 'Daily'})`}
+                    role="img"
+                  >
+                    <CartesianGrid stroke={theme === 'dark' ? '#555' : '#ccc'} strokeDasharray="5 5" />
+                    <XAxis
+                      dataKey="period"
+                      stroke={theme === 'dark' ? '#fff' : '#2C3E50'}
+                      tickFormatter={formatXAxis}
+                      interval={Math.floor(paddedTestStats.length / 10)} // Adjust to limit number of ticks
+                      angle={-45}
+                      textAnchor="end"
+                      height={60}
+                      className="font-BAM"
+                    />
+                    <YAxis stroke={theme === 'dark' ? '#fff' : '#2C3E50'} domain={[0, upperBound]} />
+                    <Tooltip
+                      formatter={(value: number) => [value, 'Tests']}
+                      labelFormatter={(label: string) => label}
+                      contentStyle={{
+                        backgroundColor: theme === 'dark' ? '#333' : '#fff',
+                        color: theme === 'dark' ? '#fff' : '#000',
+                      }}
+                    />
+                    <Line
+                      type="monotone"
+                      dataKey="count"
+                      stroke="#27AE60" // Original line color
+                      strokeWidth={2}
+                      dot={{ r: 4 }}
+                      activeDot={{ r: 8 }}
+                      animationDuration={3000}
+                      strokeLinejoin="round"
+                      strokeLinecap="round"
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="text-[hsl(var(--muted-foreground))]">No test data available.</div>
+              )}
+            </Card>
+          </motion.div>
 
-      {/* Test Summary */}
-      <Card className="p-6 shadow-lg rounded-md animate-fadeIn bg-[hsl(var(--card))] text-[hsl(var(--card-foreground))]">
-        <h2 className="text-xl font-semibold text-[hsl(var(--primary))] mb-4">
-          Test Summary
-        </h2>
-        <div className="flex flex-col md:flex-row md:space-x-6 space-y-4 md:space-y-0">
-          {/* Average Score */}
-          <div className="flex-1">
-            <span className="text-[hsl(var(--muted-foreground))]">Average Score</span>
-            <div className="text-3xl font-bold text-[hsl(var(--primary))]">
-              {averageScore !== null ? averageScore.toFixed(2) : 'N/A'}
-            </div>
-          </div>
-          {/* Pass Rate */}
-          <div className="flex-1">
-            <span className="text-[hsl(var(--muted-foreground))]">Pass Rate</span>
-            <div className="text-3xl font-bold text-[hsl(var(--primary))]">
-              {passRate !== null ? passRate.toFixed(2) + '%' : 'N/A'}
-            </div>
-          </div>
-        </div>
-      </Card>
-
-      {/* Answer Distribution */}
-      <Card className="p-6 shadow-lg rounded-md animate-fadeIn bg-[hsl(var(--card))] text-[hsl(var(--card-foreground))]">
-        <h2 className="text-xl font-semibold text-[hsl(var(--primary))] mb-4">
-          Answer Distribution
-        </h2>
-        {answerStats ? (
-          <ResponsiveContainer width="100%" height={300}>
-            <PieChart>
-              <Pie
-                data={[
-                  { name: 'Correct', value: answerStats.correctCount },
-                  { name: 'Wrong', value: answerStats.wrongCount },
-                ]}
-                dataKey="value"
-                nameKey="name"
-                cx="50%"
-                cy="50%"
-                outerRadius={80}
-                label
-                animationDuration={4000}
-              >
-                {[
-                  { name: 'Correct', value: answerStats.correctCount },
-                  { name: 'Wrong', value: answerStats.wrongCount },
-                ].map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} /> // Original colors
-                ))}
-              </Pie>
-              <Tooltip
-                contentStyle={{
-                  backgroundColor: theme === 'dark' ? '#333' : '#fff',
-                  color: theme === 'dark' ? '#fff' : '#000',
-                }}
-              />
-              <Legend verticalAlign="bottom" height={36} />
-            </PieChart>
-          </ResponsiveContainer>
-        ) : (
-          <div className="text-[hsl(var(--muted-foreground))]">No answer data available.</div>
-        )}
-      </Card>
-
-      {/* Performance by Category */}
-      <Card className="p-6 shadow-lg rounded-md animate-fadeIn bg-[hsl(var(--card))] text-[hsl(var(--card-foreground))]">
-        <h2 className="text-xl font-semibold text-[hsl(var(--primary))] mb-4">
-          Performance by Category
-        </h2>
-        {answerStats && answerStats.performanceByCategory.length > 0 ? (
-          <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={answerStats.performanceByCategory}>
-              <CartesianGrid stroke={gridStroke} strokeDasharray="5 5" /> 
-              <XAxis dataKey="category" stroke={axisStroke} />
-              <YAxis domain={[0, 100]} stroke={axisStroke} />
-              <Tooltip
-                formatter={(value: number) => [value + '%', 'Accuracy']}
-                labelFormatter={(label: string) => label}
-                contentStyle={{
-                  backgroundColor: theme === 'dark' ? '#333' : '#fff',
-                  color: theme === 'dark' ? '#fff' : '#000',
-                }}
-              />
-              <Legend verticalAlign="top" height={36} />
-              <Bar dataKey="accuracy" fill="#27AE60" name="Accuracy (%)" animationDuration={6000} /> 
-            </BarChart>
-          </ResponsiveContainer>
-        ) : (
-          <div className="text-[hsl(var(--muted-foreground))]">No performance data available.</div>
-        )}
-      </Card>
-
-      {/* Badges Earned */}
-      <Card className="p-6 shadow-lg rounded-md animate-fadeIn bg-[hsl(var(--card))] text-[hsl(var(--card-foreground))]">
-        <h2 className="text-xl font-semibold text-[hsl(var(--primary))] mb-4">
-          Badges Earned
-        </h2>
-        {badgeStats && badgeStats.badges.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-            {badgeStats.badges.map((badge, index) => (
-              <div
-                key={index}
-                className="flex items-center space-x-4 p-4 bg-[hsl(var(--card))] rounded-md shadow-sm animate-fadeIn"
-              >
-                {/* Badge Icon */}
-                <div className="w-12 h-12 bg-[hsl(var(--primary))] rounded-full flex items-center justify-center text-white text-lg font-bold">
-                  {badge.title.charAt(0)}
+          {/* Test Summary */}
+          <motion.div variants={cardVariants}>
+            <Card className="p-6 shadow-lg rounded-md bg-[hsl(var(--card))] text-[hsl(var(--card-foreground))]">
+              <h2 className="text-xl font-semibold text-[hsl(var(--primary))] mb-4">
+                Test Summary
+              </h2>
+              <div className="flex flex-col md:flex-row md:space-x-6 space-y-4 md:space-y-0">
+                {/* Average Score */}
+                <div className="flex-1">
+                  <span className="text-[hsl(var(--muted-foreground))]">Average Score</span>
+                  <div className="text-3xl font-bold text-[hsl(var(--primary))]">
+                    {averageScore !== null ? averageScore.toFixed(2) : 'N/A'}
+                  </div>
                 </div>
-                <div>
-                  <span className="font-semibold">{badge.title}</span>
-                  <div className="text-sm text-[hsl(var(--muted-foreground))]">
-                    Earned on {new Date(badge.createdAt).toLocaleDateString()}
+                {/* Pass Rate */}
+                <div className="flex-1">
+                  <span className="text-[hsl(var(--muted-foreground))]">Pass Rate</span>
+                  <div className="text-3xl font-bold text-[hsl(var(--primary))]">
+                    {passRate !== null ? passRate.toFixed(2) + '%' : 'N/A'}
                   </div>
                 </div>
               </div>
-            ))}
-          </div>
-        ) : (
-          <div className="text-[hsl(var(--muted-foreground))]">No badges earned yet.</div>
-        )}
-      </Card>
+            </Card>
+          </motion.div>
 
-      {/* Badges Over Time */}
-      {badgeStats && badgeStats.badgesOverTime.length > 0 && (
-        <Card className="p-6 shadow-lg rounded-md animate-fadeIn bg-[hsl(var(--card))] text-[hsl(var(--card-foreground))]">
-          <h2 className="text-xl font-semibold text-[hsl(var(--primary))] mb-4">
-            Badges Earned Over Time
-          </h2>
-          <ResponsiveContainer width="100%" height={300}>
-            <LineChart
-              data={badgeStats.badgesOverTime}
-              margin={{ top: 20, right: 30, left: 20, bottom: 60 }}
-              aria-label="Badges Earned Over Time"
-              role="img"
-            >
-              <CartesianGrid stroke={gridStroke} strokeDasharray="5 5" />
-              <XAxis
-                dataKey="month"
-                stroke={axisStroke}
-                tickFormatter={(month) => {
-                  const [year, monthNum] = month.split('-').map(Number);
-                  const date = new Date(year, monthNum - 1);
-                  return date.toLocaleString('default', { month: 'short', year: 'numeric' });
-                }}
-                interval={Math.floor(badgeStats.badgesOverTime.length / 10)}
-                angle={-45}
-                textAnchor="end"
-                height={60}
-                className="font-BAM"
-              />
-              <YAxis stroke={axisStroke} />
-              <Tooltip
-                formatter={(value: number) => [value, 'Badges']}
-                labelFormatter={(label: string) => label}
-                contentStyle={{
-                  backgroundColor: theme === 'dark' ? '#333' : '#fff',
-                  color: theme === 'dark' ? '#fff' : '#000',
-                }}
-              />
-              <Line
-                type="monotone"
-                dataKey="count"
-                stroke="#F1C40F"
-                strokeWidth={2}
-                dot={{ r: 4 }}
-                activeDot={{ r: 8 }}
-                animationDuration={6000}
-                strokeLinejoin="round"
-                strokeLinecap="round"
-              />
-            </LineChart>
-          </ResponsiveContainer>
-        </Card>
+          {/* Answer Distribution */}
+          <motion.div variants={cardVariants}>
+            <Card className="p-6 shadow-lg rounded-md bg-[hsl(var(--card))] text-[hsl(var(--card-foreground))]">
+              <h2 className="text-xl font-semibold text-[hsl(var(--primary))] mb-4">
+                Answer Distribution
+              </h2>
+              {answerStats ? (
+                <ResponsiveContainer width="100%" height={300}>
+                  <PieChart>
+                    <Pie
+                      data={[
+                        { name: 'Correct', value: answerStats.correctCount },
+                        { name: 'Wrong', value: answerStats.wrongCount },
+                      ]}
+                      dataKey="value"
+                      nameKey="name"
+                      cx="50%"
+                      cy="50%"
+                      outerRadius={80}
+                      label
+                      animationDuration={4000}
+                    >
+                      {[
+                        { name: 'Correct', value: answerStats.correctCount },
+                        { name: 'Wrong', value: answerStats.wrongCount },
+                      ].map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} /> // Original colors
+                      ))}
+                    </Pie>
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: theme === 'dark' ? '#333' : '#fff',
+                        color: theme === 'dark' ? '#fff' : '#000',
+                      }}
+                    />
+                    <Legend verticalAlign="bottom" height={36} />
+                  </PieChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="text-[hsl(var(--muted-foreground))]">No answer data available.</div>
+              )}
+            </Card>
+          </motion.div>
+
+          {/* Performance by Category */}
+          <motion.div variants={cardVariants}>
+            <Card className="p-6 shadow-lg rounded-md bg-[hsl(var(--card))] text-[hsl(var(--card-foreground))]">
+              <h2 className="text-xl font-semibold text-[hsl(var(--primary))] mb-4">
+                Performance by Category
+              </h2>
+              {answerStats && answerStats.performanceByCategory.length > 0 ? (
+                <ResponsiveContainer width="100%" height={300}>
+                  <BarChart data={answerStats.performanceByCategory}>
+                    <CartesianGrid stroke={gridStroke} strokeDasharray="5 5" /> 
+                    <XAxis dataKey="category" stroke={axisStroke} />
+                    <YAxis domain={[0, 100]} stroke={axisStroke} />
+                    <Tooltip
+                      formatter={(value: number) => [value + '%', 'Accuracy']}
+                      labelFormatter={(label: string) => label}
+                      contentStyle={{
+                        backgroundColor: theme === 'dark' ? '#333' : '#fff',
+                        color: theme === 'dark' ? '#fff' : '#000',
+                      }}
+                    />
+                    <Legend verticalAlign="top" height={36} />
+                    <Bar dataKey="accuracy" fill="#27AE60" name="Accuracy (%)" animationDuration={6000} /> 
+                  </BarChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="text-[hsl(var(--muted-foreground))]">No performance data available.</div>
+              )}
+            </Card>
+          </motion.div>
+
+          {/* Badges Earned */}
+          <motion.div variants={cardVariants}>
+            <Card className="p-6 shadow-lg rounded-md bg-[hsl(var(--card))] text-[hsl(var(--card-foreground))]">
+              <h2 className="text-xl font-semibold text-[hsl(var(--primary))] mb-4">
+                Badges Earned
+              </h2>
+              {badgeStats && badgeStats.badges.length > 0 ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                  {badgeStats.badges.map((badge, index) => (
+                    <div
+                      key={index}
+                      className="flex items-center space-x-4 p-4 bg-[hsl(var(--card))] rounded-md shadow-sm"
+                    >
+                      {/* Badge Icon */}
+                      <div className="w-12 h-12 bg-[hsl(var(--primary))] rounded-full flex items-center justify-center text-white text-lg font-bold">
+                        {badge.title.charAt(0)}
+                      </div>
+                      <div>
+                        <span className="font-semibold">{badge.title}</span>
+                        <div className="text-sm text-[hsl(var(--muted-foreground))]">
+                          Earned on {new Date(badge.createdAt).toLocaleDateString()}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-[hsl(var(--muted-foreground))]">No badges earned yet.</div>
+              )}
+            </Card>
+          </motion.div>
+
+          {/* Badges Over Time */}
+          {badgeStats && badgeStats.badgesOverTime.length > 0 && (
+            <motion.div variants={cardVariants}>
+              <Card className="p-6 shadow-lg rounded-md bg-[hsl(var(--card))] text-[hsl(var(--card-foreground))]">
+                <h2 className="text-xl font-semibold text-[hsl(var(--primary))] mb-4">
+                  Badges Earned Over Time
+                </h2>
+                <ResponsiveContainer width="100%" height={300}>
+                  <LineChart
+                    data={badgeStats.badgesOverTime}
+                    margin={{ top: 20, right: 30, left: 20, bottom: 60 }}
+                    aria-label="Badges Earned Over Time"
+                    role="img"
+                  >
+                    <CartesianGrid stroke={gridStroke} strokeDasharray="5 5" />
+                    <XAxis
+                      dataKey="month"
+                      stroke={axisStroke}
+                      tickFormatter={(month) => {
+                        const [year, monthNum] = month.split('-').map(Number);
+                        const date = new Date(year, monthNum - 1);
+                        return date.toLocaleString('default', { month: 'short', year: 'numeric' });
+                      }}
+                      interval={Math.floor(badgeStats.badgesOverTime.length / 10)}
+                      angle={-45}
+                      textAnchor="end"
+                      height={60}
+                      className="font-BAM"
+                    />
+                    <YAxis stroke={axisStroke} />
+                    <Tooltip
+                      formatter={(value: number) => [value, 'Badges']}
+                      labelFormatter={(label: string) => label}
+                      contentStyle={{
+                        backgroundColor: theme === 'dark' ? '#333' : '#fff',
+                        color: theme === 'dark' ? '#fff' : '#000',
+                      }}
+                    />
+                    <Line
+                      type="monotone"
+                      dataKey="count"
+                      stroke="#F1C40F"
+                      strokeWidth={2}
+                      dot={{ r: 4 }}
+                      activeDot={{ r: 8 }}
+                      animationDuration={6000}
+                      strokeLinejoin="round"
+                      strokeLinecap="round"
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
+              </Card>
+            </motion.div>
+          )}
+
+          {/* Worst Accuracy Questions */}
+          <motion.div variants={cardVariants}>
+            <Card className="p-6 shadow-lg rounded-md bg-[hsl(var(--card))] text-[hsl(var(--card-foreground))]">
+              <h2 className="text-xl font-semibold text-[hsl(var(--primary))] mb-4">
+                Questions with Worst Accuracy
+              </h2>
+              {worstAccuracyQuestions.length > 0 ? (
+                <div className="flex flex-col items-center">
+                  {/* Question Display */}
+                  <div
+                    className="w-full md:w-3/4 lg:w-2/3 p-6 rounded-md shadow-lg bg-[hsl(var(--card))]"
+                    style={{ height: '60vh' }}
+                  >
+                    <div className="flex flex-col h-full">
+                      {/* Image (if available) */}
+                      {worstAccuracyQuestions[currentQuestionIndex].imageUrl && (
+                        <img
+                          src={worstAccuracyQuestions[currentQuestionIndex].imageUrl}
+                          alt={`Question ${currentQuestionIndex + 1} Image`}
+                          className="self-center mb-4 w-36 h-36 object-cover rounded-md flex-shrink-0"
+                          loading="lazy"
+                        />
+                      )}
+
+                      {/* Question Text */}
+                      <h3 className="text-lg font-semibold mb-4 font-BAM">
+                        {worstAccuracyQuestions[currentQuestionIndex].questionText}
+                      </h3>
+
+                      {/* Simplified Answer Statistics */}
+                      <div className="mb-4 w-24 text-center py-1 bg-[hsl(var(--destructive))] text-[hsl(var(--destructive-foreground))] rounded-md">
+                        {`${worstAccuracyQuestions[currentQuestionIndex].correctCount}/${worstAccuracyQuestions[currentQuestionIndex].wrongCount}`}
+                      </div>
+
+                      {/* Display Answers */}
+                      <div className="space-y-2 flex-grow overflow-auto">
+                        {worstAccuracyQuestions[currentQuestionIndex].options.map((option, idx) => {
+                          const isCorrect = option === worstAccuracyQuestions[currentQuestionIndex].correctAnswer;
+                          return (
+                            <div
+                              key={idx}
+                              className={`
+                                p-2 rounded-md
+                                ${
+                                  isCorrect
+                                    ? 'bg-[hsl(var(--primary))] border-2 border-[hsl(var(--primary-foreground))] text-white'
+                                    : 'bg-[hsl(var(--muted))]'
+                                }
+                              `}
+                            >
+                              {option}
+                            </div>
+                          );
+                        })}
+                      </div>
+
+                      {/* Navigation Arrows */}
+                      {worstAccuracyQuestions.length > 1 && (
+                        <div className="flex justify-between mt-6 items-center">
+                          <button
+                            onClick={goToPreviousQuestion}
+                            className="p-2 bg-[hsl(var(--muted))] rounded-full hover:bg-[hsl(var(--muted-foreground))] focus:outline-none"
+                            aria-label="Previous Question"
+                          >
+                            <ChevronLeftIcon className="h-6 w-6 text-[hsl(var(--foreground))]" />
+                          </button>
+                          <span className="text-[hsl(var(--muted-foreground))]">
+                            {currentQuestionIndex + 1} of {worstAccuracyQuestions.length}
+                          </span>
+                          <button
+                            onClick={goToNextQuestion}
+                            className="p-2 bg-[hsl(var(--muted))] rounded-full hover:bg-[hsl(var(--muted-foreground))] focus:outline-none"
+                            aria-label="Next Question"
+                          >
+                            <ChevronRightIcon className="h-6 w-6 text-[hsl(var(--foreground))]" />
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="text-[hsl(var(--muted-foreground))]">No data available for worst accuracy questions.</div>
+              )}
+            </Card>
+          </motion.div>
+        </>
       )}
 
-      {/* Worst Accuracy Questions */}
-      <Card className="p-6 shadow-lg rounded-md animate-fadeIn bg-[hsl(var(--card))] text-[hsl(var(--card-foreground))]">
-        <h2 className="text-xl font-semibold text-[hsl(var(--primary))] mb-4">
-          Questions with Worst Accuracy
-        </h2>
-        {worstAccuracyQuestions.length > 0 ? (
-          <div className="flex flex-col items-center">
-            {/* Question Display */}
-            <div
-              className="w-full md:w-3/4 lg:w-2/3 p-6 rounded-md shadow-lg bg-[hsl(var(--card))]"
-              style={{ height: '60vh' }}
-            >
-              <div className="flex flex-col h-full">
-                {/* Image (if available) */}
-                {worstAccuracyQuestions[currentQuestionIndex].imageUrl && (
-                  <img
-                    src={worstAccuracyQuestions[currentQuestionIndex].imageUrl}
-                    alt={`Question ${currentQuestionIndex + 1} Image`}
-                    className="self-center mb-4 w-36 h-36 object-cover rounded-md flex-shrink-0"
-                    loading="lazy"
-                  />
-                )}
-
-                {/* Question Text */}
-                <h3 className="text-lg font-semibold mb-4 font-BAM">
-                  {worstAccuracyQuestions[currentQuestionIndex].questionText}
-                </h3>
-
-                {/* Simplified Answer Statistics */}
-                <div className="mb-4 w-24 text-center py-1 bg-[hsl(var(--destructive))] text-[hsl(var(--destructive-foreground))] rounded-md">
-                  {`${worstAccuracyQuestions[currentQuestionIndex].correctCount}/${worstAccuracyQuestions[currentQuestionIndex].wrongCount}`}
-                </div>
-
-                {/* Display Answers */}
-                <div className="space-y-2 flex-grow overflow-auto">
-                  {worstAccuracyQuestions[currentQuestionIndex].options.map((option, idx) => {
-                    const isCorrect = option === worstAccuracyQuestions[currentQuestionIndex].correctAnswer;
-                    return (
-                      <div
-                        key={idx}
-                        className={`
-                          p-2 rounded-md
-                          ${
-                            isCorrect
-                              ? 'bg-[hsl(var(--primary))] border-2 border-[hsl(var(--primary-foreground))] text-white'
-                              : 'bg-[hsl(var(--muted))]'
-                          }
-                        `}
-                      >
-                        {option}
-                      </div>
-                    );
-                  })}
-                </div>
-
-                {/* Navigation Arrows */}
-                {worstAccuracyQuestions.length > 1 && (
-                  <div className="flex justify-between mt-6 items-center">
-                    <button
-                      onClick={goToPreviousQuestion}
-                      className="p-2 bg-[hsl(var(--muted))] rounded-full hover:bg-[hsl(var(--muted-foreground))] focus:outline-none"
-                      aria-label="Previous Question"
-                    >
-                      <ChevronLeftIcon className="h-6 w-6 text-[hsl(var(--foreground))]" />
-                    </button>
-                    <span className="text-[hsl(var(--muted-foreground))]">
-                      {currentQuestionIndex + 1} of {worstAccuracyQuestions.length}
-                    </span>
-                    <button
-                      onClick={goToNextQuestion}
-                      className="p-2 bg-[hsl(var(--muted))] rounded-full hover:bg-[hsl(var(--muted-foreground))] focus:outline-none"
-                      aria-label="Next Question"
-                    >
-                      <ChevronRightIcon className="h-6 w-6 text-[hsl(var(--foreground))]" />
-                    </button>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        ) : (
-          <div className="text-[hsl(var(--muted-foreground))]">No data available for worst accuracy questions.</div>
-        )}
-      </Card>
-    </div>
+      {/* Show loading spinner if loading */}
+      {loading && (
+        <div className="flex items-center justify-center w-full h-full">
+          <LoadingSpinner />
+        </div>
+      )}
+    </motion.div>
   );
 };
 

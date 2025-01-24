@@ -141,7 +141,7 @@ const AdminReports: React.FC = () => {
       // We only want the array inside data.reports
       const fetchedReports = data.reports; // this is an array
 
-      fetchedReports.sort((a : any, b : any) => {
+      fetchedReports.sort((a: any, b: any) => {
         return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
       });
 
@@ -338,7 +338,7 @@ const AdminReports: React.FC = () => {
         <div className="flex space-x-2">
           <Button
             onClick={handleRefresh}
-            className="bg-main-green text-white hover:bg-main-green/90 transition-colors duration-200 hover:text-white w-24"
+            className="bg-main-green text-white hover:bg-main-green/90 transition-colors duration-200 hover:text-white w-24 shadow-sm"
           >
             Refresh
           </Button>
@@ -425,14 +425,14 @@ const AdminReports: React.FC = () => {
                         <>
                           <Button
                             variant="outline"
-                            className="bg-yellow-200 hover:bg-yellow-300 text-black transition-colors duration-200 w-24"
+                            className="bg-yellow-200 hover:bg-yellow-400 text-black transition-colors duration-200 w-24 shadow-sm"
                             onClick={() => handleApprove(report.id)}
                           >
                             Review
                           </Button>
                           <Button
                             variant="outline"
-                            className="bg-green-200 hover:bg-green-300 text-black transition-colors duration-200 w-24"
+                            className="bg-green-200 hover:bg-green-400 text-black transition-colors duration-200 w-24 shadow-sm"
                             onClick={() => handleResolve(report.id)}
                           >
                             Resolve
@@ -440,7 +440,7 @@ const AdminReports: React.FC = () => {
                           <Button
                             variant="destructive"
                             onClick={() => handleDelete(report.id)}
-                            className="bg-red-200 hover:bg-red-300 text-black transition-colors duration-200 w-24"
+                            className="bg-red-200 hover:bg-red-400 text-black transition-colors duration-200 w-24 shadow-sm"
                           >
                             Delete
                           </Button>
@@ -450,7 +450,7 @@ const AdminReports: React.FC = () => {
                         <>
                           <Button
                             variant="outline"
-                            className="bg-green-200 hover:bg-green-300 text-black transition-colors duration-200 w-24"
+                            className="bg-green-200 hover:bg-green-400 text-black transition-colors duration-200 w-24 shadow-sm"
                             onClick={() => handleResolve(report.id)}
                           >
                             Resolve
@@ -458,7 +458,7 @@ const AdminReports: React.FC = () => {
                           <Button
                             variant="destructive"
                             onClick={() => handleDelete(report.id)}
-                            className="bg-red-200 hover:bg-red-300 text-black transition-colors duration-200 w-24"
+                            className="bg-red-200 hover:bg-red-400 text-black transition-colors duration-200 w-24 shadow-sm"
                           >
                             Delete
                           </Button>
@@ -468,7 +468,7 @@ const AdminReports: React.FC = () => {
                         <Button
                           variant="destructive"
                           onClick={() => handleDelete(report.id)}
-                          className="bg-red-200 hover:bg-red-300 text-black transition-colors duration-200 w-24"
+                          className="bg-red-200 hover:bg-red-400 text-black transition-colors duration-200 w-24 shadow-sm"
                         >
                           Delete
                         </Button>

@@ -1,7 +1,9 @@
 // src/pages/Profile.tsx
+
 import React, { useState, useEffect, useContext } from "react";
 import axios from "axios";
 import { Edit } from "lucide-react";
+import { motion } from "framer-motion"; // <-- Import framer-motion
 import { useAuth } from "../context/AuthContext";
 import { ThemeContext } from "../context/ThemeContext";
 import { Button } from "../components/ui/button";
@@ -117,7 +119,7 @@ const Profile: React.FC = () => {
   // --------------------
   useEffect(() => {
     const fetchUserTests = async () => {
-      if (activeTab !== "History") return; // Only fetch when History tab is active
+      if (activeTab !== "History") return;
       setUserTestsLoading(true);
       setUserTestsError(null);
 
@@ -159,29 +161,47 @@ const Profile: React.FC = () => {
     }
   };
 
-  return (
-    <div className="p-6 bg-[hsl(var(--background))] min-h-screen flex flex-col items-center animate-fadeIn text-[hsl(var(--foreground))]">
-      <div className="max-w-5xl w-full">
-        <h1 className="text-3xl font-bold text-center mb-6">My Account</h1>
+  // A simple fade+slide in for the entire page container
+  const pageVariants = {
+    hidden: { opacity: 0, y: 10 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: { duration: 0.4 },
+    },
+  };
 
+  // Variants for test cards
+  const testCardVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: (i: number) => ({
+      opacity: 1,
+      y: 0,
+      transition: { delay: i * 0.1, duration: 0.5 },
+    }),
+  };
+
+  return (
+    // Wrap the entire page in a motion.div with minimal fade+slide
+    <motion.div
+      initial="hidden"
+      animate="visible"
+      variants={pageVariants}
+      className="p-6 bg-[hsl(var(--background))] min-h-screen flex flex-col items-center text-[hsl(var(--foreground))]"
+    >
+      <div className="max-w-5xl w-full">
         {/* Profile Card with Avatar and Calendar */}
-        <Card className="p-8 shadow-lg rounded-md flex flex-col md:flex-row justify-between items-start space-y-6 md:space-y-0 md:space-x-6 bg-[hsl(var(--card))] text-[hsl(var(--card-foreground))] items-center justify-around">
+        <Card className="mt-5 py-12 shadow-lg rounded-md flex flex-col md:flex-row justify-between items-start space-y-6 md:space-y-0 md:space-x-6 bg-[hsl(var(--card))] text-[hsl(var(--card-foreground))] items-center justify-around">
           {/* Avatar Section */}
           <div className="flex flex-col items-center md:items-start space-y-4">
-            {/* Avatar */}
             <Avatar className="w-24 h-24">
-              <AvatarImage
-                src={"https://github.com/shadcn.png"}
-                alt={username || "Avatar"}
-              />
-              <AvatarFallback>
-                {username?.charAt(0).toUpperCase() || "U"}
-              </AvatarFallback>
+              <AvatarImage src={"https://github.com/shadcn.png"} alt={username || "Avatar"} />
+              <AvatarFallback>{username?.charAt(0).toUpperCase() || "U"}</AvatarFallback>
             </Avatar>
             <div className="flex flex-col space-y-1 items-center md:items-start">
               <span className="text-lg font-bold">{username || "Not set"}</span>
               <span className="text-sm">{user?.email}</span>
-              {/* Success Rate and Test Counts */}
+              {/* Success Rate */}
               {testStatsLoading ? (
                 <div className="text-gray-500">Loading success rate...</div>
               ) : testStatsError ? (
@@ -189,7 +209,9 @@ const Profile: React.FC = () => {
               ) : (
                 <div className="flex items-center space-x-2 font-semibold">
                   <span>{successRate.toFixed(2)}%</span>
-                  <span>- {testsPassed}/{testsTaken}</span>
+                  <span>
+                    - {testsPassed}/{testsTaken}
+                  </span>
                 </div>
               )}
             </div>
@@ -232,7 +254,6 @@ const Profile: React.FC = () => {
               Activity
             </button>
 
-            {/* "History" tab */}
             <button
               onClick={() => setActiveTab("History")}
               className={`px-3 py-2 font-semibold ${
@@ -245,10 +266,6 @@ const Profile: React.FC = () => {
             </button>
           </nav>
         </div>
-
-        {/* ---------------- */}
-        {/* TAB CONTENT      */}
-        {/* ---------------- */}
 
         {/* PROFILE INFO TAB */}
         {activeTab === "Profile Info" && (
@@ -347,80 +364,102 @@ const Profile: React.FC = () => {
 
         {/* HISTORY TAB */}
         {activeTab === "History" && (
-          <Card className="p-6 shadow-lg rounded-md animate-fadeIn bg-[hsl(var(--card))] text-[hsl(var(--card-foreground))]">
-            <h2 className="text-xl font-semibold mb-4">My Test History</h2>
+          <Card className="p-6 shadow-lg rounded-md animate-fadeIn bg-[hsl(var(--card))] text-black">
+            <h2 className="text-xl font-semibold mb-4 text-[hsl(var(--card-foreground))]">
+              My Test History
+            </h2>
 
             {userTestsLoading ? (
-              <div className="text-gray-500">Loading test history...</div>
+              <div className="text-gray-500 text-[hsl(var(--card-foreground))]">
+                Loading test history...
+              </div>
             ) : userTestsError ? (
               <div className="text-red-500">{userTestsError}</div>
             ) : userTests.length === 0 ? (
               <div>No completed tests found.</div>
             ) : (
-              <div className="space-y-4">
-                {userTests.map((test) => {
+              <motion.div
+                className="space-y-4"
+                initial="hidden"
+                animate="visible"
+                variants={{
+                  visible: {
+                    transition: {
+                      staggerChildren: 0.1,
+                    },
+                  },
+                }}
+              >
+                {userTests.map((test, index) => {
                   const passed = test.isPassed;
                   const bgColor = passed ? "bg-green-100" : "bg-red-100";
 
                   return (
-                    <Drawer key={test.id}>
-                      {/* DrawerTrigger asChild => we wrap our clickable div */}
-                      <DrawerTrigger asChild>
-                        <div
-                          className={`p-4 rounded-md cursor-pointer ${bgColor}`}
-                        >
-                          {/* Group */}
-                          <p className="font-medium mb-1">
-                            Group: {test.group}
-                          </p>
-                          {/* Score / totalPoints */}
-                          <p className="font-semibold">
-                            {test.score}/{100} points
-                          </p>
-                          <p>{passed ? "Passed" : "Failed"}</p>
-                        </div>
-                      </DrawerTrigger>
+                    <motion.div
+                      key={test.id}
+                      custom={index}
+                      initial="hidden"
+                      animate="visible"
+                      variants={testCardVariants}
+                    >
+                      <Drawer>
+                        <DrawerTrigger asChild>
+                          {/* Wrap the div with motion.div to apply hover animations */}
+                          <motion.div
+                            className={`p-4 rounded-md cursor-pointer ${bgColor}`}
+                            whileHover={{ y: -5, 
+                              boxShadow:
+                              theme === "dark"
+                                ? "0px 4px 15px rgba(255, 255, 255, 0.5)"
+                                : "0px 4px 15px rgba(0, 0, 0, 0.2)",
+                            }}
+                            transition={{ type: "spring", stiffness: 300 }}
+                          >
+                            <p className="font-medium mb-1">Group: {test.group}</p>
+                            <p className="font-semibold">
+                              {test.score}/{100} points
+                            </p>
+                            <p>{passed ? "Passed" : "Failed"}</p>
+                          </motion.div>
+                        </DrawerTrigger>
 
-                      {/* Drawer Content for Details */}
-                      <DrawerContent>
-                        <DrawerHeader>
-                          <DrawerTitle>Test Details</DrawerTitle>
-                          <DrawerDescription>
-                            Information about your test
-                          </DrawerDescription>
-                        </DrawerHeader>
+                        {/* Drawer Content for Details */}
+                        <DrawerContent>
+                          <DrawerHeader>
+                            <DrawerTitle className="text-[hsl(var(--card-foreground))]">
+                              Test Details
+                            </DrawerTitle>
+                            <DrawerDescription>
+                              Information about your test
+                            </DrawerDescription>
+                          </DrawerHeader>
 
-                        {/* 
-                          We turn the detail section into a simple 
-                          two-column "horizontal" design using grid.
-                        */}
-                        <div className="py-4 grid grid-cols-2 gap-y-2 gap-x-4">
-                          <div className="font-medium">Group:</div>
-                          <div>{test.group}</div>
-
-                          <div className="font-medium">Score:</div>
-                          <div>
-                            {test.score}/100
+                          <div className="py-4 text-[hsl(var(--card-foreground))] flex gap-8 items-center justify-center">
+                            <p>
+                              <strong>Group:</strong> {test.group}
+                            </p>
+                            <p>
+                              <strong>Score:</strong> {test.score}/100
+                            </p>
+                            <p>
+                              <strong>Passed:</strong> {passed ? "Yes" : "No"}
+                            </p>
+                            <p>
+                              <strong>Time Taken:</strong> {test.timeTaken} seconds
+                            </p>
+                            <p>
+                              <strong>Date:</strong>{" "}
+                              {new Date(test.createdAt).toLocaleString()}
+                            </p>
                           </div>
 
-                          <div className="font-medium">Passed:</div>
-                          <div>{passed ? "Yes" : "No"}</div>
-
-                          <div className="font-medium">Time Taken:</div>
-                          <div>{test.timeTaken} seconds</div>
-
-                          <div className="font-medium">Date:</div>
-                          <div>{new Date(test.createdAt).toLocaleString()}</div>
-                        </div>
-
-                        <DrawerFooter>
-                          {/* Optional footer actions */}
-                        </DrawerFooter>
-                      </DrawerContent>
-                    </Drawer>
+                          <DrawerFooter>{/* Optional footer actions */}</DrawerFooter>
+                        </DrawerContent>
+                      </Drawer>
+                    </motion.div>
                   );
                 })}
-              </div>
+              </motion.div>
             )}
           </Card>
         )}
@@ -437,7 +476,7 @@ const Profile: React.FC = () => {
           {message}
         </div>
       )}
-    </div>
+    </motion.div>
   );
 };
 
