@@ -31,6 +31,7 @@ import {
 
 import ActivityStats from "../components/ActivityStats";
 import CustomCalendar, { TestsPerDay } from "../components/CustomCalendar";
+import { toast } from "react-toastify";
 
 const Profile: React.FC = () => {
   const { user, username, role, updateUsername } = useAuth();
@@ -151,7 +152,7 @@ const Profile: React.FC = () => {
 
     try {
       await updateUsername(newUsername);
-      setMessage("Username updated successfully!");
+      toast.success("Username updated successfully!");
       setEditing(false);
     } catch (error) {
       setMessage("Error updating username. Please try again.");
