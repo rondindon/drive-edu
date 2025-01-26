@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from 'react';
+// src/pages/TestPage.tsx
+import React, { useEffect, useState, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Button } from 'src/components/ui/button';
 import { Progress } from 'src/components/ui/progress';
@@ -30,7 +31,11 @@ const TestPage: React.FC = () => {
   // Standard local states
   const [currentIndex, setCurrentIndex] = useState(0);
   const [score, setScore] = useState(0);
-  const [timeLeft, setTimeLeft] = useState(30 * 60); // 30 min in seconds
+
+  // We'll treat timeLeft as a number of seconds
+  const totalDuration = 30 * 60; // 30 min in seconds
+  const [timeLeft, setTimeLeft] = useState(totalDuration);
+
   const [userAnswers, setUserAnswers] = useState<string[]>(
     new Array(questions.length).fill('')
   );
@@ -48,7 +53,7 @@ const TestPage: React.FC = () => {
 
         const confirmLeave = window.confirm(
           'Are you sure you want to go back? The test is not finished. ' +
-          'If you confirm, the test will be submitted and you will leave this page.'
+            'If you confirm, the test will be submitted and you will leave this page.'
         );
         if (confirmLeave) {
           finishTest(true); // finish the test, then navigate(-1)
@@ -79,7 +84,10 @@ const TestPage: React.FC = () => {
         e.returnValue = ''; // Some browsers ignore custom text
         // Attempt minimal send if you like:
         if (testId) {
-          const quickPayload = JSON.stringify({ testId, message: 'User forcibly left. Partial data?' });
+          const quickPayload = JSON.stringify({
+            testId,
+            message: 'User forcibly left. Partial data?',
+          });
           const blob = new Blob([quickPayload], { type: 'application/json' });
           navigator.sendBeacon('http://localhost:4444/api/tests/finish-quick', blob);
         }
@@ -95,26 +103,35 @@ const TestPage: React.FC = () => {
   // ================================
   // 3. Timer => auto-submit
   // ================================
+  // Important: Use a "real-time" approach so it won't freeze when tabbed out.
   useEffect(() => {
     if (!questions.length) return;
 
+    // We'll store the "start" time once, so we know the actual time elapsed.
+    const startTimestamp = Date.now(); // in ms
+
     const timer = setInterval(() => {
-      setTimeLeft((prev) => {
-        if (prev <= 1) {
-          clearInterval(timer);
-          finishTest(); // auto-finish
-          return 0;
-        }
-        return prev - 1;
-      });
+      // how many seconds have actually passed
+      const elapsed = Math.floor((Date.now() - startTimestamp) / 1000);
+
+      // The newTimeLeft is the total minus elapsed
+      const newTimeLeft = totalDuration - elapsed;
+
+      if (newTimeLeft <= 0) {
+        clearInterval(timer);
+        finishTest();
+        setTimeLeft(0);
+      } else {
+        setTimeLeft(newTimeLeft);
+      }
     }, 1000);
 
     return () => clearInterval(timer);
   }, [questions]);
 
   // For the progress bar
-  const totalDuration = 30 * 60; // 1800
   const progressValue = (timeLeft / totalDuration) * 100;
+
   // For display
   const minutes = Math.floor(timeLeft / 60);
   const seconds = timeLeft % 60;
@@ -141,6 +158,7 @@ const TestPage: React.FC = () => {
     if (isCorrect) {
       setScore((prev) => prev + (q.points || 0));
     } else {
+      // deduct points if you like, or handle differently
       setScore((prev) => Math.max(prev - (q.points || 0), 0));
     }
   };
@@ -193,12 +211,17 @@ const TestPage: React.FC = () => {
       questionStatsPromises.push(
         fetch('http://localhost:4444/api/question-stats', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
           body: JSON.stringify({ questionId: q.id, isCorrect }),
         })
       );
     });
+
     const isPassed = finalScore >= 90;
+    // how many seconds were actually used
     const timeTaken = totalDuration - timeLeft;
 
     // 2) Build results data
@@ -238,7 +261,10 @@ const TestPage: React.FC = () => {
 
     fetch('http://localhost:4444/api/tests/finish', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
       body: payload,
     })
       .then((res) => res.json())
@@ -281,7 +307,10 @@ const TestPage: React.FC = () => {
     try {
       const resp = await fetch('http://localhost:4444/api/report', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
         body: JSON.stringify({
           questionId: reportQuestionId,
           description: reportDescription,
@@ -304,7 +333,9 @@ const TestPage: React.FC = () => {
   if (!questions.length) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-[hsl(var(--background))] text-[hsl(var(--foreground))]">
-        <p className="p-4">No questions loaded. Please start a test from the landing page.</p>
+        <p className="p-4">
+          No questions loaded. Please start a test from the landing page.
+        </p>
       </div>
     );
   }
@@ -373,7 +404,8 @@ const TestPage: React.FC = () => {
           {/* Navigation row of question numbers */}
           <div className="flex flex-wrap gap-2">
             {questions.map((_, i) => {
-              let bgClass = 'bg-[hsl(var(--card))] text-[hsl(var(--foreground))]';
+              let bgClass =
+                'bg-[hsl(var(--card))] text-[hsl(var(--foreground))]';
               if (isActive(i)) {
                 // Darker green if active
                 bgClass = 'bg-main-green text-white';
@@ -392,6 +424,8 @@ const TestPage: React.FC = () => {
                     text-sm
                     hover:bg-main-green
                     hover:text-white
+                    hover:-translate-y-1 hover:shadow-lg
+                    transform transition-transform duration-200 ease-in-out
                     ${bgClass}
                   `}
                   onClick={() => jumpToQuestion(i)}
