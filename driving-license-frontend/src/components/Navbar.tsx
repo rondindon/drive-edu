@@ -1,3 +1,4 @@
+// src/components/Navbar.tsx
 import React, { useContext } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Button } from "./ui/button";
@@ -7,18 +8,16 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
 } from "./ui/dropdown-menu";
-import { Switch } from "./ui/switch"; // <-- shadcn switch import
+import { Switch } from "./ui/switch";
 import { useAuth } from "../context/AuthContext";
-import { ThemeContext } from "../context/ThemeContext"; // <-- import your theme context
-import { User, Menu, Sun, Moon } from "lucide-react";     // <-- import sun & moon icons
+import { ThemeContext } from "../context/ThemeContext";
+import { User, Menu, Sun, Moon } from "lucide-react";
 import { toast } from "react-toastify";
 
 const Navbar: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { user, role, username, logout } = useAuth();
-
-  // Grab the current theme and toggle function from context
   const { theme, toggleTheme } = useContext(ThemeContext);
 
   const isActive = (path: string) =>
@@ -37,15 +36,13 @@ const Navbar: React.FC = () => {
     }
   };
 
-  console.log("User", role, username);
-
   return (
     <header className="w-full bg-main-darkBlue shadow-md">
       <nav className="container mx-auto flex items-center justify-between py-4 px-6">
         {/* Left Section: Logo */}
         <div className="flex-1">
           <a href="/" className="text-xl font-bold text-secondary-lightGray">
-            Driving Test App
+            DriveReady
           </a>
         </div>
 
@@ -60,11 +57,14 @@ const Navbar: React.FC = () => {
           <a href="/simulator" className={isActive("/simulator")}>
             Simulator
           </a>
+         <a href="/signs" className={isActive("/signs")}>
+           Signs
+         </a>
         </div>
 
-        {/* Right Section: Profile Dropdown, Admin Panel, and Theme Toggle (Visible on md and above) */}
+        {/* Right Section: Profile, Admin, Theme Toggle (md) */}
         <div className="hidden md:flex flex-1 justify-end items-center space-x-4">
-          {/* Profile Dropdown */}
+          {/* Profile */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button
@@ -120,7 +120,7 @@ const Navbar: React.FC = () => {
             </DropdownMenuContent>
           </DropdownMenu>
 
-          {/* Admin Panel Button (visible if user is logged in and admin) */}
+          {/* Admin Panel */}
           {user && role === "ADMIN" && (
             <Button
               variant="outline"
@@ -131,7 +131,7 @@ const Navbar: React.FC = () => {
             </Button>
           )}
 
-          {/* Theme Toggle (Far Right) */}
+          {/* Theme Toggle */}
           <div className="flex items-center space-x-2">
             <Sun
               className={`w-5 h-5 ${
@@ -141,7 +141,6 @@ const Navbar: React.FC = () => {
             <Switch
               checked={theme === "dark"}
               onCheckedChange={toggleTheme}
-              // Force switch track to stay white
               className="bg-white border border-gray-300 data-[state=checked]:bg-white"
             />
             <Moon
@@ -152,7 +151,7 @@ const Navbar: React.FC = () => {
           </div>
         </div>
 
-        {/* Mobile Section: Hamburger Menu (Visible below md) */}
+        {/* Mobile Menu (below md) */}
         <div className="flex md:hidden flex-1 justify-end">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -187,6 +186,12 @@ const Navbar: React.FC = () => {
                 >
                   Simulator
                 </a>
+               <a
+                 href="/signs"
+                 className={`block px-2 py-1 rounded ${isActive("/signs")}`}
+               >
+                 Signs
+               </a>
               </div>
 
               {/* User Options */}
@@ -245,7 +250,6 @@ const Navbar: React.FC = () => {
                 <Switch
                   checked={theme === "dark"}
                   onCheckedChange={toggleTheme}
-                  // Force switch track to stay white
                   className="bg-white border border-gray-300 data-[state=checked]:bg-white"
                 />
                 <Moon
