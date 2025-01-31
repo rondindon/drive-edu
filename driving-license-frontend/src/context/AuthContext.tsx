@@ -230,9 +230,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const loginWithGoogle = async () => {
     console.log('Initiating Google OAuth sign-in.');
-    const { error } = await supabase.auth.signInWithOAuth({ provider: 'google',  options: {
-      redirectTo: 'https://drive-edu.vercel.app',
-    }, });
+    const { error } = await supabase.auth.signInWithOAuth({ provider: 'google' });
     if (error) {
       toast.error('Failed to sign in with Google.');
       console.error('Google OAuth sign-in error:', error);
