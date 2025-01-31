@@ -3,9 +3,10 @@ import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
-// Existing handlers...
 export const handleNewUser = async (req: Request, res: Response): Promise<Response> => {
   const { email, username }: { email: string; username: string } = req.body;
+
+  console.log('Creating new user:', email, username);
 
   try {
     // Check if the user already exists in the Prisma table

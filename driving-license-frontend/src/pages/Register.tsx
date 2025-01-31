@@ -37,6 +37,7 @@ const Register: React.FC = () => {
         setShowAlert(true);
 
         // Notify the backend to add the user to the Prisma User table
+        console.log(email, username);
         const response = await fetch("https://drive-edu.onrender.com/api/user", {
           method: "POST",
           headers: {
