@@ -22,6 +22,7 @@ import ResultsPage from './pages/tests/ResultsPage';
 import AdminTests from './pages/admin/tests/AdminTests';
 import AdminReports from './pages/admin/reports/AdminReports';
 import Profile from './pages/Profile';
+import SignsPage from './pages/SignsPage';
 
 function App() {
   return (
@@ -65,6 +66,14 @@ function App() {
               </ProtectedRoute>
             }
           />
+        <Route
+           path="/signs"
+           element={
+             <ProtectedRoute allowedRoles={['ADMIN','USER']}>
+               <SignsPage />
+             </ProtectedRoute>
+           }
+         />
           <Route
               path="/test/:testId"
               element={
