@@ -342,3 +342,57 @@ export async function getWorstAccuracyQuestions(req: AuthenticatedRequest, res: 
       return res.status(500).json({ message: 'Error fetching admin test statistics' });
     }
   }
+
+  export async function getUserStreak(req: AuthenticatedRequest, res: Response) {
+    try {
+      const userId = req.user?.id;
+  
+      if (!userId) {
+        return res.status(401).json({ message: 'Unauthorized: User not authenticated.' });
+      }
+  
+      // Get today's date at midnight
+      const today = new Date();
+      //convert to slovakian time
+      today.setHours(today.getHours() + 2);
+  
+      // Fetch all tests (both passed and failed) for the user, ordered descending by createdAt
+      const completedTests = await prisma.test.findMany({
+        where: {
+          userId,
+        },
+        select: {
+          createdAt: true,
+        },
+        orderBy: {
+          createdAt: 'desc',
+        },
+      });
+  
+      // Extract unique days with at least one completed test
+      const completedDaysSet = new Set<string>();
+      completedTests.forEach(test => {
+        const day = test.createdAt.toISOString().split('T')[0]; // 'YYYY-MM-DD'
+        completedDaysSet.add(day);
+      });
+  
+      let streak = 0;
+      let currentDate = new Date(today);
+  
+      while (true) {
+        const dayStr = currentDate.toISOString().split('T')[0];
+        if (completedDaysSet.has(dayStr)) {
+          streak += 1;
+          // Move to previous day
+          currentDate.setDate(currentDate.getDate() - 1);
+        } else {
+          break;
+        }
+      }
+  
+      return res.status(200).json({ streak });
+    } catch (error) {
+      console.error('[getUserStreak] Error:', error);
+      return res.status(500).json({ message: 'Internal Server Error: Unable to calculate streak.' });
+    }
+  }

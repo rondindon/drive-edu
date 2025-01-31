@@ -33,6 +33,8 @@ import ActivityStats from "../components/ActivityStats";
 import CustomCalendar, { TestsPerDay } from "../components/CustomCalendar";
 import { toast } from "react-toastify";
 
+import FireAnimation from "../components/FireAnimation"; // Import the FireAnimation component
+
 const Profile: React.FC = () => {
   const { user, username, role, updateUsername } = useAuth();
   const [activeTab, setActiveTab] = useState<"Profile Info" | "Activity" | "History">("Profile Info");
@@ -57,6 +59,11 @@ const Profile: React.FC = () => {
   const [userTests, setUserTests] = useState<any[]>([]);
   const [userTestsLoading, setUserTestsLoading] = useState<boolean>(false);
   const [userTestsError, setUserTestsError] = useState<string | null>(null);
+
+  // ** Streak State **
+  const [streak, setStreak] = useState<number>(0);
+  const [streakLoading, setStreakLoading] = useState<boolean>(true);
+  const [streakError, setStreakError] = useState<string | null>(null);
 
   const token = localStorage.getItem("supabaseToken");
   const { theme, toggleTheme } = useContext(ThemeContext);
@@ -142,6 +149,28 @@ const Profile: React.FC = () => {
   }, [activeTab, token]);
 
   // --------------------
+  // FETCH USER STREAK
+  // --------------------
+  useEffect(() => {
+    const fetchStreak = async () => {
+      setStreakLoading(true);
+      try {
+        const response = await axios.get("http://localhost:4444/api/user/stats/streak", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        setStreak(response.data.streak);
+      } catch (error) {
+        console.error("Error fetching streak:", error);
+        setStreakError("Failed to load streak.");
+      } finally {
+        setStreakLoading(false);
+      }
+    };
+
+    fetchStreak();
+  }, [token]);
+
+  // --------------------
   // SAVE UPDATED USERNAME
   // --------------------
   const handleSave = async () => {
@@ -182,6 +211,12 @@ const Profile: React.FC = () => {
     }),
   };
 
+  // Variants for navigation buttons
+  const navButtonVariants = {
+    hover: { scale: 1.1 },
+    tap: { scale: 0.95 },
+  };
+
   return (
     // Wrap the entire page in a motion.div with minimal fade+slide
     <motion.div
@@ -202,17 +237,36 @@ const Profile: React.FC = () => {
             <div className="flex flex-col space-y-1 items-center md:items-start">
               <span className="text-lg font-bold">{username || "Not set"}</span>
               <span className="text-sm">{user?.email}</span>
-              {/* Success Rate */}
+              {/* Success Rate and Streak */}
               {testStatsLoading ? (
                 <div className="text-gray-500">Loading success rate...</div>
               ) : testStatsError ? (
                 <div className="text-red-500">{testStatsError}</div>
               ) : (
-                <div className="flex items-center space-x-2 font-semibold">
-                  <span>{successRate.toFixed(2)}%</span>
-                  <span>
-                    - {testsPassed}/{testsTaken}
-                  </span>
+                <div className="flex flex-col items-center md:items-start space-y-1 font-semibold">
+                  {/* Success Rate */}
+                  <div className="flex items-center space-x-2">
+                    <span>{successRate.toFixed(2)}%</span>
+                    <span>
+                      - {testsPassed}/{testsTaken}
+                    </span>
+                  </div>
+                  {/* Streak */}
+                  {streakLoading ? (
+                    <div className="text-gray-500">Loading streak...</div>
+                  ) : streakError ? (
+                    <div className="text-red-500">{streakError}</div>
+                  ) : (
+                    <motion.div
+                      className="flex items-center space-x-1 font-semibold text-yellow-500"
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.5 }}
+                    >
+                      <FireAnimation width={30} height={30} /> {/* Animated Fire SVG */}
+                      <span className="mt-1">{streak} day{streak !== 1 ? 's' : ''} streak</span>
+                    </motion.div>
+                  )}
                 </div>
               )}
             </div>
@@ -408,11 +462,12 @@ const Profile: React.FC = () => {
                           {/* Wrap the div with motion.div to apply hover animations */}
                           <motion.div
                             className={`p-4 rounded-md cursor-pointer ${bgColor}`}
-                            whileHover={{ y: -5, 
+                            whileHover={{
+                              y: -5,
                               boxShadow:
-                              theme === "dark"
-                                ? "0px 4px 15px rgba(255, 255, 255, 0.5)"
-                                : "0px 4px 15px rgba(0, 0, 0, 0.2)",
+                                theme === "dark"
+                                  ? "0px 4px 15px rgba(255, 255, 255, 0.5)"
+                                  : "0px 4px 15px rgba(0, 0, 0, 0.2)",
                             }}
                             transition={{ type: "spring", stiffness: 300 }}
                           >
