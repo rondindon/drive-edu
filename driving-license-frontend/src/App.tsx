@@ -61,17 +61,13 @@ function App() {
         <Route
             path="/about"
             element={
-              <ProtectedRoute allowedRoles={['ADMIN', 'USER']}>
                 <AboutPage />
-              </ProtectedRoute>
             }
           />
         <Route
            path="/signs"
            element={
-             <ProtectedRoute allowedRoles={['ADMIN','USER']}>
                <SignsPage />
-             </ProtectedRoute>
            }
          />
           <Route
