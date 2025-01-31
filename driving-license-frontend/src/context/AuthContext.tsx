@@ -46,7 +46,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     setIsInitialized(false);
 
     try {
-      const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:4444/api';
+      const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'https://drive-edu.onrender.com/';
       const response = await fetch(`${API_BASE_URL}/user?email=${encodeURIComponent(email)}`, {
         method: 'GET',
         headers: {
@@ -265,7 +265,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
       console.log(`Updating username for email: ${user.email} to ${newUsername}`);
 
-      const response = await fetch(`${process.env.REACT_APP_API_BASE_URL || 'http://localhost:4444/api'}/users/update-username`, {
+      const response = await fetch(`${process.env.REACT_APP_API_BASE_URL || 'https://drive-edu.onrender.com/api'}/users/update-username`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

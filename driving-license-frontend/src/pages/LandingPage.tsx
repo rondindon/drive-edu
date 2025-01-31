@@ -73,7 +73,7 @@ const LandingPage: React.FC = () => {
 
     try {
       setIsLoading(true); // show spinner + typed messages
-      const response = await fetch('http://localhost:4444/api/tests/start', {
+      const response = await fetch('https://drive-edu.onrender.com/api/tests/start', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

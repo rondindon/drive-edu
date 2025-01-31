@@ -75,7 +75,7 @@ const Profile: React.FC = () => {
     const fetchTestSummary = async () => {
       setTestStatsLoading(true);
       try {
-        const response = await axios.get("http://localhost:4444/api/user/stats/test-summary", {
+        const response = await axios.get("https://drive-edu.onrender.com/api/user/stats/test-summary", {
           headers: { Authorization: `Bearer ${token}` },
         });
 
@@ -106,7 +106,7 @@ const Profile: React.FC = () => {
     const fetchTestsPerDay = async () => {
       setTestsPerDayLoading(true);
       try {
-        const response = await axios.get("http://localhost:4444/api/user/stats/tests", {
+        const response = await axios.get("https://drive-edu.onrender.com/api/user/stats/tests", {
           headers: { Authorization: `Bearer ${token}` },
         });
 
@@ -133,7 +133,7 @@ const Profile: React.FC = () => {
 
       try {
         // Replace with your route that calls getUserTests
-        const response = await axios.get("http://localhost:4444/api/user/tests", {
+        const response = await axios.get("https://drive-edu.onrender.com/api/user/tests", {
           headers: { Authorization: `Bearer ${token}` },
         });
         setUserTests(response.data);
@@ -155,7 +155,7 @@ const Profile: React.FC = () => {
     const fetchStreak = async () => {
       setStreakLoading(true);
       try {
-        const response = await axios.get("http://localhost:4444/api/user/stats/streak", {
+        const response = await axios.get("https://drive-edu.onrender.com/api/user/stats/streak", {
           headers: { Authorization: `Bearer ${token}` },
         });
         setStreak(response.data.streak);

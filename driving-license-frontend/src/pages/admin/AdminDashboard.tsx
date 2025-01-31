@@ -58,7 +58,7 @@ const AdminDashboard: React.FC = () => {
 
     try {
       // Fetch Total Users
-      const usersResponse = await axios.get("http://localhost:4444/api/admin/users", {
+      const usersResponse = await axios.get("https://drive-edu.onrender.com/api/admin/users", {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -67,7 +67,7 @@ const AdminDashboard: React.FC = () => {
       setTotalUsers(users.length);
 
       // Fetch Tests Taken
-      const testsResponse = await axios.get("http://localhost:4444/api/admin/tests", {
+      const testsResponse = await axios.get("https://drive-edu.onrender.com/api/admin/tests", {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -76,7 +76,7 @@ const AdminDashboard: React.FC = () => {
       setTestsTaken(tests.length);
 
       // Fetch Test Summary for Pass Rate
-      const summaryResponse = await axios.get("http://localhost:4444/api/user/stats/test-summary", {
+      const summaryResponse = await axios.get("https://drive-edu.onrender.com/api/user/stats/test-summary", {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -86,7 +86,7 @@ const AdminDashboard: React.FC = () => {
       setPassRate(`${rate}%`);
 
       // Fetch Pending Reports
-      const reportsResponse = await axios.get("http://localhost:4444/api/admin/report", {
+      const reportsResponse = await axios.get("https://drive-edu.onrender.com/api/admin/report", {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -96,7 +96,7 @@ const AdminDashboard: React.FC = () => {
       setPendingReports(pending);
 
       // Fetch Admin Test Stats
-      const adminStatsResponse = await axios.get("http://localhost:4444/api/admin/stats/tests", {
+      const adminStatsResponse = await axios.get("https://drive-edu.onrender.com/api/admin/stats/tests", {
         headers: {
           Authorization: `Bearer ${token}`,
         },

@@ -119,7 +119,7 @@ const AdminReports: React.FC = () => {
     // If no valid cache, fetch from server
     try {
       // Here we call GET /api/admin/report
-      const response = await fetch("http://localhost:4444/api/admin/report", {
+      const response = await fetch("https://drive-edu.onrender.com/api/admin/report", {
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
@@ -205,7 +205,7 @@ const AdminReports: React.FC = () => {
   const handleApprove = async (reportId: number) => {
     try {
       const response = await fetch(
-        `http://localhost:4444/api/admin/reports/${reportId}/review`,
+        `https://drive-edu.onrender.com/api/admin/reports/${reportId}/review`,
         {
           method: "POST",
           headers: {
@@ -236,7 +236,7 @@ const AdminReports: React.FC = () => {
   const handleResolve = async (reportId: number) => {
     try {
       const response = await fetch(
-        `http://localhost:4444/api/admin/reports/${reportId}/resolve`,
+        `https://drive-edu.onrender.com/api/admin/reports/${reportId}/resolve`,
         {
           method: "POST",
           headers: {
@@ -271,7 +271,7 @@ const AdminReports: React.FC = () => {
 
     try {
       const response = await fetch(
-        `http://localhost:4444/api/admin/reports/${reportId}/delete`,
+        `https://drive-edu.onrender.com/api/admin/reports/${reportId}/delete`,
         {
           method: "DELETE",
           headers: {

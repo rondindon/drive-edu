@@ -50,7 +50,7 @@ const SignsPage: React.FC = () => {
     // Fetch & shuffle questions from backend
     const fetchRoadSigns = async () => {
       try {
-        const response = await axios.get("http://localhost:4444/api/questions/road-signs", {
+        const response = await axios.get("https://drive-edu.onrender.com/api/questions/road-signs", {
           headers: { Authorization: `Bearer ${token}` },
         });
         // Optionally shuffle the questions if not already shuffled server-side

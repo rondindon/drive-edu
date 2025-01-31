@@ -143,7 +143,7 @@ const AdminUsers: React.FC = () => {
         if (roleFilter !== "All") params.set("role", roleFilter);
 
         const response = await fetch(
-          `http://localhost:4444/api/admin/users?${params.toString()}`,
+          `https://drive-edu.onrender.com/api/admin/users?${params.toString()}`,
           {
             headers: {
               "Content-Type": "application/json",
@@ -213,7 +213,7 @@ const AdminUsers: React.FC = () => {
   const handleUpdateUserRole = async (userId: number, newRole: string) => {
     try {
       const response = await fetch(
-        `http://localhost:4444/api/admin/users/${userId}`,
+        `https://drive-edu.onrender.com/api/admin/users/${userId}`,
         {
           method: "PUT",
           headers: {
@@ -248,7 +248,7 @@ const AdminUsers: React.FC = () => {
   ) => {
     try {
       const response = await fetch(
-        `http://localhost:4444/api/admin/users/${userId}`,
+        `https://drive-edu.onrender.com/api/admin/users/${userId}`,
         {
           method: "PUT",
           headers: {
@@ -281,7 +281,7 @@ const AdminUsers: React.FC = () => {
     if (!window.confirm("Are you sure you want to delete this user?")) return;
     try {
       const response = await fetch(
-        `http://localhost:4444/api/admin/users/${userId}`,
+        `https://drive-edu.onrender.com/api/admin/users/${userId}`,
         {
           method: "DELETE",
           headers: {

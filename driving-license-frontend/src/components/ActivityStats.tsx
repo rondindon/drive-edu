@@ -102,16 +102,16 @@ const ActivityStats: React.FC = () => {
       try {
         // Fetch Test Stats by Day and Month
         const [testsRes, answersRes, badgesRes, worstQuestionsRes] = await Promise.all([
-          axios.get('http://localhost:4444/api/user/stats/tests', {
+          axios.get('https://drive-edu.onrender.com/api/user/stats/tests', {
             headers: { Authorization: `Bearer ${token}` },
           }),
-          axios.get('http://localhost:4444/api/user/stats/answers', {
+          axios.get('https://drive-edu.onrender.com/api/user/stats/answers', {
             headers: { Authorization: `Bearer ${token}` },
           }),
-          axios.get('http://localhost:4444/api/user/stats/badges', {
+          axios.get('https://drive-edu.onrender.com/api/user/stats/badges', {
             headers: { Authorization: `Bearer ${token}` },
           }),
-          axios.get('http://localhost:4444/api/user/stats/worst-accuracy', {
+          axios.get('https://drive-edu.onrender.com/api/user/stats/worst-accuracy', {
             headers: { Authorization: `Bearer ${token}` },
           }),
         ]);
