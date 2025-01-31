@@ -456,11 +456,11 @@ export async function getUserTests(req: AuthenticatedRequest, res: Response) {
     const tests = await prisma.test.findMany({
       where: { userId },
       include: {
-        // If you want to also include user answers or user info:
-        // user: true,
-        // userAnswers: true,
+        user: true
       },
     });
+
+    console.log(tests);
 
     return res.status(200).json(tests);
   } catch (error) {
