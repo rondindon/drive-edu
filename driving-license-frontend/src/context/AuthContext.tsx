@@ -46,7 +46,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     setIsInitialized(false);
 
     try {
-      const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'https://drive-edu.onrender.com/';
+      const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'https://drive-edu.onrender.com/api';
       const response = await fetch(`${API_BASE_URL}/user?email=${encodeURIComponent(email)}`, {
         method: 'GET',
         headers: {
