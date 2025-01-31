@@ -340,7 +340,7 @@ const SignsPage: React.FC = () => {
             className={`${
               theme === 'dark'
                 ? "bg-[hsl(var(--muted))] text-[hsl(var(--muted-foreground))] hover:bg-[hsl(var(--muted))]/90"
-                : "bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] hover:bg-[hsl(var(--primary))]/90"
+                : "bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] hover:bg-[hsl(var(--primary))]/90 hover:text-[hsl(var(--primary-foreground))]"
             }`}
             aria-label="Previous Question"
           >
@@ -359,7 +359,7 @@ const SignsPage: React.FC = () => {
             className={`${
               theme === 'dark'
                 ? "bg-[hsl(var(--muted))] text-[hsl(var(--muted-foreground))] hover:bg-[hsl(var(--muted))]/90"
-                : "bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] hover:bg-[hsl(var(--primary))]/90"
+                : "bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] hover:bg-[hsl(var(--primary))]/90 hover:text-[hsl(var(--primary-foreground))]"
             }`}
             aria-label="Next Question"
           >
