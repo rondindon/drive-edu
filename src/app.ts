@@ -6,7 +6,7 @@ import 'dotenv/config';
 const app = express();
 app.use(express.json());
 const corsOptions = {
-  origin: 'https://www.driveready.site', // Replace with your frontend's URL
+  origin: ['https://www.driveready.site','https://drive-edu.vercel.app'],
   optionsSuccessStatus: 200, // For legacy browser support
 };
 app.use(cors(corsOptions));
