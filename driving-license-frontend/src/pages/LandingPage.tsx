@@ -112,9 +112,6 @@ const LandingPage: React.FC = () => {
         <motion.div variants={itemVariants}>
           <LoadingSpinner children={<TypedText text={showMessage} typingSpeed={30} />}/>
         </motion.div>
-        <motion.div variants={itemVariants}>
-          <TypedText text={showMessage} typingSpeed={30} />
-        </motion.div>
       </motion.div>
     );
   }

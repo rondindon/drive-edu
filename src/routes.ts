@@ -25,7 +25,7 @@ router.get('/admin/questions',authenticate,isAdmin, getAllQuestions);
 router.post('/admin/questions',authenticate, isAdmin, createQuestion);
 router.put('/admin/questions/:id',authenticate, isAdmin, updateQuestion);
 router.delete('/admin/questions/:id',authenticate, isAdmin, deleteQuestion);
-router.get('/questions/road-signs',authenticate, getRoadSigns);
+router.get('/questions/road-signs', getRoadSigns);
 
 router.post('/tests/start', authenticate, startTest);
 router.post('/tests/finish', authenticate, finishTest);
