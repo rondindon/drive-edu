@@ -89,9 +89,7 @@ const SignsPage: React.FC = () => {
   useEffect(() => {
     const fetchRoadSigns = async () => {
       try {
-        const response = await axios.get("https://drive-edu.onrender.com/api/questions/road-signs", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        const response = await axios.get("https://drive-edu.onrender.com/api/questions/road-signs");
         // Optionally shuffle the questions if not already shuffled server-side
         const shuffledQuestions = response.data.sort(() => Math.random() - 0.5);
         setQuestions(shuffledQuestions);
