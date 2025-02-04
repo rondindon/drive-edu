@@ -242,7 +242,10 @@ const ActivityStats: React.FC = () => {
     return paddedData;
   };
 
-  const paddedTestStats = useMemo(() => addPadding(currentTestStats, 4, selectedAggregation), [currentTestStats, selectedAggregation]);
+  const paddedTestStats = useMemo(
+    () => addPadding(currentTestStats, 4, selectedAggregation),
+    [currentTestStats, selectedAggregation]
+  );
 
   // Format X-Axis Labels
   const formatXAxis = (period: string): string => {
@@ -263,10 +266,14 @@ const ActivityStats: React.FC = () => {
 
   // Carousel Navigation
   const goToPreviousQuestion = () => {
-    setCurrentQuestionIndex(prevIndex => (prevIndex === 0 ? worstAccuracyQuestions.length - 1 : prevIndex - 1));
+    setCurrentQuestionIndex(prevIndex =>
+      prevIndex === 0 ? worstAccuracyQuestions.length - 1 : prevIndex - 1
+    );
   };
   const goToNextQuestion = () => {
-    setCurrentQuestionIndex(prevIndex => (prevIndex === worstAccuracyQuestions.length - 1 ? 0 : prevIndex + 1));
+    setCurrentQuestionIndex(prevIndex =>
+      prevIndex === worstAccuracyQuestions.length - 1 ? 0 : prevIndex + 1
+    );
   };
 
   // Keyboard Navigation for Carousel
@@ -299,7 +306,31 @@ const ActivityStats: React.FC = () => {
     visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: 'easeOut' } },
   };
 
-  // Early Returns for Loading and Error States
+  // Global check: if loading is finished, no error, and none of the stats are available, display a message.
+  const noStatsAvailable =
+    !loading &&
+    !error &&
+    testStatsDay.length === 0 &&
+    testStatsMonth.length === 0 &&
+    (!answerStats ||
+      (answerStats.correctCount === 0 &&
+        answerStats.wrongCount === 0 &&
+        answerStats.performanceByCategory.length === 0)) &&
+    (!badgeStats ||
+      (badgeStats.badges.length === 0 && badgeStats.badgesOverTime.length === 0)) &&
+    worstAccuracyQuestions.length === 0;
+
+  if (noStatsAvailable) {
+    return (
+      <div className="flex items-center justify-center min-h-screen px-4 py-6">
+        <p className="text-lg text-center text-[hsl(var(--muted-foreground))]">
+          No statistics available at this time.
+        </p>
+      </div>
+    );
+  }
+
+  // Early Return for Error State
   if (error) {
     return (
       <div className="text-center text-red-500 min-h-screen flex items-center justify-center">
@@ -346,7 +377,7 @@ const ActivityStats: React.FC = () => {
                       dataKey="period"
                       stroke={theme === 'dark' ? '#fff' : '#2C3E50'}
                       tickFormatter={formatXAxis}
-                      interval={Math.floor(paddedTestStats.length / 10)} // Adjust to limit number of ticks
+                      interval={Math.floor(paddedTestStats.length / 10)}
                       angle={-45}
                       textAnchor="end"
                       height={60}
@@ -364,7 +395,7 @@ const ActivityStats: React.FC = () => {
                     <Line
                       type="monotone"
                       dataKey="count"
-                      stroke="#27AE60" // Original line color
+                      stroke="#27AE60"
                       strokeWidth={2}
                       dot={{ r: 4 }}
                       activeDot={{ r: 8 }}
@@ -383,9 +414,7 @@ const ActivityStats: React.FC = () => {
           {/* Test Summary */}
           <motion.div variants={cardVariants}>
             <Card className="p-6 shadow-lg rounded-md bg-[hsl(var(--card))] text-[hsl(var(--card-foreground))]">
-              <h2 className="text-xl font-semibold text-[hsl(var(--primary))] mb-4">
-                Test Summary
-              </h2>
+              <h2 className="text-xl font-semibold text-[hsl(var(--primary))] mb-4">Test Summary</h2>
               <div className="flex flex-col md:flex-row md:space-x-6 space-y-4 md:space-y-0">
                 {/* Average Score */}
                 <div className="flex-1">
@@ -408,9 +437,7 @@ const ActivityStats: React.FC = () => {
           {/* Answer Distribution */}
           <motion.div variants={cardVariants}>
             <Card className="p-6 shadow-lg rounded-md bg-[hsl(var(--card))] text-[hsl(var(--card-foreground))]">
-              <h2 className="text-xl font-semibold text-[hsl(var(--primary))] mb-4">
-                Answer Distribution
-              </h2>
+              <h2 className="text-xl font-semibold text-[hsl(var(--primary))] mb-4">Answer Distribution</h2>
               {answerStats ? (
                 <ResponsiveContainer width="100%" height={300}>
                   <PieChart>
@@ -431,7 +458,7 @@ const ActivityStats: React.FC = () => {
                         { name: 'Correct', value: answerStats.correctCount },
                         { name: 'Wrong', value: answerStats.wrongCount },
                       ].map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} /> // Original colors
+                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                       ))}
                     </Pie>
                     <Tooltip
@@ -452,13 +479,11 @@ const ActivityStats: React.FC = () => {
           {/* Performance by Category */}
           <motion.div variants={cardVariants}>
             <Card className="p-6 shadow-lg rounded-md bg-[hsl(var(--card))] text-[hsl(var(--card-foreground))]">
-              <h2 className="text-xl font-semibold text-[hsl(var(--primary))] mb-4">
-                Performance by Category
-              </h2>
+              <h2 className="text-xl font-semibold text-[hsl(var(--primary))] mb-4">Performance by Category</h2>
               {answerStats && answerStats.performanceByCategory.length > 0 ? (
                 <ResponsiveContainer width="100%" height={300}>
                   <BarChart data={answerStats.performanceByCategory}>
-                    <CartesianGrid stroke={gridStroke} strokeDasharray="5 5" /> 
+                    <CartesianGrid stroke={gridStroke} strokeDasharray="5 5" />
                     <XAxis dataKey="category" stroke={axisStroke} />
                     <YAxis domain={[0, 100]} stroke={axisStroke} />
                     <Tooltip
@@ -470,7 +495,7 @@ const ActivityStats: React.FC = () => {
                       }}
                     />
                     <Legend verticalAlign="top" height={36} />
-                    <Bar dataKey="accuracy" fill="#27AE60" name="Accuracy (%)" animationDuration={6000} /> 
+                    <Bar dataKey="accuracy" fill="#27AE60" name="Accuracy (%)" animationDuration={6000} />
                   </BarChart>
                 </ResponsiveContainer>
               ) : (
@@ -482,9 +507,7 @@ const ActivityStats: React.FC = () => {
           {/* Badges Earned */}
           <motion.div variants={cardVariants}>
             <Card className="p-6 shadow-lg rounded-md bg-[hsl(var(--card))] text-[hsl(var(--card-foreground))]">
-              <h2 className="text-xl font-semibold text-[hsl(var(--primary))] mb-4">
-                Badges Earned
-              </h2>
+              <h2 className="text-xl font-semibold text-[hsl(var(--primary))] mb-4">Badges Earned</h2>
               {badgeStats && badgeStats.badges.length > 0 ? (
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                   {badgeStats.badges.map((badge, index) => (
@@ -515,9 +538,7 @@ const ActivityStats: React.FC = () => {
           {badgeStats && badgeStats.badgesOverTime.length > 0 && (
             <motion.div variants={cardVariants}>
               <Card className="p-6 shadow-lg rounded-md bg-[hsl(var(--card))] text-[hsl(var(--card-foreground))]">
-                <h2 className="text-xl font-semibold text-[hsl(var(--primary))] mb-4">
-                  Badges Earned Over Time
-                </h2>
+                <h2 className="text-xl font-semibold text-[hsl(var(--primary))] mb-4">Badges Earned Over Time</h2>
                 <ResponsiveContainer width="100%" height={300}>
                   <LineChart
                     data={badgeStats.badgesOverTime}
@@ -569,9 +590,7 @@ const ActivityStats: React.FC = () => {
           {/* Worst Accuracy Questions */}
           <motion.div variants={cardVariants}>
             <Card className="p-6 shadow-lg rounded-md bg-[hsl(var(--card))] text-[hsl(var(--card-foreground))]">
-              <h2 className="text-xl font-semibold text-[hsl(var(--primary))] mb-4">
-                Questions with Worst Accuracy
-              </h2>
+              <h2 className="text-xl font-semibold text-[hsl(var(--primary))] mb-4">Questions with Worst Accuracy</h2>
               {worstAccuracyQuestions.length > 0 ? (
                 <div className="flex flex-col items-center">
                   {/* Question Display */}
@@ -648,7 +667,9 @@ const ActivityStats: React.FC = () => {
                   </div>
                 </div>
               ) : (
-                <div className="text-[hsl(var(--muted-foreground))]">No data available for worst accuracy questions.</div>
+                <div className="text-[hsl(var(--muted-foreground))]">
+                  No data available for worst accuracy questions.
+                </div>
               )}
             </Card>
           </motion.div>
