@@ -135,17 +135,13 @@ const ActivityStats: React.FC = () => {
           badgesOverTime: badgesRes.data.badgesOverTime || [],
         });
 
-        // Set Worst Accuracy Questions with imageUrl converted to undefined if null
-        if (worstQuestionsRes.data.worstAccuracyQuestions !== null) {
-          setWorstAccuracyQuestions(
-            worstQuestionsRes.data.worstAccuracyQuestions.map((q: WorstAccuracyQuestion) => ({
-              ...q,
-              imageUrl: q.imageUrl ?? undefined, // Convert null to undefined
-            })) || []
-          );
-        } else {
-          setWorstAccuracyQuestions([]);
-        }
+        const worstData: WorstAccuracyQuestion[] = worstQuestionsRes.data.worstAccuracyQuestions || [];
+        setWorstAccuracyQuestions(
+          worstData.map((q: WorstAccuracyQuestion) => ({
+            ...q,
+            imageUrl: q.imageUrl ?? undefined, // Convert null to undefined
+          }))
+        );
       } catch (err) {
         console.error('Error fetching activity stats:', err);
         setError('Failed to load activity statistics.');

@@ -431,7 +431,7 @@ const Profile: React.FC = () => {
             ) : userTestsError ? (
               <div className="text-red-500">{userTestsError}</div>
             ) : userTests.length === 0 ? (
-              <div>No completed tests found.</div>
+              <div><p className="text-[hsl(var(--card-foreground))]">No completed tests found.</p></div>
             ) : (
               <motion.div
                 className="space-y-4"
