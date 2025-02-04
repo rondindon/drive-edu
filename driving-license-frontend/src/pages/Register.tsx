@@ -7,6 +7,7 @@ import { Button } from "../components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "../components/ui/alert";
 import { FcGoogle } from "react-icons/fc"; // Google icon for styling
+import { useAuth } from "src/context/AuthContext";
 
 const Register: React.FC = () => {
   const [email, setEmail] = useState<string>("");
@@ -15,6 +16,7 @@ const Register: React.FC = () => {
   const [message, setMessage] = useState<string | null>(null);
   const [showAlert, setShowAlert] = useState<boolean>(false);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+  const { login, loginWithGoogle, user } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -48,6 +50,8 @@ const Register: React.FC = () => {
 
         if (!response.ok) {
           throw new Error("Failed to create user in the backend.");
+        }else{
+          await login(email,password);
         }
       }
     } catch (err: any) {
