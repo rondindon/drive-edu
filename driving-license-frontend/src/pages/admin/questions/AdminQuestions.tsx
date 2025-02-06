@@ -35,7 +35,6 @@ export interface Question {
   explanation: string;
 }
 
-// Categories and Difficulty Options
 const categories = [
   "All",
   "Pravidlá cestnej premávky",
@@ -52,13 +51,11 @@ const categories = [
 
 const difficultyOptions = ["All", "easy", "medium", "hard"];
 
-// Define Cache Structure
 interface QuestionCache {
   questions: Question[];
   timestamp: number;
 }
 
-// Define interface for question stats fetched from UserAnswer
 interface QuestionStats {
   questionId: number;
   totalAnswers: number;
