@@ -23,7 +23,7 @@ import { Skeleton } from "src/components/ui/skeleton";
 import { ThemeContext } from "src/context/ThemeContext";
 
 export interface Question {
-  id: number;
+  id?: number;
   groups: string[];
   category: string;
   points: number;
@@ -453,7 +453,7 @@ const AdminQuestions: React.FC = () => {
                     <td className="py-2 px-4 w-1/5">{q.category}</td>
                     <td className="py-2 px-4 capitalize">{q.difficulty}</td>
                     <td className="py-2 px-4">
-                      {questionStats[q.id] ? (
+                      {q.id !== undefined && questionStats[q.id] ? (
                         <>
                           <span>{questionStats[q.id].totalAnswers} answers</span>
                           <span> | </span>
