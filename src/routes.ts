@@ -2,7 +2,7 @@
 import { Router } from 'express';
 import { getUserByEmail, handleNewUser, updateUsername } from './controllers/userController';
 import { createQuestion, deleteQuestion, getAllQuestions, isAdmin, updateQuestion } from './controllers/adminController';
-import { getQuestionById, getRoadSigns } from './controllers/questionController';
+import { getAllQuestionStats, getQuestionById, getRoadSigns } from './controllers/questionController';
 import { authenticate } from './middleware/auth';
 import { deleteUser, getAllUsers, updateUser } from './controllers/adminUserController';
 import {deleteTest, finishTest, getAllTests, getUserTests, recordQuestionStat, recordUserAnswer, startTest } from './controllers/testController';
@@ -25,6 +25,7 @@ router.get('/admin/questions',authenticate,isAdmin, getAllQuestions);
 router.post('/admin/questions',authenticate, isAdmin, createQuestion);
 router.put('/admin/questions/:id',authenticate, isAdmin, updateQuestion);
 router.delete('/admin/questions/:id',authenticate, isAdmin, deleteQuestion);
+router.get('/admin/question-stats', authenticate, isAdmin, getAllQuestionStats);
 router.get('/questions/road-signs', getRoadSigns);
 
 router.post('/tests/start', authenticate, startTest);
