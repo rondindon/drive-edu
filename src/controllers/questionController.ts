@@ -57,16 +57,18 @@ export const getRoadSigns = async (req: Request, res: Response): Promise<Respons
 
 export async function getAllQuestionStats(req: Request, res: Response) {
   try {
-    const rows = await prisma.$queryRawUnsafe<any[]>(`
+    const query = `
       SELECT "questionId",
              COUNT(*) AS "totalAnswers",
              ROUND(100.0 * SUM(CASE WHEN "isCorrect" = true THEN 1 ELSE 0 END) / COUNT(*), 2) AS "accuracy"
       FROM "UserAnswer"
       GROUP BY "questionId"
-    `);
+    `;
     
-    // Return the results as JSON.
-    return res.status(200).json({ stats: rows });
+    // Execute the raw query using prisma.$queryRawUnsafe
+    const stats = await prisma.$queryRawUnsafe<any[]>(query);
+    
+    return res.status(200).json({ stats });
   } catch (error) {
     console.error("[getAllQuestionStats] Error:", error);
     return res.status(500).json({ message: "Error fetching question stats" });
