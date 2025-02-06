@@ -68,7 +68,20 @@ export async function getAllQuestionStats(req: Request, res: Response) {
     // Execute the raw query using prisma.$queryRawUnsafe
     const stats = await prisma.$queryRawUnsafe<any[]>(query);
     
-    return res.status(200).json({ stats });
+    // Convert any BigInt values in the results to numbers
+    const safeStats = stats.map(row => {
+      const safeRow: Record<string, any> = {};
+      for (const key in row) {
+        if (typeof row[key] === 'bigint') {
+          safeRow[key] = Number(row[key]);
+        } else {
+          safeRow[key] = row[key];
+        }
+      }
+      return safeRow;
+    });
+    
+    return res.status(200).json({ stats: safeStats });
   } catch (error) {
     console.error("[getAllQuestionStats] Error:", error);
     return res.status(500).json({ message: "Error fetching question stats" });
