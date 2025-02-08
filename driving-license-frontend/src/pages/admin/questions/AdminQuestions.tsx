@@ -56,10 +56,10 @@ interface QuestionCache {
   timestamp: number;
 }
 
-interface QuestionStats {
+export interface QuestionStats {
   questionId: number;
   totalAnswers: number;
-  accuracy: number; // in percentage
+  accuracy: number; // percentage (e.g. 75.50)
 }
 
 // --- Skeleton Rows for loading state ---
@@ -450,13 +450,15 @@ const AdminQuestions: React.FC = () => {
                     <td className="py-2 px-4 w-1/5">{q.category}</td>
                     <td className="py-2 px-4 capitalize">{q.difficulty}</td>
                     <td className="py-2 px-4">
-                      {q.id !== undefined && questionStats[q.id] ? (
-                        <>
-                          <span>{questionStats[q.id].totalAnswers} answers</span>
-                          <span> | </span>
-                          <span>{questionStats[q.id].accuracy}% accuracy</span>
-                        </>
-                      ) : (
+                      {q.id !== undefined && questionStats[q.id] ? (() => {
+                        const stat = questionStats[q.id];
+                        const correctAttempts = Math.round(stat.totalAnswers * (stat.accuracy / 100));
+                        return (
+                          <span>
+                            {correctAttempts}/{stat.totalAnswers} {stat.accuracy}% 
+                          </span>
+                        );
+                      })() : (
                         "No data"
                       )}
                     </td>
