@@ -26,30 +26,6 @@ const Login: React.FC = () => {
     }
   }, [user, message, navigate]);
 
-  useEffect(() => {
-    const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (event === "PASSWORD_RECOVERY") {
-        const newPassword = prompt("What would you like your new password to be?");
-        if (!newPassword) {
-          alert("Password update cancelled.");
-          return;
-        }
-        
-        const { data, error } = await supabase.auth.updateUser({ password: newPassword });
-        if (data) {
-          alert("Password updated successfully!");
-        }
-        if (error) {
-          alert("There was an error updating your password.");
-        }
-      }
-    });
-  
-    return () => {
-      authListener.subscription.unsubscribe();
-    };
-  }, []);  
-
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
