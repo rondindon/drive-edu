@@ -7,6 +7,7 @@ import { ThemeContext } from '../context/ThemeContext';
 import LoadingSpinner from '../components/LoadingSpinner'; // Import your spinner
 import TypedText from 'src/components/TypedText';
 import { motion } from 'framer-motion'; // Import framer-motion
+import { supabase } from '@/services/supabase';
 
 const typedMessages = [
   "Checking your license status...",
