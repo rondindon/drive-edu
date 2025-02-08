@@ -56,9 +56,7 @@ const Login: React.FC = () => {
     }
     try {
       console.log("Sending password reset email to:", email);
-      const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: window.location.origin + "/login",
-      });
+      const { data, error } = await supabase.auth.resetPasswordForEmail(email);
       console.log("Reset password response:", { data, error });
       if (error) throw error;
       toast.success("Password reset email sent! Please check your inbox.");
