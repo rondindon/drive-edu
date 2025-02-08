@@ -214,12 +214,12 @@ const SignsPage: React.FC = () => {
     incorrect: {
       // Shake horizontally
       x: [0, -10, 10, -10, 10, -10, 10, 0],
-      transition: { duration: 1.5 },
+      transition: { duration: .75 },
     },
     correct: {
       y: [0, -10, 0],
       scale: [1, 1.05, 1],
-      transition: { duration: 1 },
+      transition: { duration: .75 },
     },
   };
 
@@ -231,7 +231,7 @@ const SignsPage: React.FC = () => {
       color: "#fff",
       opacity: [1, 1, 0],
       scale: [1, 1.05, 0],
-      transition: { duration: 0.8 },
+      transition: { duration: 0.5 },
     },
     correct: {
       backgroundColor: "#10b981", // Tailwind green-500
