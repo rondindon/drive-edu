@@ -49,24 +49,23 @@ const Login: React.FC = () => {
     }
   };
 
-  // Handle forgot password functionality
   const handleForgotPassword = async () => {
     if (!email) {
       toast.error("Please enter your email address first.");
       return;
     }
     try {
-      // You can provide a redirect URL after password reset if desired.
-      // Ensure that you have a route (e.g., /reset-password) to handle the password reset.
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
         redirectTo: window.location.origin + "/reset-password",
       });
+      console.log("Reset password response:", { data, error });
       if (error) throw error;
       toast.success("Password reset email sent! Please check your inbox.");
     } catch (err: any) {
+      console.error("Error sending password reset email:", err);
       toast.error("Error sending password reset email: " + err.message);
     }
-  };
+  };  
 
   return (
     <div className="flex items-center justify-center h-screen bg-[hsl(var(--background))] text-[hsl(var(--foreground))]">
