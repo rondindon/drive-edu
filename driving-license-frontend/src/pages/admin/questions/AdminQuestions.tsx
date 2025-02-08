@@ -453,9 +453,10 @@ const AdminQuestions: React.FC = () => {
                       {q.id !== undefined && questionStats[q.id] ? (() => {
                         const stat = questionStats[q.id];
                         const correctAttempts = Math.round(stat.totalAnswers * (stat.accuracy / 100));
+                        const roundedAccuracy = Math.round(stat.accuracy);
                         return (
                           <span>
-                            {correctAttempts}/{stat.totalAnswers} {stat.accuracy}% 
+                            {correctAttempts}/{stat.totalAnswers} {roundedAccuracy}% 
                           </span>
                         );
                       })() : (

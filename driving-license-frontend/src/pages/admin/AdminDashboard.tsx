@@ -51,7 +51,10 @@ const AdminDashboard: React.FC = () => {
 
   const token = localStorage.getItem("supabaseToken"); // Ensure token is correctly stored
 
-  // Fetch Statistics
+  // Cache key for the statistics
+  const CACHE_KEY = "adminDashboardStats";
+
+  // Fetch Statistics (and update cache)
   const fetchStatistics = useCallback(async () => {
     setLoading(true);
     setError(null);
@@ -106,11 +109,23 @@ const AdminDashboard: React.FC = () => {
       // Set Tests Taken per Month
       const testsOverTimeMonth = adminStats.testsOverTimeMonth as AdminTestStatsMonth[];
       setTestsTakenPerMonth(testsOverTimeMonth);
-      console.log(testsOverTimeMonth);
 
       // Set Test Performance by Month
       const testPerformance = adminStats.testPerformanceByMonth as TestPerformanceMonth[];
       setTestPerformanceByMonth(testPerformance);
+
+      // Build the cache object
+      const statsCache = {
+        totalUsers: users.length,
+        testsTaken: tests.length,
+        passRate: `${rate}%`,
+        pendingReports: pending,
+        testsTakenPerMonth: testsOverTimeMonth,
+        testPerformanceByMonth: testPerformance,
+      };
+
+      // Update cache in localStorage
+      localStorage.setItem(CACHE_KEY, JSON.stringify(statsCache));
 
       setLoading(false);
     } catch (err: any) {
@@ -121,11 +136,24 @@ const AdminDashboard: React.FC = () => {
     }
   }, [token]);
 
+  // On component mount, try to load cached stats (if available)
   useEffect(() => {
-    fetchStatistics();
+    const cachedStats = localStorage.getItem(CACHE_KEY);
+    if (cachedStats) {
+      const stats = JSON.parse(cachedStats);
+      setTotalUsers(stats.totalUsers);
+      setTestsTaken(stats.testsTaken);
+      setPassRate(stats.passRate);
+      setPendingReports(stats.pendingReports);
+      setTestsTakenPerMonth(stats.testsTakenPerMonth);
+      setTestPerformanceByMonth(stats.testPerformanceByMonth);
+      setLoading(false);
+    } else {
+      fetchStatistics();
+    }
   }, [fetchStatistics]);
 
-  // Refresh function
+  // Refresh function that always fetches new stats (and updates cache)
   const handleRefresh = () => {
     fetchStatistics();
   };
@@ -135,10 +163,10 @@ const AdminDashboard: React.FC = () => {
       <div className="space-y-6">
         {/* Quick Actions Skeleton */}
         <div>
-        <div className="flex justify-between items-center mb-4">
-          <Skeleton className="w-1/6 h-8 rounded" />
-          <Skeleton className="w-24 h-10 rounded" />
-        </div>
+          <div className="flex justify-between items-center mb-4">
+            <Skeleton className="w-1/6 h-8 rounded" />
+            <Skeleton className="w-24 h-10 rounded" />
+          </div>
           <div className="flex flex-wrap gap-4">
             <Skeleton className="w-32 h-10 rounded" />
             <Skeleton className="w-32 h-10 rounded" />

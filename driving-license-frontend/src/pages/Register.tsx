@@ -35,11 +35,6 @@ const Register: React.FC = () => {
         setMessage(`Error: ${error.message}`);
         setShowAlert(true);
       } else if (data.user) {
-        setMessage("User registered successfully! Please check your email for verification.");
-        setShowAlert(true);
-
-        // Notify the backend to add the user to the Prisma User table
-        console.log(email, username);
         const response = await fetch("https://drive-edu.onrender.com/api/user", {
           method: "POST",
           headers: {
@@ -49,9 +44,10 @@ const Register: React.FC = () => {
         });
 
         if (!response.ok) {
-          throw new Error("Failed to create user in the backend.");
+          throw new Error("User already exists.");
         }else{
-          await login(email,password);
+          setMessage("User registered successfully! Please check your email for verification.");
+          setShowAlert(true);
         }
       }
     } catch (err: any) {

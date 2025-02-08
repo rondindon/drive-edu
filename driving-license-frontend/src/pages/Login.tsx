@@ -8,6 +8,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card"
 import { Alert, AlertDescription, AlertTitle } from "../components/ui/alert";
 import { FcGoogle } from "react-icons/fc"; // Google icon for styling
 import { toast } from "react-toastify";
+// Import supabase client to use reset password functionality
+import { supabase } from "../services/supabase";
 
 const Login: React.FC = () => {
   const [email, setEmail] = useState<string>("");
@@ -44,6 +46,25 @@ const Login: React.FC = () => {
       setMessage(`Google sign-in failed: ${err.message}`);
       setShowAlert(true);
       setTimeout(() => setShowAlert(false), 2000);
+    }
+  };
+
+  // Handle forgot password functionality
+  const handleForgotPassword = async () => {
+    if (!email) {
+      toast.error("Please enter your email address first.");
+      return;
+    }
+    try {
+      // You can provide a redirect URL after password reset if desired.
+      // Ensure that you have a route (e.g., /reset-password) to handle the password reset.
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: window.location.origin + "/reset-password",
+      });
+      if (error) throw error;
+      toast.success("Password reset email sent! Please check your inbox.");
+    } catch (err: any) {
+      toast.error("Error sending password reset email: " + err.message);
     }
   };
 
@@ -120,6 +141,18 @@ const Login: React.FC = () => {
                 "
               />
             </div>
+
+            {/* Forgot Password Link */}
+            <div className="text-right">
+              <button
+                type="button"
+                onClick={handleForgotPassword}
+                className="text-sm text-[hsl(var(--primary))] underline hover:no-underline"
+              >
+                Forgot password?
+              </button>
+            </div>
+
             <Button
               type="submit"
               className="
