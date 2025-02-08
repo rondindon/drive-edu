@@ -285,6 +285,7 @@ const SignsPage: React.FC = () => {
             {/* Animated Image */}
             {currentQuestion.imageUrl && (
               <motion.img
+                key={`${currentQuestion.id}-${animationState}`} // Force re-render on state change
                 src={currentQuestion.imageUrl}
                 alt="Road Sign"
                 className="w-64 h-64 object-contain rounded-md mx-auto mb-4"

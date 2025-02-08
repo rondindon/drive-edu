@@ -40,7 +40,7 @@ const Login: React.FC = () => {
           alert("Password updated successfully!");
         }
         if (error) {
-          alert("There was an error updating your password.");
+          alert("The password matches the old one.");
         }
       }
     });
