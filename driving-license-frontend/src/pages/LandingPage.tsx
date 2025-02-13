@@ -152,7 +152,7 @@ const LandingPage: React.FC = () => {
       <div className="p-5 text-center flex flex-col items-center justify-center space-y-6 animate-fadeIn min-h-screen bg-[hsl(var(--background))] text-[hsl(var(--foreground))]">
         {/* Header */}
         <motion.h1
-          className="text-4xl font-bold text-[hsl(var(--primary))] mb-4 font-inclusive"
+          className="tracking-wider text-4xl font-bold text-[hsl(var(--primary))] mb-4 font-inclusive"
           variants={itemVariants}
         >
           Driving License Test
