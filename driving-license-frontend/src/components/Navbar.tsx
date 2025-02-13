@@ -41,7 +41,7 @@ const Navbar: React.FC = () => {
       <nav className="container mx-auto flex items-center justify-between py-4 px-6">
         {/* Left Section: Logo */}
         <div className="flex-1">
-          <a href="/" className="text-xl font-bold text-secondary-lightGray">
+          <a href="/" className="text-xl font-bold text-secondary-lightGray font-inclusive tracking-wider">
             DriveReady
           </a>
         </div>
