@@ -46,6 +46,7 @@ module.exports = {
       },
       fontFamily: {
         bam: ['BAM', ...defaultTheme.fontFamily.sans],
+        inclusive: ['inclusive',...defaultTheme.fontFamily.sans]
       },
       borderRadius: {
         lg: "var(--radius)",

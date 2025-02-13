@@ -65,6 +65,13 @@
     font-display: swap;
     src: url(./fonts/bam/BasicallyAMono-Regular.ttf) format('truetype');
   }
+  @font-face {
+    font-family: 'inclusive';
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+    src: url(./fonts/inclusive/InclusiveSans-Regular.ttf) format('truetype');
+  }
 }
 
 @keyframes gradientMove {
