@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useContext } from "react";
 import axios from "axios";
 import { Edit } from "lucide-react";
-import { motion } from "framer-motion"; // <-- Import framer-motion
+import { motion } from "framer-motion";
 import { useAuth } from "../context/AuthContext";
 import { ThemeContext } from "../context/ThemeContext";
 import { Button } from "../components/ui/button";
@@ -30,8 +30,7 @@ import {
 import ActivityStats from "../components/ActivityStats";
 import CustomCalendar, { TestsPerDay } from "../components/CustomCalendar";
 import { toast } from "react-toastify";
-
-import FireAnimation from "../components/FireAnimation"; // Import the FireAnimation component
+import FireAnimation from "../components/FireAnimation";
 
 const Profile: React.FC = () => {
   const { user, username, role, updateUsername } = useAuth();
@@ -69,9 +68,17 @@ const Profile: React.FC = () => {
   const [badgeDialogOpen, setBadgeDialogOpen] = useState(false);
   const [selectedBadge, setSelectedBadge] = useState<{ title: string; rank: string; description: string } | null>(null);
 
+  const [profilePicDialogOpen, setProfilePicDialogOpen] = useState(false);
+  const [profilePicture, setProfilePicture] = useState("https://github.com/shadcn.png");
+
+  const profilePics = [
+    "https://res.cloudinary.com/dw9jwwmue/image/upload/v1729336300/znacky/ohxd0n1ssw6cs4zqn5hk.jpg",
+    "https://res.cloudinary.com/dw9jwwmue/image/upload/v1729271508/znacky/upjscaggcu6asripbkep.jpg",
+    "https://res.cloudinary.com/dw9jwwmue/image/upload/v1729020799/znacky/qnvpbmlip6g41hyjpomo.jpg",
+  ];
 
   const token = localStorage.getItem("supabaseToken");
-  const { theme, toggleTheme } = useContext(ThemeContext);
+  const { theme } = useContext(ThemeContext);
 
   const badgeStyles: Record<string, string> = {
     DIAMOND: "bg-gradient-to-r from-blue-500 to-purple-500 text-white border-2 border-purple-700 font-bold",
@@ -84,6 +91,13 @@ const Profile: React.FC = () => {
   const badgeVariants = {
     hidden: { opacity: 0, scale: 0.8 },
     visible: { opacity: 1, scale: 1, transition: { duration: 0.3 } },
+  };
+
+  // Handler for selecting a new profile picture
+  const handleProfilePicSelect = async (url: string) => {
+    setProfilePicture(url);
+    await axios.put('https://drive-edu.onrender.com/api/user/updateProfilePic', { profilePicture: url }, { headers: { Authorization: `Bearer ${token}` } });
+    setProfilePicDialogOpen(false);
   };
 
   useEffect(() => {
@@ -111,9 +125,6 @@ const Profile: React.FC = () => {
     fetchTestSummary();
   }, [token]);
 
-  // --------------------
-  // FETCH TESTS PER DAY (Calendar)
-  // --------------------
   useEffect(() => {
     const fetchTestsPerDay = async () => {
       setTestsPerDayLoading(true);
@@ -132,9 +143,6 @@ const Profile: React.FC = () => {
     fetchTestsPerDay();
   }, [token]);
 
-  // --------------------
-  // FETCH USER TEST HISTORY (when History tab is clicked)
-  // --------------------
   useEffect(() => {
     const fetchUserTests = async () => {
       if (activeTab !== "History") return;
@@ -155,9 +163,6 @@ const Profile: React.FC = () => {
     fetchUserTests();
   }, [activeTab, token]);
 
-  // --------------------
-  // FETCH USER STREAK
-  // --------------------
   useEffect(() => {
     const fetchStreak = async () => {
       setStreakLoading(true);
@@ -176,9 +181,6 @@ const Profile: React.FC = () => {
     fetchStreak();
   }, [token]);
 
-  // --------------------
-  // FETCH USER BADGES
-  // --------------------
   useEffect(() => {
     const fetchBadges = async () => {
       setBadgesLoading(true);
@@ -196,9 +198,6 @@ const Profile: React.FC = () => {
     fetchBadges();
   }, [token]);
 
-  // --------------------
-  // SAVE UPDATED USERNAME
-  // --------------------
   const handleSave = async () => {
     if (!newUsername.trim()) {
       alert("Username cannot be empty.");
@@ -216,13 +215,12 @@ const Profile: React.FC = () => {
     }
   };
 
-  // A simple fade+slide in for the entire page container
+  // Animation variants for the page and test cards
   const pageVariants = {
     hidden: { opacity: 0, y: 10 },
     visible: { opacity: 1, y: 0, transition: { duration: 0.4 } },
   };
 
-  // Variants for test cards
   const testCardVariants = {
     hidden: { opacity: 0, y: 20 },
     visible: (i: number) => ({
@@ -232,14 +230,12 @@ const Profile: React.FC = () => {
     }),
   };
 
-  // Variants for navigation buttons
   const navButtonVariants = {
     hover: { scale: 1.1 },
     tap: { scale: 0.95 },
   };
 
   return (
-    // Wrap the entire page in a motion.div with minimal fade+slide
     <motion.div
       initial="hidden"
       animate="visible"
@@ -251,26 +247,26 @@ const Profile: React.FC = () => {
         <Card className="mt-5 py-12 shadow-lg rounded-md flex flex-col md:flex-row justify-between items-start space-y-6 md:space-y-0 md:space-x-6 bg-[hsl(var(--card))] text-[hsl(var(--card-foreground))] items-center justify-around">
           {/* Avatar Section */}
           <div className="flex flex-col items-center md:items-start space-y-4">
-            <Avatar className="w-24 h-24">
-              <AvatarImage src={"https://github.com/shadcn.png"} alt={username || "Avatar"} />
-              <AvatarFallback>{username?.charAt(0).toUpperCase() || "U"}</AvatarFallback>
-            </Avatar>
+            {/* Make the Avatar clickable to open the profile picture selection dialog */}
+            <div onClick={() => setProfilePicDialogOpen(true)} className="cursor-pointer">
+              <Avatar className="w-24 h-24">
+                <AvatarImage src={profilePicture} alt={username || "Avatar"} />
+                <AvatarFallback>{username?.charAt(0).toUpperCase() || "U"}</AvatarFallback>
+              </Avatar>
+            </div>
             <div className="flex flex-col space-y-1 items-center md:items-start">
               <span className="text-lg font-bold">{username || "Not set"}</span>
               <span className="text-sm">{user?.email}</span>
-              {/* Success Rate and Streak */}
               {testStatsLoading ? (
                 <div className="text-gray-500">Loading success rate...</div>
               ) : testStatsError ? (
                 <div className="text-red-500">{testStatsError}</div>
               ) : (
                 <div className="flex flex-col items-center md:items-start space-y-1 font-semibold">
-                  {/* Success Rate */}
                   <div className="flex items-center space-x-2">
                     <span>{successRate.toFixed(2)}%</span>
                     <span>- {testsPassed}/{testsTaken}</span>
                   </div>
-                  {/* Streak */}
                   {streakLoading ? (
                     <div className="text-gray-500">Loading streak...</div>
                   ) : streakError ? (
@@ -282,7 +278,7 @@ const Profile: React.FC = () => {
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ duration: 0.5 }}
                     >
-                      <FireAnimation width={30} height={30} /> {/* Animated Fire SVG */}
+                      <FireAnimation width={30} height={30} />
                       <span className="mt-1">{streak} day{streak !== 1 ? 's' : ''} streak</span>
                     </motion.div>
                   )}
@@ -328,6 +324,58 @@ const Profile: React.FC = () => {
           </div>
         </Card>
 
+        {/* Profile Picture Selection Dialog */}
+        {profilePicDialogOpen && (
+          <AlertDialog open={profilePicDialogOpen} onOpenChange={setProfilePicDialogOpen}>
+            <AlertDialogContent className="bg-[hsl(var(--popover))] text-[hsl(var(--popover-foreground))]">
+              <AlertDialogHeader>
+                <AlertDialogTitle>Select Profile Picture</AlertDialogTitle>
+                <AlertDialogDescription>
+                  Choose one of the available profile pictures.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <div className="flex justify-around my-4">
+                {profilePics.map((pic, idx) => (
+                  <motion.img
+                    key={idx}
+                    src={pic}
+                    alt={`Profile option ${idx + 1}`}
+                    className="w-16 h-16 rounded-full cursor-pointer"
+                    whileHover={{ scale: 1.1 }}
+                    onClick={() => handleProfilePicSelect(pic)}
+                  />
+                ))}
+              </div>
+              <AlertDialogFooter>
+                <Button onClick={() => setProfilePicDialogOpen(false)}>Cancel</Button>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        )}
+
+        {/* Badge Description Dialog */}
+        {selectedBadge && (
+          <AlertDialog
+            open={badgeDialogOpen}
+            onOpenChange={(open) => {
+              if (!open) {
+                setSelectedBadge(null);
+              }
+              setBadgeDialogOpen(open);
+            }}
+          >
+            <AlertDialogContent className="bg-[hsl(var(--popover))] text-[hsl(var(--popover-foreground))]">
+              <AlertDialogHeader>
+                <AlertDialogTitle>{selectedBadge.title}</AlertDialogTitle>
+                <AlertDialogDescription>{selectedBadge.description}</AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <Button onClick={() => setBadgeDialogOpen(false)}>Close</Button>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        )}
+
         {/* Tabs */}
         <div className="border-b border-gray-200 my-6">
           <nav className="-mb-px flex space-x-4">
@@ -364,46 +412,20 @@ const Profile: React.FC = () => {
           </nav>
         </div>
 
-        {selectedBadge && (
-          console.log(selectedBadge),
-          <AlertDialog
-            open={badgeDialogOpen}
-            onOpenChange={(open) => {
-              if (!open) {
-                setSelectedBadge(null);
-              }
-              setBadgeDialogOpen(open);
-            }}
-          >
-            <AlertDialogContent className="bg-[hsl(var(--popover))] text-[hsl(var(--popover-foreground))]">
-              <AlertDialogHeader>
-                <AlertDialogTitle>{selectedBadge.title}</AlertDialogTitle>
-                <AlertDialogDescription>{selectedBadge.description}</AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <Button onClick={() => setBadgeDialogOpen(false)}>Close</Button>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
-        )}
-
         {/* PROFILE INFO TAB */}
         {activeTab === "Profile Info" && (
           <Card className="p-6 shadow-lg rounded-md animate-fadeIn bg-[hsl(var(--card))] text-[hsl(var(--card-foreground))]">
             <div className="space-y-6">
-              {/* Role */}
               <div className="flex justify-between items-center">
                 <span className="font-semibold">Role:</span>
                 <span>{role}</span>
               </div>
-              {/* Created At */}
               {user?.created_at && (
                 <div className="flex justify-between items-center">
                   <span className="font-semibold">Created At:</span>
                   <span>{new Date(user.created_at).toLocaleString()}</span>
                 </div>
               )}
-              {/* Username */}
               <div className="flex justify-between items-center">
                 <span className="font-semibold">Username:</span>
                 {editing ? (
@@ -414,7 +436,6 @@ const Profile: React.FC = () => {
                       placeholder="Enter new username"
                       className="bg-[hsl(var(--input))] text-[hsl(var(--foreground))]"
                     />
-                    {/* AlertDialog for Confirmation */}
                     <AlertDialog open={dialogOpen} onOpenChange={setDialogOpen}>
                       <AlertDialogTrigger asChild>
                         <Button
@@ -532,7 +553,6 @@ const Profile: React.FC = () => {
                             <p>{passed ? "Passed" : "Failed"}</p>
                           </motion.div>
                         </DrawerTrigger>
-                        {/* Drawer Content for Details */}
                         <DrawerContent>
                           <DrawerHeader>
                             <DrawerTitle className="text-[hsl(var(--card-foreground))]">

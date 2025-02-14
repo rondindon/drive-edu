@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import { PrismaClient } from '@prisma/client';
+import { AuthenticatedRequest } from '../interfaces/AuthenticatedRequest';
 
 const prisma = new PrismaClient();
 
@@ -92,3 +93,32 @@ export const updateUsername = async (req: Request, res: Response) => {
     return res.status(500).json({ message: 'Failed to update username' });
   }
 };
+
+export async function updateProfilePicture(req: AuthenticatedRequest, res: Response) {
+  try {
+    const userId = req.user?.id;
+    if (!userId) {
+      return res.status(401).json({ message: 'Not authenticated' });
+    }
+    const { profilePicture } = req.body;
+
+    if (typeof profilePicture === 'undefined') {
+      return res.status(400).json({ message: 'No profile picture provided' });
+    }
+
+    const updatedUser = await prisma.user.update({
+      where: { id: userId },
+      data: {
+        profileImg,
+      },
+    });
+
+    return res.status(200).json({
+      message: 'Profile picture updated successfully',
+      user: updatedUser,
+    });
+  } catch (error) {
+    console.error("Error updating profile picture:", error);
+    return res.status(500).json({ message: 'Internal server error' });
+  }
+}
