@@ -10,6 +10,7 @@ const adminUserController_1 = require("./controllers/adminUserController");
 const testController_1 = require("./controllers/testController");
 const reportController_1 = require("./controllers/reportController");
 const statsController_1 = require("./controllers/statsController");
+const badgeController_1 = require("./controllers/badgeController");
 const router = (0, express_1.Router)();
 router.post('/user', userController_1.handleNewUser);
 router.get('/user', userController_1.getUserByEmail);
@@ -18,6 +19,7 @@ router.get('/admin/users', auth_1.authenticate, adminController_1.isAdmin, admin
 router.put('/admin/users/:id', auth_1.authenticate, adminController_1.isAdmin, adminUserController_1.updateUser);
 router.delete('/admin/users/:id', auth_1.authenticate, adminController_1.isAdmin, adminUserController_1.deleteUser);
 router.put('/users/update-username', auth_1.authenticate, userController_1.updateUsername);
+router.put('users/updateProfilePicture', auth_1.authenticate, userController_1.updateProfilePicture);
 router.get('/admin/questions', auth_1.authenticate, adminController_1.isAdmin, adminController_1.getAllQuestions);
 router.post('/admin/questions', auth_1.authenticate, adminController_1.isAdmin, adminController_1.createQuestion);
 router.put('/admin/questions/:id', auth_1.authenticate, adminController_1.isAdmin, adminController_1.updateQuestion);
@@ -44,4 +46,5 @@ router.get('/user/stats/worst-accuracy', auth_1.authenticate, statsController_1.
 router.get('/user/stats/test-summary', auth_1.authenticate, statsController_1.testsTakenAndPassedByUser);
 router.get('/admin/stats/tests', auth_1.authenticate, adminController_1.isAdmin, statsController_1.getAdminTestStats);
 router.get('/user/stats/streak', auth_1.authenticate, statsController_1.getUserStreak);
+router.get('/user/badges', auth_1.authenticate, badgeController_1.getUserBadges);
 exports.default = router;

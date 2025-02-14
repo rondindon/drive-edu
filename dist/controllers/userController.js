@@ -1,6 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.updateUsername = exports.getUserByEmail = exports.handleNewUser = void 0;
+exports.updateProfilePicture = updateProfilePicture;
 const client_1 = require("@prisma/client");
 const prisma = new client_1.PrismaClient();
 const handleNewUser = async (req, res) => {
@@ -82,3 +83,29 @@ const updateUsername = async (req, res) => {
     }
 };
 exports.updateUsername = updateUsername;
+async function updateProfilePicture(req, res) {
+    try {
+        const userId = req.user?.id;
+        if (!userId) {
+            return res.status(401).json({ message: 'Not authenticated' });
+        }
+        const { profilePicture } = req.body;
+        if (typeof profilePicture === 'undefined') {
+            return res.status(400).json({ message: 'No profile picture provided' });
+        }
+        const updatedUser = await prisma.user.update({
+            where: { id: userId },
+            data: {
+                profileImg: profilePicture,
+            },
+        });
+        return res.status(200).json({
+            message: 'Profile picture updated successfully',
+            user: updatedUser,
+        });
+    }
+    catch (error) {
+        console.error("Error updating profile picture:", error);
+        return res.status(500).json({ message: 'Internal server error' });
+    }
+}

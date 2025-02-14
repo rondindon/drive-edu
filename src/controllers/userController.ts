@@ -109,7 +109,7 @@ export async function updateProfilePicture(req: AuthenticatedRequest, res: Respo
     const updatedUser = await prisma.user.update({
       where: { id: userId },
       data: {
-        profileImg,
+        profileImg: profilePicture,
       },
     });
 
