@@ -1,5 +1,4 @@
-import { PrismaClient } from '@prisma/client';
-import { BadgeRank } from '@prisma/client';
+import { BadgeRank, PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
