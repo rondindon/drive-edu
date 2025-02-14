@@ -7,7 +7,7 @@ import { authenticate } from './middleware/auth';
 import { deleteUser, getAllUsers, updateUser } from './controllers/adminUserController';
 import {deleteTest, finishTest, getAllTests, getUserTests, recordQuestionStat, recordUserAnswer, startTest } from './controllers/testController';
 import { createReport, deleteReport, getAllReports, markReportResolved, markReportReviewed } from './controllers/reportController';
-import { getAdminTestStats, getAnswerStats, getTestStats, getUserStreak, getWorstAccuracyQuestions, testsTakenAndPassedByUser } from './controllers/statsController';
+import { getAdminTestStats, getAnswerStats, getBadgeStats, getTestStats, getUserStreak, getWorstAccuracyQuestions, testsTakenAndPassedByUser } from './controllers/statsController';
 import { getUserBadges } from './controllers/badgeController';
 
 const router: Router = Router();
@@ -46,10 +46,11 @@ router.delete('/admin/reports/:id/delete', authenticate, isAdmin, deleteReport);
 
 router.get('/user/stats/tests', authenticate, getTestStats);
 router.get('/user/stats/answers', authenticate, getAnswerStats);
-router.get('/user/stats/badges', authenticate, getUserBadges);
+router.get('/user/stats/badges', authenticate, getBadgeStats);
 router.get('/user/stats/worst-accuracy', authenticate, getWorstAccuracyQuestions);
 router.get('/user/stats/test-summary', authenticate, testsTakenAndPassedByUser);
 router.get('/admin/stats/tests', authenticate, isAdmin, getAdminTestStats);
 router.get('/user/stats/streak', authenticate, getUserStreak);
+router.get('user/badges',authenticate, getUserBadges);
 
 export default router;

@@ -1,5 +1,3 @@
-// src/pages/Profile.tsx
-
 import React, { useState, useEffect, useContext } from "react";
 import axios from "axios";
 import { Edit } from "lucide-react";
@@ -65,6 +63,7 @@ const Profile: React.FC = () => {
   const [streakLoading, setStreakLoading] = useState<boolean>(true);
   const [streakError, setStreakError] = useState<string | null>(null);
 
+  // ** Badges State **
   const [badges, setBadges] = useState<{ title: string; rank: string; description: string }[]>([]);
   const [badgesLoading, setBadgesLoading] = useState<boolean>(true);
 
@@ -78,6 +77,9 @@ const Profile: React.FC = () => {
     BRONZE: "bg-yellow-600 text-white border-yellow-800",
   };
 
+  // --------------------
+  // FETCH TEST SUMMARY
+  // --------------------
   useEffect(() => {
     const fetchTestSummary = async () => {
       setTestStatsLoading(true);
@@ -85,11 +87,9 @@ const Profile: React.FC = () => {
         const response = await axios.get("https://drive-edu.onrender.com/api/user/stats/test-summary", {
           headers: { Authorization: `Bearer ${token}` },
         });
-
         const { testsTaken, testsPassed } = response.data;
         setTestsTaken(testsTaken ?? 0);
         setTestsPassed(testsPassed ?? 0);
-
         if (testsTaken > 0) {
           setSuccessRate((testsPassed / testsTaken) * 100);
         } else {
@@ -102,7 +102,6 @@ const Profile: React.FC = () => {
         setTestStatsLoading(false);
       }
     };
-
     fetchTestSummary();
   }, [token]);
 
@@ -116,7 +115,6 @@ const Profile: React.FC = () => {
         const response = await axios.get("https://drive-edu.onrender.com/api/user/stats/tests", {
           headers: { Authorization: `Bearer ${token}` },
         });
-
         setTestsPerDay(response.data.testsOverTimeDay ?? []);
       } catch (error) {
         console.error("Error fetching tests per day:", error);
@@ -125,7 +123,6 @@ const Profile: React.FC = () => {
         setTestsPerDayLoading(false);
       }
     };
-
     fetchTestsPerDay();
   }, [token]);
 
@@ -137,9 +134,7 @@ const Profile: React.FC = () => {
       if (activeTab !== "History") return;
       setUserTestsLoading(true);
       setUserTestsError(null);
-
       try {
-        // Replace with your route that calls getUserTests
         const response = await axios.get("https://drive-edu.onrender.com/api/user/tests", {
           headers: { Authorization: `Bearer ${token}` },
         });
@@ -151,7 +146,6 @@ const Profile: React.FC = () => {
         setUserTestsLoading(false);
       }
     };
-
     fetchUserTests();
   }, [activeTab, token]);
 
@@ -173,10 +167,12 @@ const Profile: React.FC = () => {
         setStreakLoading(false);
       }
     };
-
     fetchStreak();
   }, [token]);
 
+  // --------------------
+  // FETCH USER BADGES
+  // --------------------
   useEffect(() => {
     const fetchBadges = async () => {
       setBadgesLoading(true);
@@ -184,26 +180,13 @@ const Profile: React.FC = () => {
         const response = await axios.get("https://drive-edu.onrender.com/api/user/stats/badges", {
           headers: { Authorization: `Bearer ${token}` },
         });
-
-        const rankOrder = {
-          DIAMOND: 4,
-          PLATINUM: 3,
-          SILVER: 2,
-          BRONZE: 1,
-        } as const;
-        
-        const sortedBadges = response.data.sort((a: { rank: keyof typeof rankOrder }, b: { rank: keyof typeof rankOrder }) => {
-          return rankOrder[b.rank] - rankOrder[a.rank];
-        });
-
-        setBadges(sortedBadges);
+        setBadges(response.data);
       } catch (error) {
         console.error("Error fetching badges:", error);
       } finally {
         setBadgesLoading(false);
       }
     };
-
     fetchBadges();
   }, [token]);
 
@@ -215,7 +198,6 @@ const Profile: React.FC = () => {
       alert("Username cannot be empty.");
       return;
     }
-
     try {
       await updateUsername(newUsername);
       toast.success("Username updated successfully!");
@@ -231,11 +213,7 @@ const Profile: React.FC = () => {
   // A simple fade+slide in for the entire page container
   const pageVariants = {
     hidden: { opacity: 0, y: 10 },
-    visible: {
-      opacity: 1,
-      y: 0,
-      transition: { duration: 0.4 },
-    },
+    visible: { opacity: 1, y: 0, transition: { duration: 0.4 } },
   };
 
   // Variants for test cards
@@ -263,7 +241,7 @@ const Profile: React.FC = () => {
       className="p-6 bg-[hsl(var(--background))] min-h-screen flex flex-col items-center text-[hsl(var(--foreground))]"
     >
       <div className="max-w-5xl w-full">
-        {/* Profile Card with Avatar and Calendar */}
+        {/* Profile Card with Avatar, Calendar, and Achievements */}
         <Card className="mt-5 py-12 shadow-lg rounded-md flex flex-col md:flex-row justify-between items-start space-y-6 md:space-y-0 md:space-x-6 bg-[hsl(var(--card))] text-[hsl(var(--card-foreground))] items-center justify-around">
           {/* Avatar Section */}
           <div className="flex flex-col items-center md:items-start space-y-4">
@@ -284,9 +262,7 @@ const Profile: React.FC = () => {
                   {/* Success Rate */}
                   <div className="flex items-center space-x-2">
                     <span>{successRate.toFixed(2)}%</span>
-                    <span>
-                      - {testsPassed}/{testsTaken}
-                    </span>
+                    <span>- {testsPassed}/{testsTaken}</span>
                   </div>
                   {/* Streak */}
                   {streakLoading ? (
@@ -304,16 +280,24 @@ const Profile: React.FC = () => {
                       <span className="mt-1">{streak} day{streak !== 1 ? 's' : ''} streak</span>
                     </motion.div>
                   )}
+                  {/* Achievements Section */}
                   <div className="mt-4">
                     <h3 className="font-bold text-lg">Achievements</h3>
                     <div className="flex flex-wrap gap-2">
-                      {badgesLoading ? <p>Loading badges...</p> : badges.map((badge) => (
-                        <div key={badge.title} className={`p-2 rounded-md border ${badgeColors[badge.rank]}`}>
-                          {badge.title}
-                        </div>
-                      ))}
+                      {badgesLoading ? (
+                        <p>Loading badges...</p>
+                      ) : (
+                        badges.map((badge) => (
+                          <div
+                            key={badge.title}
+                            className={`p-2 rounded-md border ${badgeColors[badge.rank]}`}
+                          >
+                            {badge.title}
+                          </div>
+                        ))
+                      )}
                     </div>
-                </div>
+                  </div>
                 </div>
               )}
             </div>
@@ -344,7 +328,6 @@ const Profile: React.FC = () => {
             >
               Profile Info
             </button>
-
             <button
               onClick={() => setActiveTab("Activity")}
               className={`px-3 py-2 font-semibold ${
@@ -355,7 +338,6 @@ const Profile: React.FC = () => {
             >
               Activity
             </button>
-
             <button
               onClick={() => setActiveTab("History")}
               className={`px-3 py-2 font-semibold ${
@@ -378,7 +360,6 @@ const Profile: React.FC = () => {
                 <span className="font-semibold">Role:</span>
                 <span>{role}</span>
               </div>
-
               {/* Created At */}
               {user?.created_at && (
                 <div className="flex justify-between items-center">
@@ -386,7 +367,6 @@ const Profile: React.FC = () => {
                   <span>{new Date(user.created_at).toLocaleString()}</span>
                 </div>
               )}
-
               {/* Username */}
               <div className="flex justify-between items-center">
                 <span className="font-semibold">Username:</span>
@@ -398,7 +378,6 @@ const Profile: React.FC = () => {
                       placeholder="Enter new username"
                       className="bg-[hsl(var(--input))] text-[hsl(var(--foreground))]"
                     />
-
                     {/* AlertDialog for Confirmation */}
                     <AlertDialog open={dialogOpen} onOpenChange={setDialogOpen}>
                       <AlertDialogTrigger asChild>
@@ -434,7 +413,6 @@ const Profile: React.FC = () => {
                         </AlertDialogFooter>
                       </AlertDialogContent>
                     </AlertDialog>
-
                     <Button
                       variant="outline"
                       size="sm"
@@ -470,7 +448,6 @@ const Profile: React.FC = () => {
             <h2 className="text-xl font-semibold mb-4 text-[hsl(var(--card-foreground))]">
               My Test History
             </h2>
-
             {userTestsLoading ? (
               <div className="text-gray-500 text-[hsl(var(--card-foreground))]">
                 Loading test history...
@@ -478,24 +455,21 @@ const Profile: React.FC = () => {
             ) : userTestsError ? (
               <div className="text-red-500">{userTestsError}</div>
             ) : userTests.length === 0 ? (
-              <div><p className="text-[hsl(var(--card-foreground))]">No completed tests found.</p></div>
+              <div>
+                <p className="text-[hsl(var(--card-foreground))]">No completed tests found.</p>
+              </div>
             ) : (
               <motion.div
                 className="space-y-4"
                 initial="hidden"
                 animate="visible"
                 variants={{
-                  visible: {
-                    transition: {
-                      staggerChildren: 0.1,
-                    },
-                  },
+                  visible: { transition: { staggerChildren: 0.1 } },
                 }}
               >
                 {userTests.map((test, index) => {
                   const passed = test.isPassed;
                   const bgColor = passed ? "bg-green-100" : "bg-red-100";
-
                   return (
                     <motion.div
                       key={test.id}
@@ -506,7 +480,6 @@ const Profile: React.FC = () => {
                     >
                       <Drawer>
                         <DrawerTrigger asChild>
-                          {/* Wrap the div with motion.div to apply hover animations */}
                           <motion.div
                             className={`p-4 rounded-md cursor-pointer ${bgColor}`}
                             whileHover={{
@@ -519,13 +492,10 @@ const Profile: React.FC = () => {
                             transition={{ type: "spring", stiffness: 300 }}
                           >
                             <p className="font-medium mb-1">Group: {test.group}</p>
-                            <p className="font-semibold">
-                              {test.score}/{100} points
-                            </p>
+                            <p className="font-semibold">{test.score}/100 points</p>
                             <p>{passed ? "Passed" : "Failed"}</p>
                           </motion.div>
                         </DrawerTrigger>
-
                         {/* Drawer Content for Details */}
                         <DrawerContent>
                           <DrawerHeader>
@@ -536,7 +506,6 @@ const Profile: React.FC = () => {
                               Information about your test
                             </DrawerDescription>
                           </DrawerHeader>
-
                           <div className="py-4 text-[hsl(var(--card-foreground))] flex gap-8 items-center justify-center">
                             <p>
                               <strong>Group:</strong> {test.group}
@@ -551,11 +520,9 @@ const Profile: React.FC = () => {
                               <strong>Time Taken:</strong> {test.timeTaken} seconds
                             </p>
                             <p>
-                              <strong>Date:</strong>{" "}
-                              {new Date(test.createdAt).toLocaleString()}
+                              <strong>Date:</strong> {new Date(test.createdAt).toLocaleString()}
                             </p>
                           </div>
-
                           <DrawerFooter>{/* Optional footer actions */}</DrawerFooter>
                         </DrawerContent>
                       </Drawer>
@@ -567,7 +534,6 @@ const Profile: React.FC = () => {
           </Card>
         )}
       </div>
-
       {message && (
         <div
           className={`mt-4 p-2 text-center rounded-md ${
