@@ -3,9 +3,9 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.updateUsername = exports.getUserByEmail = exports.handleNewUser = void 0;
 const client_1 = require("@prisma/client");
 const prisma = new client_1.PrismaClient();
-// Existing handlers...
 const handleNewUser = async (req, res) => {
     const { email, username } = req.body;
+    console.log('Creating new user:', email, username);
     try {
         // Check if the user already exists in the Prisma table
         const existingUser = await prisma.user.findUnique({

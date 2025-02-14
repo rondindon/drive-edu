@@ -22,7 +22,8 @@ router.get('/admin/questions', auth_1.authenticate, adminController_1.isAdmin, a
 router.post('/admin/questions', auth_1.authenticate, adminController_1.isAdmin, adminController_1.createQuestion);
 router.put('/admin/questions/:id', auth_1.authenticate, adminController_1.isAdmin, adminController_1.updateQuestion);
 router.delete('/admin/questions/:id', auth_1.authenticate, adminController_1.isAdmin, adminController_1.deleteQuestion);
-router.get('/questions/road-signs', auth_1.authenticate, questionController_1.getRoadSigns);
+router.get('/admin/question-stats', auth_1.authenticate, adminController_1.isAdmin, questionController_1.getAllQuestionStats);
+router.get('/questions/road-signs', questionController_1.getRoadSigns);
 router.post('/tests/start', auth_1.authenticate, testController_1.startTest);
 router.post('/tests/finish', auth_1.authenticate, testController_1.finishTest);
 router.get('/user/tests', auth_1.authenticate, testController_1.getUserTests);

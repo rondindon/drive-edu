@@ -8,6 +8,7 @@ exports.getAllTests = getAllTests;
 exports.deleteTest = deleteTest;
 exports.getUserTests = getUserTests;
 const client_1 = require("@prisma/client");
+const badgeController_1 = require("./badgeController");
 const prisma = new client_1.PrismaClient();
 // The categories you listed, each with how many questions to pick
 const categoriesConfig = [
@@ -289,12 +290,19 @@ async function finishTest(req, res) {
                 },
             })));
         }
-        // 6) Return success response
+        const completedTests = await prisma.test.count({ where: { userId } });
+        const answeredQuestions = await prisma.userAnswer.count({ where: { userId } });
+        const testBadge = await (0, badgeController_1.awardTestBadge)(userId, completedTests);
+        const questionBadge = await (0, badgeController_1.awardQuestionBadge)(userId, answeredQuestions);
         return res.json({
             message: 'Test finished!',
             test: updatedTest,
             createdCount: newAnswers.length,
             updatedCount: updateAnswers.length,
+            badgesAwarded: {
+                testBadge,
+                questionBadge,
+            },
         });
     }
     catch (error) {
@@ -423,11 +431,10 @@ async function getUserTests(req, res) {
         const tests = await prisma.test.findMany({
             where: { userId },
             include: {
-            // If you want to also include user answers or user info:
-            // user: true,
-            // userAnswers: true,
+                user: true
             },
         });
+        console.log(tests);
         return res.status(200).json(tests);
     }
     catch (error) {
