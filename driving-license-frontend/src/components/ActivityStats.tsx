@@ -174,29 +174,29 @@ const ActivityStats: React.FC = () => {
     // Scholar badges are based on answered questions
     if (badge.title.includes('Scholar')) {
       if (badgeStats.answeredQuestions >= 500) {
-        return 'Diamond Scholar: You have answered 500+ questions!';
+        return `${badgeStats.answeredQuestions} questions answered!`;
       } else if (badgeStats.answeredQuestions >= 250) {
-        return 'Platinum Scholar: You have answered 250+ questions!';
+        return `${badgeStats.answeredQuestions} / 500 questions answered!`;
       } else if (badgeStats.answeredQuestions >= 100) {
-        return 'Silver Scholar: You have answered 100+ questions!';
+        return `${badgeStats.answeredQuestions} / 250 questions answered!`;
       } else if (badgeStats.answeredQuestions >= 10) {
-        return 'Bronze Scholar: You have answered your first questions!';
+        return `${badgeStats.answeredQuestions} / 100 questions answered!`;
       } else {
-        return 'Answer more questions to earn a badge!';
+        return `${badgeStats.answeredQuestions} / 10 questions answered!`;
       }
     }
     // Tester badges are based on completed tests
     if (badge.title.includes('Tester')) {
       if (badgeStats.completedTests >= 50) {
-        return 'Diamond Tester: You have completed 50+ tests!';
+        return `${badgeStats.completedTests} tests completed!`;
       } else if (badgeStats.completedTests >= 25) {
-        return 'Platinum Tester: You have completed 25+ tests!';
+        return `${badgeStats.completedTests} / 50 tests completed!`;
       } else if (badgeStats.completedTests >= 10) {
-        return 'Silver Tester: You have completed 10+ tests!';
+        return `${badgeStats.completedTests} / 25 tests completed!`;
       } else if (badgeStats.completedTests >= 1) {
-        return 'Bronze Tester: You have completed your first test!';
+        return `${badgeStats.completedTests} / 10 tests completed!`;
       } else {
-        return 'Complete tests to earn a badge!';
+        return `${badgeStats.completedTests} / 1 tests completed!`;
       }
     }
     return '';
