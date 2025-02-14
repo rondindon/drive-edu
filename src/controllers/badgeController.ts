@@ -86,7 +86,16 @@ export async function awardQuestionBadge(userId: number, answeredQuestions: numb
   }
 
   export async function getUserBadges(userId: number) {
-    return await prisma.badge.findMany({
-      where: { userId },
-    });
+    try {
+      const badges = await prisma.badge.findMany({
+        where: { userId },
+        // Optional: order badges by creation date descending.
+        orderBy: { createdAt: 'desc' },
+      });
+      return badges;
+    } catch (error) {
+      // Handle or log the error as needed.
+      console.error('Error fetching user badges:', error);
+      throw error;
+    }
   }
