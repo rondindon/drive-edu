@@ -89,9 +89,19 @@ export async function awardQuestionBadge(userId: number, answeredQuestions: numb
     try {
       const badges = await prisma.badge.findMany({
         where: { userId },
-        // Optional: order badges by creation date descending.
+        select: {
+          id: true,
+          title: true,
+          description: true,
+          rank: true,
+          createdAt: true,
+          updatedAt: true,
+          // If you need user info, select only specific fields:
+          // user: { select: { id: true, email: true } }
+        },
         orderBy: { createdAt: 'desc' },
       });
+      
       return badges;
     } catch (error) {
       // Handle or log the error as needed.
