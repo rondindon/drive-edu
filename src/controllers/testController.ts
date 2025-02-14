@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { PrismaClient } from '@prisma/client';
 import { AuthenticatedRequest } from '../interfaces/AuthenticatedRequest';
+import { awardQuestionBadge, awardTestBadge } from './badgeController';
 
 const prisma = new PrismaClient();
 
@@ -315,12 +316,21 @@ function shuffleArray<T>(array: T[]): T[] {
       );
     }
 
-    // 6) Return success response
+    const completedTests = await prisma.test.count({ where: { userId } });
+    const answeredQuestions = await prisma.userAnswer.count({ where: { userId } });
+
+    const testBadge = await awardTestBadge(userId, completedTests);
+    const questionBadge = await awardQuestionBadge(userId, answeredQuestions);
+    
     return res.json({
       message: 'Test finished!',
       test: updatedTest,
       createdCount: newAnswers.length,
       updatedCount: updateAnswers.length,
+      badgesAwarded: {
+        testBadge,
+        questionBadge,
+      },
     });
   } catch (error) {
     console.error('[finishTest] Error:', error);

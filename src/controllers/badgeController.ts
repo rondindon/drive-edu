@@ -1,0 +1,87 @@
+import { PrismaClient } from '@prisma/client';
+import { BadgeRank } from '@prisma/client';
+
+const prisma = new PrismaClient();
+
+export async function awardTestBadge(userId: number, completedTests: number) {
+  let rank: BadgeRank | null = null;
+  let title = '';
+  let description = '';
+
+  if (completedTests >= 50) {
+    rank = 'DIAMOND';
+    title = 'Diamond Tester';
+    description = 'You have completed 50 or more tests!';
+  } else if (completedTests >= 25) {
+    rank = 'PLATINUM';
+    title = 'Platinum Tester';
+    description = 'You have completed 25 or more tests!';
+  } else if (completedTests >= 10) {
+    rank = 'SILVER';
+    title = 'Silver Tester';
+    description = 'You have completed 10 or more tests!';
+  } else if (completedTests >= 1) {
+    rank = 'BRONZE';
+    title = 'Bronze Tester';
+    description = 'You have completed your first test!';
+  }
+
+  if (rank) {
+    // Check if the user already has this badge
+    const existingBadge = await prisma.badge.findFirst({
+      where: { userId, title },
+    });
+    if (!existingBadge) {
+      return await prisma.badge.create({
+        data: {
+          userId,
+          title,
+          description,
+          rank,
+        },
+      });
+    }
+  }
+  return null;
+}
+
+export async function awardQuestionBadge(userId: number, answeredQuestions: number) {
+    let rank: BadgeRank | null = null;
+    let title = '';
+    let description = '';
+  
+    if (answeredQuestions >= 500) {
+      rank = 'DIAMOND';
+      title = 'Diamond Scholar';
+      description = 'You have answered 500 or more questions!';
+    } else if (answeredQuestions >= 250) {
+      rank = 'PLATINUM';
+      title = 'Platinum Scholar';
+      description = 'You have answered 250 or more questions!';
+    } else if (answeredQuestions >= 100) {
+      rank = 'SILVER';
+      title = 'Silver Scholar';
+      description = 'You have answered 100 or more questions!';
+    } else if (answeredQuestions >= 10) {
+      rank = 'BRONZE';
+      title = 'Bronze Scholar';
+      description = 'You have answered your first questions!';
+    }
+  
+    if (rank) {
+      const existingBadge = await prisma.badge.findFirst({
+        where: { userId, title },
+      });
+      if (!existingBadge) {
+        return await prisma.badge.create({
+          data: {
+            userId,
+            title,
+            description,
+            rank,
+          },
+        });
+      }
+    }
+    return null;
+  }  

@@ -366,17 +366,10 @@ const TestPage: React.FC = () => {
         </div>
       </div>
 
-      <div className="w-[70%] flex gap-6 items-start">
+      <div className="w-[70%] flex flex-col md:flex-row gap-6 items-start">
         {/* Categories */}
         <aside
-          className="
-            bg-[hsl(var(--card))] text-[hsl(var(--card-foreground))]
-            rounded shadow p-4
-            text-left
-            w-56 h-[39rem]
-            overflow-auto
-            shrink-0
-          "
+          className="bg-[hsl(var(--card))] text-[hsl(var(--card-foreground))] rounded shadow p-4 text-left w-full md:w-56 h-auto md:h-[39rem] overflow-auto shrink-0"
         >
           <div className="flex flex-col gap-2">
             {categories.map((cat) => (
@@ -441,14 +434,15 @@ const TestPage: React.FC = () => {
             {/* Report icon at top-right */}
             <Button
               variant="outline"
-              className="absolute top-4 right-6 h-8 px-2 flex items-center justify-center hover:bg-[hsl(var(--destructive))] hover:text-[hsl(var(--destructive-foreground))]"
+              className="md:absolute md:top-2 md:right-6 md:mt-4 mb-4 h-8 px-2 flex items-center justify-center hover:bg-[hsl(var(--destructive))] hover:text-[hsl(var(--destructive-foreground))]"
               onClick={() => openReportPopup(currentQuestion.id)}
               title="Report an issue with this question"
             >
               <FaFlag className="text-[hsl(var(--destructive))]" />
             </Button>
 
-            <h2 className="text-xl font-bold mb-4 whitespace-normal break-words max-w-3xl">
+
+            <h2 className="text-lg md:text-xl font-bold mb-4 whitespace-normal break-words max-w-full md:max-w-[90%]">
               {currentQuestion.text}
             </h2>
             {currentQuestion.imageUrl && (
