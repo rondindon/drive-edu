@@ -96,7 +96,7 @@ const Profile: React.FC = () => {
   // Handler for selecting a new profile picture
   const handleProfilePicSelect = async (url: string) => {
     setProfilePicture(url);
-    await axios.put('https://drive-edu.onrender.com/api/users/updateProfilePic', { profilePicture: url }, { headers: { Authorization: `Bearer ${token}` } });
+    axios.put('https://drive-edu.onrender.com/api/users/updateProfilePicture', { profilePicture: url }, { headers: { Authorization: `Bearer ${token}` } });
     setProfilePicDialogOpen(false);
   };
 
