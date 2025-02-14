@@ -94,7 +94,7 @@ export async function awardQuestionBadge(userId: number, answeredQuestions: numb
       if (!userId) {
         return res.status(401).json({ message: 'Not authenticated' });
       }
-
+  
       const badges = await prisma.badge.findMany({
         where: { userId },
         select: {
@@ -104,16 +104,13 @@ export async function awardQuestionBadge(userId: number, answeredQuestions: numb
           rank: true,
           createdAt: true,
           updatedAt: true,
-          // If you need user info, select only specific fields:
-          // user: { select: { id: true, email: true } }
         },
         orderBy: { createdAt: 'desc' },
       });
       
-      return badges;
+      return res.status(200).json(badges);
     } catch (error) {
-      // Handle or log the error as needed.
       console.error('Error fetching user badges:', error);
-      throw error;
+      return res.status(500).json({ message: 'Internal server error' });
     }
   }
