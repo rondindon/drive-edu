@@ -150,15 +150,7 @@ export async function getAnswerStats(
   }
 }
 
-/**
- * Get Badge Statistics for the authenticated user
- * - Badges earned
- * - Badges over time
- */
-export async function getBadgeStats(
-  req: AuthenticatedRequest,
-  res: Response
-) {
+export async function getBadgeStats(req: AuthenticatedRequest, res: Response) {
   try {
     const userId = req.user?.id;
 
@@ -176,11 +168,13 @@ export async function getBadgeStats(
       orderBy: { createdAt: 'asc' },
     });
 
-    if (badges.length === 0) {
-      return res
-        .status(200)
-        .json({ message: 'No badges earned yet', badges: [] });
-    }
+    const answeredQuestions = await prisma.userAnswer.count({
+      where: { userId },
+    });
+
+    const completedTests = await prisma.test.count({
+      where: { userId },
+    });
 
     // Process badges over time (e.g., monthly)
     const badgesOverTimeMap: { [key: string]: number } = {};
@@ -204,6 +198,8 @@ export async function getBadgeStats(
     return res.status(200).json({
       badges,
       badgesOverTime,
+      answeredQuestions,
+      completedTests,
     });
   } catch (error) {
     console.error('[getBadgeStats] Error:', error);

@@ -66,20 +66,26 @@ const Profile: React.FC = () => {
   // ** Badges State **
   const [badges, setBadges] = useState<{ title: string; rank: string; description: string }[]>([]);
   const [badgesLoading, setBadgesLoading] = useState<boolean>(true);
+  const [badgeDialogOpen, setBadgeDialogOpen] = useState(false);
+  const [selectedBadge, setSelectedBadge] = useState<{ title: string; rank: string; description: string } | null>(null);
+
 
   const token = localStorage.getItem("supabaseToken");
   const { theme, toggleTheme } = useContext(ThemeContext);
 
-  const badgeColors: Record<string, string> = {
-    DIAMOND: "bg-blue-500 text-white border-blue-700",
-    PLATINUM: "bg-gray-400 text-black border-gray-600",
-    SILVER: "bg-gray-300 text-black border-gray-500",
-    BRONZE: "bg-yellow-600 text-white border-yellow-800",
+  const badgeStyles: Record<string, string> = {
+    DIAMOND: "bg-gradient-to-r from-blue-500 to-purple-500 text-white border-2 border-purple-700 font-bold",
+    PLATINUM: "bg-gray-400 text-black border border-gray-600 font-semibold",
+    SILVER: "bg-gray-300 text-black border border-gray-500",
+    BRONZE: "bg-yellow-600 text-white border border-yellow-800",
   };
 
-  // --------------------
-  // FETCH TEST SUMMARY
-  // --------------------
+  // Base animation variant for non-glowing badges
+  const badgeVariants = {
+    hidden: { opacity: 0, scale: 0.8 },
+    visible: { opacity: 1, scale: 1, transition: { duration: 0.3 } },
+  };
+
   useEffect(() => {
     const fetchTestSummary = async () => {
       setTestStatsLoading(true);
@@ -282,18 +288,25 @@ const Profile: React.FC = () => {
                   )}
                   {/* Achievements Section */}
                   <div className="mt-4">
-                    <h3 className="font-bold text-lg">Achievements</h3>
-                    <div className="flex flex-wrap gap-2">
+                    <div className="mt-2 flex flex-wrap gap-2">
                       {badgesLoading ? (
                         <p>Loading badges...</p>
                       ) : (
                         badges.map((badge) => (
-                          <div
+                          <motion.div
                             key={badge.title}
-                            className={`p-2 rounded-md border ${badgeColors[badge.rank]}`}
+                            onClick={() => {
+                              setSelectedBadge(badge);
+                              setBadgeDialogOpen(true);
+                            }}
+                            variants={badgeVariants}
+                            initial="hidden"
+                            animate="visible"
+                            whileHover={{ scale: 1.05 }}
+                            className={`px-2 py-1 text-xs rounded inline-flex items-center cursor-pointer ${badgeStyles[badge.rank]}`}
                           >
                             {badge.title}
-                          </div>
+                          </motion.div>
                         ))
                       )}
                     </div>
@@ -350,6 +363,29 @@ const Profile: React.FC = () => {
             </button>
           </nav>
         </div>
+
+        {selectedBadge && (
+          console.log(selectedBadge),
+          <AlertDialog
+            open={badgeDialogOpen}
+            onOpenChange={(open) => {
+              if (!open) {
+                setSelectedBadge(null);
+              }
+              setBadgeDialogOpen(open);
+            }}
+          >
+            <AlertDialogContent className="bg-[hsl(var(--popover))] text-[hsl(var(--popover-foreground))]">
+              <AlertDialogHeader>
+                <AlertDialogTitle>{selectedBadge.title}</AlertDialogTitle>
+                <AlertDialogDescription>{selectedBadge.description}</AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <Button onClick={() => setBadgeDialogOpen(false)}>Close</Button>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        )}
 
         {/* PROFILE INFO TAB */}
         {activeTab === "Profile Info" && (

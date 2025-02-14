@@ -56,6 +56,8 @@ interface BadgeOverTime {
 interface BadgeStats {
   badges: BadgeStat[];
   badgesOverTime: BadgeOverTime[];
+  answeredQuestions: number;
+  completedTests: number;
 }
 
 interface WorstAccuracyQuestion {
@@ -128,6 +130,8 @@ const ActivityStats: React.FC = () => {
         setBadgeStats({
           badges: badgesRes.data.badges || [],
           badgesOverTime: badgesRes.data.badgesOverTime || [],
+          answeredQuestions: badgesRes.data.answeredQuestions || 0,
+          completedTests: badgesRes.data.completedTests || 0
         });
 
         const worstData: WorstAccuracyQuestion[] = worstQuestionsRes.data.worstAccuracyQuestions || [];
@@ -165,7 +169,39 @@ const ActivityStats: React.FC = () => {
     return Math.ceil(maxTestCount / magnitude) * magnitude;
   }, [maxTestCount]);
 
-  // Function to Add Padding
+  const getBadgeProgression = (badge: { title: string; createdAt: string }): string => {
+    if (!badgeStats) return '';
+    // Scholar badges are based on answered questions
+    if (badge.title.includes('Scholar')) {
+      if (badgeStats.answeredQuestions >= 500) {
+        return 'Diamond Scholar: You have answered 500+ questions!';
+      } else if (badgeStats.answeredQuestions >= 250) {
+        return 'Platinum Scholar: You have answered 250+ questions!';
+      } else if (badgeStats.answeredQuestions >= 100) {
+        return 'Silver Scholar: You have answered 100+ questions!';
+      } else if (badgeStats.answeredQuestions >= 10) {
+        return 'Bronze Scholar: You have answered your first questions!';
+      } else {
+        return 'Answer more questions to earn a badge!';
+      }
+    }
+    // Tester badges are based on completed tests
+    if (badge.title.includes('Tester')) {
+      if (badgeStats.completedTests >= 50) {
+        return 'Diamond Tester: You have completed 50+ tests!';
+      } else if (badgeStats.completedTests >= 25) {
+        return 'Platinum Tester: You have completed 25+ tests!';
+      } else if (badgeStats.completedTests >= 10) {
+        return 'Silver Tester: You have completed 10+ tests!';
+      } else if (badgeStats.completedTests >= 1) {
+        return 'Bronze Tester: You have completed your first test!';
+      } else {
+        return 'Complete tests to earn a badge!';
+      }
+    }
+    return '';
+  };
+  
   const addPadding = (data: TestStat[], paddingCount: number = 4, aggregation: 'day' | 'month'): TestStat[] => {
     if (data.length === 0) return data;
 
@@ -495,34 +531,37 @@ const ActivityStats: React.FC = () => {
         </Card>
       </motion.div>
 
-      {/* Badges Earned */}
       <motion.div variants={cardVariants}>
-        <Card className="p-6 shadow-lg rounded-md bg-[hsl(var(--card))] text-[hsl(var(--card-foreground))]">
-          <h2 className="text-xl font-semibold text-[hsl(var(--primary))] mb-4">Badges Earned</h2>
-          {badgeStats && badgeStats.badges.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-              {badgeStats.badges.map((badge, index) => (
-                <div
-                  key={index}
-                  className="flex items-center space-x-4 p-4 bg-[hsl(var(--card))] rounded-md shadow-sm"
-                >
-                  <div className="w-12 h-12 bg-[hsl(var(--primary))] rounded-full flex items-center justify-center text-white text-lg font-bold">
-                    {badge.title.charAt(0)}
-                  </div>
-                  <div>
-                    <span className="font-semibold">{badge.title}</span>
-                    <div className="text-sm text-[hsl(var(--muted-foreground))]">
-                      Earned on {new Date(badge.createdAt).toLocaleDateString()}
-                    </div>
-                  </div>
-                </div>
-              ))}
+  <Card className="p-6 shadow-lg rounded-md bg-[hsl(var(--card))] text-[hsl(var(--card-foreground))]">
+    <h2 className="text-xl font-semibold text-[hsl(var(--primary))] mb-4">Badges Earned</h2>
+    {badgeStats && badgeStats.badges.length > 0 ? (
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+        {badgeStats.badges.map((badge, index) => (
+          <div
+            key={index}
+            className="flex flex-col items-center space-y-2 p-4 bg-[hsl(var(--card))] rounded-md shadow-sm"
+          >
+            <div className="w-12 h-12 bg-[hsl(var(--primary))] rounded-full flex items-center justify-center text-white text-lg font-bold">
+              {badge.title.charAt(0)}
             </div>
-          ) : (
-            <div className="text-[hsl(var(--muted-foreground))]">No badges earned yet.</div>
-          )}
-        </Card>
-      </motion.div>
+            <div className="text-center">
+              <span className="font-semibold">{badge.title}</span>
+              <div className="text-sm text-[hsl(var(--muted-foreground))]">
+                Earned on {new Date(badge.createdAt).toLocaleDateString()}
+              </div>
+              <div className="text-xs text-[hsl(var(--muted-foreground))] mt-1">
+                {getBadgeProgression(badge)}
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    ) : (
+      <div className="text-[hsl(var(--muted-foreground))]">No badges earned yet.</div>
+    )}
+  </Card>
+</motion.div>
+
 
       {/* Badges Over Time */}
       {badgeStats && badgeStats.badgesOverTime.length > 0 && (
