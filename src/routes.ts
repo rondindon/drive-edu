@@ -51,6 +51,6 @@ router.get('/user/stats/worst-accuracy', authenticate, getWorstAccuracyQuestions
 router.get('/user/stats/test-summary', authenticate, testsTakenAndPassedByUser);
 router.get('/admin/stats/tests', authenticate, isAdmin, getAdminTestStats);
 router.get('/user/stats/streak', authenticate, getUserStreak);
-router.get('user/badges',authenticate, getUserBadges);
+router.get('/user/badges',authenticate, getUserBadges);
 
 export default router;
