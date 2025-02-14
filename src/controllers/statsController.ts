@@ -151,67 +151,6 @@ export async function getAnswerStats(
   }
 }
 
-/**
- * Get Badge Statistics for the authenticated user
- * - Badges earned
- * - Badges over time
- */
-export async function getBadgeStats(
-  req: AuthenticatedRequest,
-  res: Response
-) {
-  try {
-    const userId = req.user?.id;
-
-    if (!userId) {
-      return res.status(401).json({ message: 'Not authenticated' });
-    }
-
-    // Fetch all badges for the user
-    const badges = await prisma.badge.findMany({
-      where: { userId },
-      select: {
-        title: true,
-        createdAt: true,
-      },
-      orderBy: { createdAt: 'asc' },
-    });
-
-    if (badges.length === 0) {
-      return res
-        .status(200)
-        .json({ message: 'No badges earned yet', badges: [] });
-    }
-
-    // Process badges over time (e.g., monthly)
-    const badgesOverTimeMap: { [key: string]: number } = {};
-
-    badges.forEach((badge) => {
-      const month = `${badge.createdAt.getFullYear()}-${(
-        badge.createdAt.getMonth() + 1
-      )
-        .toString()
-        .padStart(2, '0')}`; // Format: YYYY-MM
-      badgesOverTimeMap[month] = (badgesOverTimeMap[month] || 0) + 1;
-    });
-
-    const badgesOverTime = Object.keys(badgesOverTimeMap)
-      .sort()
-      .map((month) => ({
-        month,
-        count: badgesOverTimeMap[month],
-      }));
-
-    return res.status(200).json({
-      badges,
-      badgesOverTime,
-    });
-  } catch (error) {
-    console.error('[getBadgeStats] Error:', error);
-    return res.status(500).json({ message: 'Error fetching badge statistics' });
-  }
-}
-
 export async function getWorstAccuracyQuestions(req: AuthenticatedRequest, res: Response) {
     try {
       // **Authentication:**

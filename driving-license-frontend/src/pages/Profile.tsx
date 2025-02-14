@@ -65,12 +65,19 @@ const Profile: React.FC = () => {
   const [streakLoading, setStreakLoading] = useState<boolean>(true);
   const [streakError, setStreakError] = useState<string | null>(null);
 
+  const [badges, setBadges] = useState<{ title: string; rank: string; description: string }[]>([]);
+  const [badgesLoading, setBadgesLoading] = useState<boolean>(true);
+
   const token = localStorage.getItem("supabaseToken");
   const { theme, toggleTheme } = useContext(ThemeContext);
 
-  // --------------------
-  // FETCH TEST SUMMARY
-  // --------------------
+  const badgeColors: Record<string, string> = {
+    DIAMOND: "bg-blue-500 text-white border-blue-700",
+    PLATINUM: "bg-gray-400 text-black border-gray-600",
+    SILVER: "bg-gray-300 text-black border-gray-500",
+    BRONZE: "bg-yellow-600 text-white border-yellow-800",
+  };
+
   useEffect(() => {
     const fetchTestSummary = async () => {
       setTestStatsLoading(true);
@@ -170,6 +177,36 @@ const Profile: React.FC = () => {
     fetchStreak();
   }, [token]);
 
+  useEffect(() => {
+    const fetchBadges = async () => {
+      setBadgesLoading(true);
+      try {
+        const response = await axios.get("https://drive-edu.onrender.com/api/user/badges", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        const rankOrder = {
+          DIAMOND: 4,
+          PLATINUM: 3,
+          SILVER: 2,
+          BRONZE: 1,
+        } as const;
+        
+        const sortedBadges = response.data.sort((a: { rank: keyof typeof rankOrder }, b: { rank: keyof typeof rankOrder }) => {
+          return rankOrder[b.rank] - rankOrder[a.rank];
+        });
+
+        setBadges(sortedBadges);
+      } catch (error) {
+        console.error("Error fetching badges:", error);
+      } finally {
+        setBadgesLoading(false);
+      }
+    };
+
+    fetchBadges();
+  }, [token]);
+
   // --------------------
   // SAVE UPDATED USERNAME
   // --------------------
@@ -267,6 +304,16 @@ const Profile: React.FC = () => {
                       <span className="mt-1">{streak} day{streak !== 1 ? 's' : ''} streak</span>
                     </motion.div>
                   )}
+                  <div className="mt-4">
+                    <h3 className="font-bold text-lg">Achievements</h3>
+                    <div className="flex flex-wrap gap-2">
+                      {badgesLoading ? <p>Loading badges...</p> : badges.map((badge) => (
+                        <div key={badge.title} className={`p-2 rounded-md border ${badgeColors[badge.rank]}`}>
+                          {badge.title}
+                        </div>
+                      ))}
+                    </div>
+                </div>
                 </div>
               )}
             </div>

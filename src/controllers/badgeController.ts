@@ -83,4 +83,19 @@ export async function awardQuestionBadge(userId: number, answeredQuestions: numb
       }
     }
     return null;
-  }  
+  }
+
+  export async function getUserBadges(userId: number) {
+    return await prisma.badge.findMany({
+      where: { userId },
+      orderBy: [
+        {
+          rank: 'asc', // Order by rank (BRONZE -> DIAMOND)
+        },
+        {
+          createdAt: 'desc', // If same rank, order by newest first
+        },
+      ],
+    });
+  }
+  
