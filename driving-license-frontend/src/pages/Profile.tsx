@@ -181,7 +181,7 @@ const Profile: React.FC = () => {
     const fetchBadges = async () => {
       setBadgesLoading(true);
       try {
-        const response = await axios.get("https://drive-edu.onrender.com/api/user/badges", {
+        const response = await axios.get("https://drive-edu.onrender.com/api/user/stats/badges", {
           headers: { Authorization: `Bearer ${token}` },
         });
 
