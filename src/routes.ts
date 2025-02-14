@@ -21,7 +21,7 @@ router.put('/admin/users/:id', authenticate, isAdmin, updateUser);
 router.delete('/admin/users/:id', authenticate, isAdmin, deleteUser);
 
 router.put('/users/update-username', authenticate, updateUsername);
-router.put('users/updateProfilePicture', authenticate, updateProfilePicture);
+router.put('/users/updateProfilePicture', authenticate, updateProfilePicture);
 
 router.get('/admin/questions',authenticate,isAdmin, getAllQuestions);
 router.post('/admin/questions',authenticate, isAdmin, createQuestion);
