@@ -1,4 +1,3 @@
-// src/controllers/userStatsController.ts
 import { Request, Response } from 'express';
 import { AuthenticatedRequest, WorstAccuracyQuestion } from '../interfaces/AuthenticatedRequest';
 import { PrismaClient } from '@prisma/client';

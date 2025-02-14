@@ -1,4 +1,6 @@
 import { BadgeRank, PrismaClient } from '@prisma/client';
+import { Request, Response } from 'express';
+import { AuthenticatedRequest } from '../interfaces/AuthenticatedRequest';
 
 const prisma = new PrismaClient();
 
@@ -85,8 +87,14 @@ export async function awardQuestionBadge(userId: number, answeredQuestions: numb
     return null;
   }
 
-  export async function getUserBadges(userId: number) {
+  export async function getUserBadges(req: AuthenticatedRequest, res: Response) {
     try {
+      const userId = req.user?.id;
+  
+      if (!userId) {
+        return res.status(401).json({ message: 'Not authenticated' });
+      }
+
       const badges = await prisma.badge.findMany({
         where: { userId },
         select: {
