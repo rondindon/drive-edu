@@ -11,8 +11,11 @@ interface Props {
 
 const models: { [key: string]: string } = {
   B: "/models/car.glb",
+  BE: "/models/car.glb",
   C: "/models/truck.glb",
-  D: "/models/buss.glb",
+  CE: "/models/truck.glb",
+  D: "/models/busss.glb",
+  DE: "/models/busss.glb",
   A: "/models/bike.glb",
   T: "/models/tractorr.glb",
 };
@@ -31,6 +34,8 @@ interface ModelProps {
   targetColor: THREE.Color;
   duration?: number;
   scale?: number;
+  /** "in" for entrance (scale 0 → target), "out" for exit (scale target → 0) */
+  animateDirection?: "in" | "out";
 }
 
 const Model = ({
@@ -38,20 +43,21 @@ const Model = ({
   rotation,
   currentColor,
   targetColor,
-  duration = 1000,
+  duration = 200,
   scale = 1.5,
+  animateDirection = "in",
 }: ModelProps) => {
   const gltf = useGLTF(url);
+  const modelRef = useRef<THREE.Group>(null);
 
+  // Color animation (unchanged)
   useEffect(() => {
     let startTime: number | null = null;
-
     const updateColor = (time: number) => {
       if (!startTime) startTime = time;
       const elapsed = time - startTime;
       const progress = Math.min(elapsed / duration, 1);
       const interpolatedColor = currentColor.clone().lerp(targetColor, progress);
-
       gltf.scene.traverse((child) => {
         if ((child as THREE.Mesh).isMesh) {
           const mesh = child as THREE.Mesh;
@@ -61,16 +67,43 @@ const Model = ({
           }
         }
       });
-
       if (progress < 1) {
         requestAnimationFrame(updateColor);
       }
     };
-
     requestAnimationFrame(updateColor);
   }, [targetColor, currentColor, gltf, duration]);
 
-  return <primitive object={gltf.scene} rotation={rotation} scale={scale} />;
+  // Scale animation: animate "in" from 0→scale or "out" from scale→0.
+  useEffect(() => {
+    let startTime: number | null = null;
+    // For "in", start at zero; for "out", start at full scale.
+    const startScale =
+      animateDirection === "in"
+        ? new THREE.Vector3(0, 0, 0)
+        : new THREE.Vector3(scale, scale, scale);
+    const endScale =
+      animateDirection === "in"
+        ? new THREE.Vector3(scale, scale, scale)
+        : new THREE.Vector3(0, 0, 0);
+
+    const animateScale = (time: number) => {
+      if (startTime === null) startTime = time;
+      const elapsed = time - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      const newScale = startScale.clone().lerp(endScale, progress);
+      if (modelRef.current) {
+        modelRef.current.scale.copy(newScale);
+      }
+      if (progress < 1) {
+        requestAnimationFrame(animateScale);
+      }
+    };
+
+    requestAnimationFrame(animateScale);
+  }, [scale, duration, animateDirection]);
+
+  return <primitive ref={modelRef} object={gltf.scene} rotation={rotation} />;
 };
 
 const Viewer: React.FC<Props> = ({ group }) => {
@@ -82,32 +115,55 @@ const Viewer: React.FC<Props> = ({ group }) => {
   const [targetColor, setTargetColor] = useState(new THREE.Color(1, 1, 1));
   const { theme } = useContext(ThemeContext);
 
+  const transitionDuration = 500;
+  const [currentGroup, setCurrentGroup] = useState<string | null>(group);
+  const [prevGroup, setPrevGroup] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (group !== currentGroup) {
+      if (currentGroup !== null) {
+        setPrevGroup(currentGroup);
+        const timeout = setTimeout(() => {
+          setCurrentGroup(group);
+          setPrevGroup(null);
+        }, transitionDuration);
+        return () => clearTimeout(timeout);
+      } else {
+        setCurrentGroup(group);
+      }
+    }
+  }, [group, currentGroup, transitionDuration]);
+
   // Custom starting positions for models.
   const startingPositions: { [key: string]: [number, number, number] } = {
-    B: [0, -70, -200],  // Car
-    A: [0, -20, -200],  // Bike
-    C: [0, -90, -300],  // Truck
-    D: [0, -40, -150],  // Bus
-    T: [0, -120, -250],  // Tractor: moved further back
+    B: [0, -70, -200],
+    BE: [0, -70, -200],
+    A: [0, -20, -200],
+    C: [0, -90, -300],
+    CE: [0, -90, -300],
+    D: [0, -60, -100],
+    DE: [0, -60, -100],
+    T: [0, -110, -250],
   };
   const defaultPosition: [number, number, number] = [0, -60, 0];
 
   // Custom scales for models.
   const modelScales: { [key: string]: number } = {
-    A: 0.25, // Bike
-    C: 0.8,  // Truck
-    D: 50.0, // Bus
-    T: 0.6,  // Tractor: scaled down
-    default: 1.5,
+    A: 0.25,
+    C: 0.8,
+    CE: 0.8,
+    D: 33.0,
+    DE: 33.0,
+    T: 0.6,
+    default: 1.6,
   };
 
   // For models (other than tractor) we use static rotation offsets if needed.
   const modelRotationOffsets: { [key: string]: [number, number, number] } = {
     C: [0, Math.PI, 0],
+    CE: [0, Math.PI, 0],
   };
 
-  // For the tractor we want a static offset *separate* from the global spin.
-  // Adjust this offset so the tractor is oriented correctly.
   const tractorStaticOffset: [number, number, number] = [Math.PI / 2, Math.PI, 0];
 
   const calculateContinuousAngle = (current: number, target: number): number => {
@@ -203,7 +259,7 @@ const Viewer: React.FC<Props> = ({ group }) => {
           borderColor: "hsl(var(--border))",
         }}
       >
-        {group && group in models ? (
+        {(currentGroup || prevGroup) ? (
           <Suspense
             fallback={
               <p className="text-center text-[hsl(var(--muted-foreground))]">
@@ -212,45 +268,106 @@ const Viewer: React.FC<Props> = ({ group }) => {
             }
           >
             <Canvas
-              camera={{
-                position: [0, 50, 500],
-                fov: 35,
-              }}
-              style={{
-                background: "hsl(var(--background))",
-              }}
+              camera={{ position: [0, 50, 500], fov: 35 }}
+              style={{ background: "hsl(var(--background))" }}
             >
               <ambientLight intensity={theme === "dark" ? 0.25 : 0.5} />
-              <directionalLight intensity={theme === "dark" ? 0.6 : 0.8} position={[2, 2, 2]} />
-              <group
-                position={group in startingPositions ? startingPositions[group] : defaultPosition}
-                scale={group in modelScales ? modelScales[group] : modelScales.default}
-              >
-                {/* Apply global spin via an outer group */}
-                <group rotation={rotation}>
-                  {group === "T" ? (
-                    // For the tractor, apply the static offset in an inner group
-                    <group rotation={tractorStaticOffset}>
-                      <Model
-                        url={models[group]}
-                        rotation={[0, 0, 0]}
-                        currentColor={currentColor}
-                        targetColor={targetColor}
-                      />
-                    </group>
-                  ) : (
-                    // For other models, apply any static offset if needed
-                    <group rotation={group in modelRotationOffsets ? modelRotationOffsets[group] : [0, 0, 0]}>
-                      <Model
-                        url={models[group]}
-                        rotation={[0, 0, 0]}
-                        currentColor={currentColor}
-                        targetColor={targetColor}
-                      />
-                    </group>
-                  )}
+              <directionalLight
+                intensity={theme === "dark" ? 0.6 : 0.8}
+                position={[2, 2, 2]}
+              />
+
+              {/* Render the exiting (prev) model if any */}
+              {prevGroup && (
+                <group
+                  position={
+                    prevGroup in startingPositions
+                      ? startingPositions[prevGroup]
+                      : defaultPosition
+                  }
+                >
+                  <group rotation={rotation}>
+                    {prevGroup === "T" ? (
+                      <group rotation={tractorStaticOffset} key={prevGroup}>
+                        <Model
+                          url={models[prevGroup]}
+                          rotation={[0, 0, 0]}
+                          currentColor={currentColor}
+                          targetColor={targetColor}
+                          scale={modelScales[prevGroup] ?? modelScales.default}
+                          duration={transitionDuration}
+                          animateDirection="out"
+                        />
+                      </group>
+                    ) : (
+                      <group
+                        rotation={
+                          prevGroup in modelRotationOffsets
+                            ? modelRotationOffsets[prevGroup]
+                            : [0, 0, 0]
+                        }
+                        key={prevGroup}
+                      >
+                        <Model
+                          url={models[prevGroup]}
+                          rotation={[0, 0, 0]}
+                          currentColor={currentColor}
+                          targetColor={targetColor}
+                          scale={modelScales[prevGroup] ?? modelScales.default}
+                          duration={transitionDuration}
+                          animateDirection="out"
+                        />
+                      </group>
+                    )}
+                  </group>
                 </group>
-              </group>
+              )}
+
+              {/* Render the entering (current) model */}
+              {currentGroup && (
+                <group
+                  position={
+                    currentGroup in startingPositions
+                      ? startingPositions[currentGroup]
+                      : defaultPosition
+                  }
+                >
+                  <group rotation={rotation}>
+                    {currentGroup === "T" ? (
+                      <group rotation={tractorStaticOffset} key={currentGroup}>
+                        <Model
+                          url={models[currentGroup]}
+                          rotation={[0, 0, 0]}
+                          currentColor={currentColor}
+                          targetColor={targetColor}
+                          scale={modelScales[currentGroup] ?? modelScales.default}
+                          duration={transitionDuration}
+                          animateDirection="in"
+                        />
+                      </group>
+                    ) : (
+                      <group
+                        rotation={
+                          currentGroup in modelRotationOffsets
+                            ? modelRotationOffsets[currentGroup]
+                            : [0, 0, 0]
+                        }
+                        key={currentGroup}
+                      >
+                        <Model
+                          url={models[currentGroup]}
+                          rotation={[0, 0, 0]}
+                          currentColor={currentColor}
+                          targetColor={targetColor}
+                          scale={modelScales[currentGroup] ?? modelScales.default}
+                          duration={transitionDuration}
+                          animateDirection="in"
+                        />
+                      </group>
+                    )}
+                  </group>
+                </group>
+              )}
             </Canvas>
           </Suspense>
         ) : (
