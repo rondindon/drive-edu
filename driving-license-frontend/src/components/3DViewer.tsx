@@ -14,10 +14,10 @@ const models: { [key: string]: string } = {
   BE: "/models/car.glb",
   C: "/models/truck.glb",
   CE: "/models/truck.glb",
-  D: "/models/busss.glb",
-  DE: "/models/busss.glb",
+  D: "/models/bus.glb",
+  DE: "/models/bus.glb",
   A: "/models/bike.glb",
-  T: "/models/tractorr.glb",
+  T: "/models/tractor.glb",
 };
 
 const getShadeOfColor = (baseColor: THREE.Color): THREE.Color => {
