@@ -42,22 +42,22 @@ interface UserCache {
 
 const SkeletonRow: React.FC = () => (
   <tr className="border-b border-gray-200">
-    <td className="py-2 px-4">
+    <td className="py-2 px-2 sm:px-4">
       <Skeleton className="w-6 h-4" />
     </td>
-    <td className="py-2 px-4">
+    <td className="py-2 px-2 sm:px-4">
       <Skeleton className="w-40 h-4" />
     </td>
-    <td className="py-2 px-4">
+    <td className="py-2 px-2 sm:px-4">
       <Skeleton className="w-32 h-4" />
     </td>
-    <td className="py-2 px-4">
+    <td className="py-2 px-2 sm:px-4">
       <Skeleton className="w-24 h-4" />
     </td>
-    <td className="py-2 px-4">
+    <td className="py-2 px-2 sm:px-4">
       <Skeleton className="w-32 h-4" />
     </td>
-    <td className="py-2 px-4">
+    <td className="py-2 px-2 sm:px-4">
       <Skeleton className="w-24 h-4" />
     </td>
   </tr>
@@ -125,7 +125,6 @@ const AdminUsers: React.FC = () => {
             setLoading(false);
             return;
           } else {
-            // Cache is stale
             localStorage.removeItem(cacheKey);
           }
         } catch (e) {
@@ -134,7 +133,6 @@ const AdminUsers: React.FC = () => {
         }
       }
 
-      // If no valid cache, fetch from server
       try {
         const params = new URLSearchParams();
         params.set("limit", limit.toString());
@@ -170,7 +168,6 @@ const AdminUsers: React.FC = () => {
           setHasMore(true);
         }
 
-        // Store fetched data to cache
         const cacheData: UserCache = {
           users: append ? [...users, ...data] : data,
           offset: offsetVal,
@@ -190,14 +187,12 @@ const AdminUsers: React.FC = () => {
     [search, roleFilter, limit, token, users]
   );
 
-  // Fetch users on mount and when search or roleFilter changes
   useEffect(() => {
     setOffset(0);
     setHasMore(true);
     fetchUsers(0, false);
   }, [fetchUsers, search, roleFilter]);
 
-  // Update filteredUsers based on search
   useEffect(() => {
     const sortedUsers = [...users].sort((a, b) => a.id - b.id);
     setFilteredUsers(sortedUsers);
@@ -234,7 +229,6 @@ const AdminUsers: React.FC = () => {
         prev.map((u) => (u.id === updatedUser.id ? updatedUser : u))
       );
 
-      // Invalidate cache after update
       localStorage.removeItem(getCacheKey());
     } catch (err) {
       console.error(err);
@@ -269,7 +263,6 @@ const AdminUsers: React.FC = () => {
         prev.map((u) => (u.id === updatedUser.id ? updatedUser : u))
       );
 
-      // Invalidate cache after update
       localStorage.removeItem(getCacheKey());
     } catch (err) {
       console.error(err);
@@ -295,8 +288,6 @@ const AdminUsers: React.FC = () => {
       }
 
       setUsers((prev) => prev.filter((u) => u.id !== userId));
-
-      // Invalidate cache after deletion
       localStorage.removeItem(getCacheKey());
     } catch (err) {
       console.error(err);
@@ -304,7 +295,6 @@ const AdminUsers: React.FC = () => {
     }
   };
 
-  // Handle Refresh Button
   const handleRefresh = () => {
     const cacheKey = getCacheKey();
     localStorage.removeItem(cacheKey);
@@ -316,38 +306,34 @@ const AdminUsers: React.FC = () => {
   return (
     <div className="p-6 space-y-4">
       <h1 className="text-2xl font-bold text-[hsl(var(--foreground))]">Users</h1>
-      {/* Filters */}
-      <div className="flex items-center justify-between space-x-4 text-[hsl(var(--foreground))]">
-        <div className="flex space-x-4">
-        <Input
-          placeholder="Search by email or username..."
-          value={search}
-          onChange={(e) => {
-            setSearch(e.target.value);
-          }}
-          className="w-64 text-[hsl(var(--foreground))]"
-        />
-
-        <div className="flex items-center space-x-2">
-          <span>Role:</span>
-          <Select
-            value={roleFilter}
-            onValueChange={(val) => setRoleFilter(val)}
-          >
-            <SelectTrigger className="w-32">
-              <SelectValue placeholder="All" />
-            </SelectTrigger>
-            <SelectContent>
-              {roleOptions.map((r) => (
-                <SelectItem key={r} value={r}>
-                  {r}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+      {/* Responsive Filters */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between space-y-4 sm:space-y-0 sm:space-x-4 text-[hsl(var(--foreground))]">
+        <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-4">
+          <Input
+            placeholder="Search by email or username..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="w-full sm:w-64 text-[hsl(var(--foreground))]"
+          />
+          <div className="flex items-center space-x-2">
+            <span className="whitespace-nowrap">Role:</span>
+            <Select
+              value={roleFilter}
+              onValueChange={(val) => setRoleFilter(val)}
+            >
+              <SelectTrigger className="w-full sm:w-32">
+                <SelectValue placeholder="All" />
+              </SelectTrigger>
+              <SelectContent>
+                {roleOptions.map((r) => (
+                  <SelectItem key={r} value={r}>
+                    {r}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
         </div>
-        </div>
-
         {/* Refresh Button */}
         <Button
           onClick={handleRefresh}
@@ -357,118 +343,107 @@ const AdminUsers: React.FC = () => {
         </Button>
       </div>
 
-      {/* Users Table */}
+      {/* Users Table with responsive container */}
       <Card className="p-4">
-        <table className="w-full border-collapse text-left">
-          <thead>
-            <tr className="border-b border-main-green text-gray-800">
-              <th className="py-2 px-4 text-[hsl(var(--foreground))]">ID</th>
-              <th className="py-2 px-4 text-[hsl(var(--foreground))]">Email</th>
-              <th className="py-2 px-4 text-[hsl(var(--foreground))]">Username</th>
-              <th className="py-2 px-4 text-[hsl(var(--foreground))]">Role</th>
-              <th className="py-2 px-4 text-[hsl(var(--foreground))]">Created At</th>
-              <th className="py-2 px-4 text-[hsl(var(--foreground))]">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {loading && users.length === 0 ? (
-              renderSkeletonRows()
-            ) : (
-              <>
-                {filteredUsers.map((u) => (
-                  <tr
-                    key={u.id}
-                    className={`border-b border-gray-200 ${theme === 'light' ? "hover:bg-gray-100" : "hover:bg-green-300/50"} `}
-                  >
-                    <td className="py-2 px-4">{u.id}</td>
-                    <td className="py-2 px-4">{u.email}</td>
-                    <td className="py-2 px-4">
-                      {u.username || "No username"}
-                    </td>
-                    <td className="py-2 px-4">{u.role}</td>
-                    <td className="py-2 px-4">
-                      {new Date(u.createdAt).toLocaleString()}
-                    </td>
-                    <td className="py-2 px-4 text-right">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" className="h-8 w-8 p-0">
-                            <MoreVertical />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          {/* Update Role Options (excluding current role and 'All') */}
-                          {roleOptions
-                            .filter(
-                              (r) => r !== "All" && r !== u.role
-                            )
-                            .map((r) => (
-                              <DropdownMenuItem
-                                key={r}
-                                onClick={() =>
-                                  handleUpdateUserRole(u.id, r)
-                                }
-                              >
-                                Set role to {r}
-                              </DropdownMenuItem>
-                            ))}
-
-                          {/* Update Username */}
-                          <DropdownMenuItem
-                            onClick={() => {
-                              const newUsername = window.prompt(
-                                "Enter new username (leave empty to remove username):",
-                                u.username || ""
-                              );
-                              if (newUsername !== null) {
-                                const trimmed = newUsername.trim();
-                                handleUpdateUserUsername(
-                                  u.id,
-                                  trimmed === "" ? null : trimmed
+        <div className="overflow-x-auto">
+          <table className="min-w-full border-collapse text-left">
+            <thead>
+              <tr className="border-b border-main-green text-gray-800">
+                <th className="py-2 px-2 sm:px-4 text-[hsl(var(--foreground))]">ID</th>
+                <th className="py-2 px-2 sm:px-4 text-[hsl(var(--foreground))]">Email</th>
+                <th className="py-2 px-2 sm:px-4 text-[hsl(var(--foreground))]">Username</th>
+                <th className="py-2 px-2 sm:px-4 text-[hsl(var(--foreground))]">Role</th>
+                <th className="py-2 px-2 sm:px-4 text-[hsl(var(--foreground))]">Created At</th>
+                <th className="py-2 px-2 sm:px-4 text-[hsl(var(--foreground))]">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {loading && users.length === 0 ? (
+                renderSkeletonRows()
+              ) : (
+                <>
+                  {filteredUsers.map((u) => (
+                    <tr
+                      key={u.id}
+                      className={`border-b border-gray-200 ${
+                        theme === "light"
+                          ? "hover:bg-gray-100"
+                          : "hover:bg-green-300/50"
+                      }`}
+                    >
+                      <td className="py-2 px-2 sm:px-4">{u.id}</td>
+                      <td className="py-2 px-2 sm:px-4">{u.email}</td>
+                      <td className="py-2 px-2 sm:px-4">
+                        {u.username || "No username"}
+                      </td>
+                      <td className="py-2 px-2 sm:px-4">{u.role}</td>
+                      <td className="py-2 px-2 sm:px-4">
+                        {new Date(u.createdAt).toLocaleString()}
+                      </td>
+                      <td className="py-2 px-2 sm:px-4 text-right">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" className="h-8 w-8 p-0">
+                              <MoreVertical />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            {roleOptions
+                              .filter((r) => r !== "All" && r !== u.role)
+                              .map((r) => (
+                                <DropdownMenuItem
+                                  key={r}
+                                  onClick={() => handleUpdateUserRole(u.id, r)}
+                                >
+                                  Set role to {r}
+                                </DropdownMenuItem>
+                              ))}
+                            <DropdownMenuItem
+                              onClick={() => {
+                                const newUsername = window.prompt(
+                                  "Enter new username (leave empty to remove username):",
+                                  u.username || ""
                                 );
-                              }
-                            }}
-                          >
-                            Set Username
-                          </DropdownMenuItem>
-
-                          {/* Delete User */}
-                          <DropdownMenuItem
-                            onClick={() => handleDeleteUser(u.id)}
-                            className="text-red-500"
-                          >
-                            Delete
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </td>
-                  </tr>
-                ))}
-
-                {/* If no users found after filtering */}
-                {filteredUsers.length === 0 && !loading && (
-                  <tr>
-                    <td colSpan={6} className="text-center py-4">
-                      No users found.
-                    </td>
-                  </tr>
-                )}
-
-                {/* If loading more data, append skeleton rows */}
-                {loading && users.length > 0 && renderSkeletonRows()}
-              </>
-            )}
-          </tbody>
-        </table>
-
+                                if (newUsername !== null) {
+                                  const trimmed = newUsername.trim();
+                                  handleUpdateUserUsername(
+                                    u.id,
+                                    trimmed === "" ? null : trimmed
+                                  );
+                                }
+                              }}
+                            >
+                              Set Username
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              onClick={() => handleDeleteUser(u.id)}
+                              className="text-red-500"
+                            >
+                              Delete
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </td>
+                    </tr>
+                  ))}
+                  {filteredUsers.length === 0 && !loading && (
+                    <tr>
+                      <td colSpan={6} className="text-center py-4">
+                        No users found.
+                      </td>
+                    </tr>
+                  )}
+                  {loading && users.length > 0 && renderSkeletonRows()}
+                </>
+              )}
+            </tbody>
+          </table>
+        </div>
         {/* Load More Button */}
         {hasMore && filteredUsers.length > 0 && (
           <div className="mt-4 text-center">
             {loading && users.length > 0 ? (
-              <Button
-                disabled
-                className="bg-main-green text-main-darkBlue opacity-50 cursor-not-allowed"
-              >
+              <Button disabled className="bg-main-green text-main-darkBlue opacity-50 cursor-not-allowed">
                 Loading...
               </Button>
             ) : (

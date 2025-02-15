@@ -344,9 +344,11 @@ const AdminQuestions: React.FC = () => {
   return (
     <>
       {/* Header and Add/Refresh Buttons */}
-      <div className="flex justify-between items-center mb-4">
-        <h1 className="text-2xl font-bold text-[hsl(var(--foreground))]">Questions</h1>
-        <div className="flex space-x-2">
+      <div className="flex flex-col md:flex-row justify-between items-center mb-4">
+        <h1 className="text-2xl font-bold text-[hsl(var(--foreground))]">
+          Questions
+        </h1>
+        <div className="flex space-x-2 mt-2 md:mt-0">
           <Button
             onClick={handleRefresh}
             className="bg-main-green text-white hover:bg-main-green/90"
@@ -363,19 +365,22 @@ const AdminQuestions: React.FC = () => {
       </div>
 
       {/* Filters and Search Bar */}
-      <div className="flex items-center space-x-4 mb-4 justify-between">
-        <div className="flex text-[hsl(var(--foreground))] space-x-4">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between space-y-4 sm:space-y-0 mb-4">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-4 sm:space-y-0 sm:space-x-4">
           <Input
             placeholder="Search questions..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-1/3"
+            className="w-full sm:w-1/3"
           />
           {/* Category Filter */}
           <div className="flex items-center space-x-2">
-            <span>Category:</span>
-            <Select value={categoryFilter} onValueChange={(val) => setCategoryFilter(val)}>
-              <SelectTrigger className="w-100">
+            <span className="whitespace-nowrap">Category:</span>
+            <Select
+              value={categoryFilter}
+              onValueChange={(val) => setCategoryFilter(val)}
+            >
+              <SelectTrigger className="w-full sm:w-48">
                 <SelectValue placeholder="All" />
               </SelectTrigger>
               <SelectContent>
@@ -389,14 +394,14 @@ const AdminQuestions: React.FC = () => {
           </div>
           {/* Difficulty Filter */}
           <div className="flex items-center space-x-2">
-            <span>Difficulty:</span>
+            <span className="whitespace-nowrap">Difficulty:</span>
             <Select
               value={difficultyFilter}
               onValueChange={(val) =>
-                setDifficultyFilter(val as 'easy' | 'medium' | 'hard' | 'All')
+                setDifficultyFilter(val as "easy" | "medium" | "hard" | "All")
               }
             >
-              <SelectTrigger className="w-32">
+              <SelectTrigger className="w-full sm:w-32">
                 <SelectValue placeholder="All" />
               </SelectTrigger>
               <SelectContent>
@@ -411,92 +416,98 @@ const AdminQuestions: React.FC = () => {
         </div>
       </div>
 
-      {/* Reports Table */}
+      {/* Questions Table */}
       <Card className="p-4">
-        <table className="w-full border-collapse text-left">
-          <thead>
-            <tr className="border-b border-main-green text-gray-800">
-              <th className="py-2 px-4 text-[hsl(var(--foreground))]">ID</th>
-              <th className="py-2 px-4 text-[hsl(var(--foreground))]">Text</th>
-              <th className="py-2 px-4 text-[hsl(var(--foreground))]">Category</th>
-              <th className="py-2 px-4 text-[hsl(var(--foreground))]">Difficulty</th>
-              <th className="py-2 px-4 text-[hsl(var(--foreground))]">Stats</th>
-              <th className="py-2 px-4 text-[hsl(var(--foreground))]">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {loading && questions.length === 0 ? (
-              renderSkeletonRows()
-            ) : (
-              <>
-                {filteredQuestions.map((q) => (
-                  <tr
-                    key={q.id}
-                    className={`border-b border-gray-200 ${theme === "light" ? "hover:bg-gray-100" : "hover:bg-green-300/50"} min-h-[3rem]`}
-                  >
-                    <td className="py-2 px-4">{q.id}</td>
-                    <td className="py-2 px-4">
-                      <div className="flex items-center">
-                        {q.imageUrl && (
-                          <img
-                            src={q.imageUrl}
-                            alt="Question"
-                            className="w-16 h-auto mr-2 rounded"
-                          />
+        <div className="overflow-x-auto">
+          <table className="w-full border-collapse text-left">
+            <thead>
+              <tr className="border-b border-main-green text-gray-800">
+                <th className="py-2 px-4 text-[hsl(var(--foreground))]">ID</th>
+                <th className="py-2 px-4 text-[hsl(var(--foreground))]">Text</th>
+                <th className="py-2 px-4 text-[hsl(var(--foreground))]">Category</th>
+                <th className="py-2 px-4 text-[hsl(var(--foreground))]">Difficulty</th>
+                <th className="py-2 px-4 text-[hsl(var(--foreground))]">Stats</th>
+                <th className="py-2 px-4 text-[hsl(var(--foreground))]">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {loading && questions.length === 0 ? (
+                renderSkeletonRows()
+              ) : (
+                <>
+                  {filteredQuestions.map((q) => (
+                    <tr
+                      key={q.id}
+                      className={`border-b border-gray-200 ${
+                        theme === "light"
+                          ? "hover:bg-gray-100"
+                          : "hover:bg-green-300/50"
+                      } min-h-[3rem]`}
+                    >
+                      <td className="py-2 px-4">{q.id}</td>
+                      <td className="py-2 px-4">
+                        <div className="flex items-center">
+                          {q.imageUrl && (
+                            <img
+                              src={q.imageUrl}
+                              alt="Question"
+                              className="w-16 h-auto mr-2 rounded"
+                            />
+                          )}
+                          <span>{q.text}</span>
+                        </div>
+                      </td>
+                      <td className="py-2 px-4 w-1/5">{q.category}</td>
+                      <td className="py-2 px-4 capitalize">{q.difficulty}</td>
+                      <td className="py-2 px-4">
+                        {q.id !== undefined && questionStats[q.id] ? (() => {
+                          const stat = questionStats[q.id];
+                          const correctAttempts = Math.round(stat.totalAnswers * (stat.accuracy / 100));
+                          const roundedAccuracy = Math.round(stat.accuracy);
+                          return (
+                            <span>
+                              {correctAttempts}/{stat.totalAnswers} {roundedAccuracy}%
+                            </span>
+                          );
+                        })() : (
+                          "No data"
                         )}
-                        <span>{q.text}</span>
-                      </div>
-                    </td>
-                    <td className="py-2 px-4 w-1/5">{q.category}</td>
-                    <td className="py-2 px-4 capitalize">{q.difficulty}</td>
-                    <td className="py-2 px-4">
-                      {q.id !== undefined && questionStats[q.id] ? (() => {
-                        const stat = questionStats[q.id];
-                        const correctAttempts = Math.round(stat.totalAnswers * (stat.accuracy / 100));
-                        const roundedAccuracy = Math.round(stat.accuracy);
-                        return (
-                          <span>
-                            {correctAttempts}/{stat.totalAnswers} {roundedAccuracy}% 
-                          </span>
-                        );
-                      })() : (
-                        "No data"
-                      )}
-                    </td>
-                    <td className="py-2 px-4 flex justify-center items-center space-x-2 h-full">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" className="h-8 w-8 p-0">
-                            <MoreVertical />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem onClick={() => q.id && handleEdit(q)}>
-                            Edit
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            onClick={() => q.id && handleDelete(q.id)}
-                            className="text-red-500"
-                          >
-                            Delete
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </td>
-                  </tr>
-                ))}
-                {filteredQuestions.length === 0 && !loading && (
-                  <tr>
-                    <td colSpan={6} className="text-center py-4">
-                      No questions found.
-                    </td>
-                  </tr>
-                )}
-                {loading && questions.length > 0 && renderSkeletonRows()}
-              </>
-            )}
-          </tbody>
-        </table>
+                      </td>
+                      <td className="py-2 px-4 flex justify-center items-center space-x-2">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" className="h-8 w-8 p-0">
+                              <MoreVertical />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={() => q.id && handleEdit(q)}>
+                              Edit
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              onClick={() => q.id && handleDelete(q.id)}
+                              className="text-red-500"
+                            >
+                              Delete
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </td>
+                    </tr>
+                  ))}
+                  {filteredQuestions.length === 0 && !loading && (
+                    <tr>
+                      <td colSpan={6} className="text-center py-4">
+                        No questions found.
+                      </td>
+                    </tr>
+                  )}
+                  {loading && questions.length > 0 && renderSkeletonRows()}
+                </>
+              )}
+            </tbody>
+          </table>
+        </div>
       </Card>
 
       {/* Add/Edit Question Dialog */}

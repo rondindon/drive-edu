@@ -158,7 +158,7 @@ const LandingPage: React.FC = () => {
           Driving License Test
         </motion.h1>
 
-        <Separator className={`w-1/2 animate-fadeIn ${theme === 'dark' ? "bg-blue-200" : "bg-main-darkBlue"}`}/>
+        <Separator className={`w-full sm:w-1/2 animate-fadeIn ${theme === 'dark' ? "bg-blue-200" : "bg-main-darkBlue"}`}/>
 
         <motion.p
           className="text-lg text-[hsl(var(--card-foreground))] transition-opacity duration-500 ease-in-out"

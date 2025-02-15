@@ -240,17 +240,19 @@ const AdminTests: React.FC = () => {
   return (
     <>
       {/* Header and Add/Refresh Button */}
-      <div className="flex justify-between items-center mb-4">
-        <h1 className="text-2xl font-bold text-[hsl(var(--foreground))]">User Tests</h1>
+      <div className="flex flex-col md:flex-row justify-between items-center mb-4">
+        <h1 className="text-2xl font-bold text-[hsl(var(--foreground))]">
+          User Tests
+        </h1>
       </div>
 
       {/* Filters and Search Bar */}
-      <div className="flex items-center justify-between space-x-4 mb-4">
+      <div className="flex flex-col md:flex-row items-start md:items-center justify-between space-y-4 md:space-y-0 md:space-x-4 mb-4">
         <Input
           placeholder="Search by username, email, or group..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="w-1/3"
+          className="w-full md:w-1/3"
         />
         <div className="flex space-x-2">
           {/* Refresh Button */}
@@ -271,84 +273,94 @@ const AdminTests: React.FC = () => {
 
       {/* Tests Table */}
       <Card className="p-4">
-        <table className="w-full border-collapse text-left">
-          <thead>
-            <tr className="border-b border-main-green text-gray-800">
-              <th className="py-2 px-4 text-[hsl(var(--foreground))]">ID</th>
-              <th className="py-2 px-4 text-[hsl(var(--foreground))]">User</th> {/* New Username Column */}
-              <th className="py-2 px-4 text-[hsl(var(--foreground))]">Email</th> {/* Renamed User to Email */}
-              <th className="py-2 px-4 text-[hsl(var(--foreground))]">Group</th>
-              <th className="py-2 px-4 text-[hsl(var(--foreground))]">Score</th>
-              <th className="py-2 px-4 text-[hsl(var(--foreground))]">Time Taken</th> {/* Reformatted Time */}
-              <th className="py-2 px-4 text-[hsl(var(--foreground))]">Passed</th>
-              <th className="py-2 px-4 text-[hsl(var(--foreground))]">Created At</th>
-              <th className="py-2 px-4 text-[hsl(var(--foreground))]">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {/* If loading and no tests yet, show skeleton rows */}
-            {loading && tests.length === 0 ? (
-              renderSkeletonRows()
-            ) : (
-              <>
-                {filteredTests.map((t) => (
-                  <tr
-                    key={t.id}
-                    className={`border-b border-gray-200 ${theme === 'light' ? "hover:bg-gray-100" : "hover:bg-green-300/50"} `}
-                  >
-                    <td className="py-2 px-4">{t.id}</td>
-                    <td className="py-2 px-4">
-                      <span>{t.user.username}</span>
-                    </td>
-                    <td className="py-2 px-4">
-                      <span>{t.user.email}</span>
-                    </td>
-                    <td className="py-2 px-4">{t.group}</td>
-                    <td className="py-2 px-4">{t.score}</td>
-                    <td className="py-2 px-4">
-                      {/* Convert timeTaken from seconds to "MM:SS" format */}
-                      {Math.floor(t.timeTaken / 60)}m {t.timeTaken % 60}s
-                    </td>
-                    <td className="py-2 px-4">{t.isPassed ? "Yes" : "No"}</td>
-                    <td className="py-2 px-4">{new Date(t.createdAt).toLocaleString()}</td>
-                    <td className="py-2 px-4 text-right">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" className="h-8 w-8 p-0">
-                            <MoreVertical />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem onClick={() => handleView(t)}>
-                            View
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            onClick={() => handleDelete(t.id)}
-                            className="text-red-500"
-                          >
-                            Delete
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </td>
-                  </tr>
-                ))}
+        <div className="overflow-x-auto">
+          <table className="w-full border-collapse text-left">
+            <thead>
+              <tr className="border-b border-main-green text-gray-800">
+                <th className="py-2 px-4 text-[hsl(var(--foreground))]">ID</th>
+                <th className="py-2 px-4 text-[hsl(var(--foreground))]">User</th> {/* New Username Column */}
+                <th className="py-2 px-4 text-[hsl(var(--foreground))]">Email</th> {/* Renamed User to Email */}
+                <th className="py-2 px-4 text-[hsl(var(--foreground))]">Group</th>
+                <th className="py-2 px-4 text-[hsl(var(--foreground))]">Score</th>
+                <th className="py-2 px-4 text-[hsl(var(--foreground))]">Time Taken</th> {/* Reformatted Time */}
+                <th className="py-2 px-4 text-[hsl(var(--foreground))]">Passed</th>
+                <th className="py-2 px-4 text-[hsl(var(--foreground))]">Created At</th>
+                <th className="py-2 px-4 text-[hsl(var(--foreground))]">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {/* If loading and no tests yet, show skeleton rows */}
+              {loading && tests.length === 0 ? (
+                renderSkeletonRows()
+              ) : (
+                <>
+                  {filteredTests.map((t) => (
+                    <tr
+                      key={t.id}
+                      className={`border-b border-gray-200 ${
+                        theme === "light"
+                          ? "hover:bg-gray-100"
+                          : "hover:bg-green-300/50"
+                      }`}
+                    >
+                      <td className="py-2 px-4">{t.id}</td>
+                      <td className="py-2 px-4">
+                        <span>{t.user.username}</span>
+                      </td>
+                      <td className="py-2 px-4">
+                        <span>{t.user.email}</span>
+                      </td>
+                      <td className="py-2 px-4">{t.group}</td>
+                      <td className="py-2 px-4">{t.score}</td>
+                      <td className="py-2 px-4">
+                        {/* Convert timeTaken from seconds to "MM:SS" format */}
+                        {Math.floor(t.timeTaken / 60)}m {t.timeTaken % 60}s
+                      </td>
+                      <td className="py-2 px-4">
+                        {t.isPassed ? "Yes" : "No"}
+                      </td>
+                      <td className="py-2 px-4">
+                        {new Date(t.createdAt).toLocaleString()}
+                      </td>
+                      <td className="py-2 px-4 text-right">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" className="h-8 w-8 p-0">
+                              <MoreVertical />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={() => handleView(t)}>
+                              View
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              onClick={() => handleDelete(t.id)}
+                              className="text-red-500"
+                            >
+                              Delete
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </td>
+                    </tr>
+                  ))}
 
-                {/* If no tests found after filtering */}
-                {filteredTests.length === 0 && !loading && (
-                  <tr>
-                    <td colSpan={9} className="text-center py-4">
-                      No tests found.
-                    </td>
-                  </tr>
-                )}
+                  {/* If no tests found after filtering */}
+                  {filteredTests.length === 0 && !loading && (
+                    <tr>
+                      <td colSpan={9} className="text-center py-4">
+                        No tests found.
+                      </td>
+                    </tr>
+                  )}
 
-                {/* If loading more data, append skeleton rows */}
-                {loading && tests.length > 0 && renderSkeletonRows()}
-              </>
-            )}
-          </tbody>
-        </table>
+                  {/* If loading more data, append skeleton rows */}
+                  {loading && tests.length > 0 && renderSkeletonRows()}
+                </>
+              )}
+            </tbody>
+          </table>
+        </div>
 
         {/* Load More Button */}
         {hasMore && (

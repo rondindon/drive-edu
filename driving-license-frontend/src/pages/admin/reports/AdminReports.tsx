@@ -1,5 +1,3 @@
-// src/pages/admin/reports/AdminReports.tsx
-
 import React, { useState, useEffect, useCallback, useContext } from "react";
 import { Button } from "src/components/ui/button";
 import { Input } from "src/components/ui/input";
@@ -59,7 +57,6 @@ const SkeletonRow: React.FC = () => (
 const renderSkeletonRows = (count: number = 10) =>
   Array.from({ length: count }).map((_, index) => <SkeletonRow key={index} />);
 
-// --- Admin Reports Component ---
 const AdminReports: React.FC = () => {
   const { role } = useAuth();
   const navigate = useNavigate();
@@ -72,7 +69,7 @@ const AdminReports: React.FC = () => {
   }, [role, navigate]);
 
   // 2) State management
-  const [reports, setReports] = useState<Report[]>([]); // must be an array
+  const [reports, setReports] = useState<Report[]>([]);
   const [filteredReports, setFilteredReports] = useState<Report[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -86,7 +83,7 @@ const AdminReports: React.FC = () => {
   // Local cache key
   const cacheKey = "adminReportsCache";
 
-  // === 3) Fetch Reports with caching ===
+  // 3) Fetch Reports with caching
   const fetchReports = useCallback(async () => {
     setLoading(true);
     setError(null);
@@ -118,7 +115,6 @@ const AdminReports: React.FC = () => {
 
     // If no valid cache, fetch from server
     try {
-      // Here we call GET /api/admin/report
       const response = await fetch("https://drive-edu.onrender.com/api/admin/report", {
         headers: {
           "Content-Type": "application/json",
@@ -130,24 +126,18 @@ const AdminReports: React.FC = () => {
         throw new Error("Failed to fetch reports");
       }
 
-      // Your server returns { reports: Report[] }, so we do:
       const data = await response.json();
-      // data = { reports: [ { id, user, question, ... }, ... ] }
-
       if (!data || !Array.isArray(data.reports)) {
         throw new Error("Invalid response shape. Expected { reports: [...] }");
       }
 
-      // We only want the array inside data.reports
-      const fetchedReports = data.reports; // this is an array
-
+      const fetchedReports = data.reports;
       fetchedReports.sort((a: any, b: any) => {
         return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
       });
 
       setReports(fetchedReports);
 
-      // Save to cache
       const cacheData = {
         reports: fetchedReports,
         timestamp: now,
@@ -176,16 +166,14 @@ const AdminReports: React.FC = () => {
     fetchReports();
   }, [fetchReports]);
 
-  // === 4) Filtering logic ===
+  // 4) Filtering logic
   useEffect(() => {
     let temp = [...reports];
 
-    // Filter by status
     if (statusFilter !== "All") {
       temp = temp.filter((report) => report.status === statusFilter);
     }
 
-    // Search term
     if (searchTerm.trim() !== "") {
       const search = searchTerm.toLowerCase();
       temp = temp.filter(
@@ -200,8 +188,7 @@ const AdminReports: React.FC = () => {
     setFilteredReports(temp);
   }, [reports, statusFilter, searchTerm]);
 
-  // === 5) Handlers for Approve, Resolve, Delete ===
-
+  // 5) Handlers for Approve, Resolve, Delete
   const handleApprove = async (reportId: number) => {
     try {
       const response = await fetch(
@@ -218,14 +205,12 @@ const AdminReports: React.FC = () => {
         throw new Error("Failed to mark report as reviewed");
       }
 
-      // Update local state
       setReports((prev) =>
         prev.map((report) =>
           report.id === reportId ? { ...report, status: "Reviewed" } : report
         )
       );
 
-      // Invalidate cache
       localStorage.removeItem(cacheKey);
     } catch (err) {
       console.error(err);
@@ -249,14 +234,12 @@ const AdminReports: React.FC = () => {
         throw new Error("Failed to resolve report");
       }
 
-      // Update local state
       setReports((prev) =>
         prev.map((report) =>
           report.id === reportId ? { ...report, status: "Resolved" } : report
         )
       );
 
-      // Invalidate cache
       localStorage.removeItem(cacheKey);
     } catch (err) {
       console.error(err);
@@ -292,7 +275,7 @@ const AdminReports: React.FC = () => {
     }
   };
 
-  // === 7) Refresh button
+  // 7) Refresh button
   const handleRefresh = () => {
     localStorage.removeItem(cacheKey);
     fetchReports();
@@ -300,28 +283,35 @@ const AdminReports: React.FC = () => {
 
   return (
     <>
-      {/* Header and Action Buttons */}
-      <div className="flex justify-between items-center mb-4">
+      {/* Header */}
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4">
         <h1 className="text-2xl font-bold text-[hsl(var(--foreground))]">Reports</h1>
+        <div className="mt-4 md:mt-0 flex space-x-2">
+          <Button
+            onClick={handleRefresh}
+            className="bg-main-green text-white hover:bg-main-green/90 transition-colors duration-200 shadow-sm w-full md:w-24"
+          >
+            Refresh
+          </Button>
+        </div>
       </div>
-      <div className="flex justify-between">
-        {/* Filters and Search */}
-        <div className="flex items-center space-x-4 mb-4 text-[hsl(var(--foreground))]">
+
+      {/* Filters and Search */}
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 space-y-4 md:space-y-0">
+        <div className="flex flex-col md:flex-row items-start md:items-center space-y-4 md:space-x-4 text-[hsl(var(--foreground))] w-full">
           <Input
             placeholder="Search by user, report ID, or question ID..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-72"
+            className="w-full md:w-72"
           />
-
-          {/* Status Filter */}
           <div className="flex items-center space-x-2">
             <span>Status:</span>
             <Select
               value={statusFilter}
               onValueChange={(val) => setStatusFilter(val)}
             >
-              <SelectTrigger className="w-32">
+              <SelectTrigger className="w-full md:w-32">
                 <SelectValue placeholder="All" />
               </SelectTrigger>
               <SelectContent>
@@ -335,14 +325,6 @@ const AdminReports: React.FC = () => {
             </Select>
           </div>
         </div>
-        <div className="flex space-x-2">
-          <Button
-            onClick={handleRefresh}
-            className="bg-main-green text-white hover:bg-main-green/90 transition-colors duration-200 hover:text-white w-24 shadow-sm"
-          >
-            Refresh
-          </Button>
-        </div>
       </div>
 
       {/* Error Handling */}
@@ -354,144 +336,139 @@ const AdminReports: React.FC = () => {
 
       {/* Reports Table */}
       <Card className="p-4">
-        <table className="w-full border-collapse text-left">
-          <thead>
-            <tr className="border-b border-main-green text-gray-800">
-              <th className="py-2 px-4 text-[hsl(var(--foreground))]">ID</th>
-              <th className="py-2 px-4 text-[hsl(var(--foreground))]">User</th>
-              <th className="py-2 px-4 text-[hsl(var(--foreground))]">Question</th>
-              <th className="py-2 px-4 text-[hsl(var(--foreground))]">Description</th>
-              <th className="py-2 px-4 text-[hsl(var(--foreground))]">Date Submitted</th>
-              <th className="py-2 px-4 text-[hsl(var(--foreground))]">Status</th>
-              <th className="py-2 px-4 text-[hsl(var(--foreground))]">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {/* Loading State */}
-            {loading && reports.length === 0 ? (
-              renderSkeletonRows()
-            ) : (
-              <>
-                {/* Mapped Rows */}
-                {filteredReports.map((report) => (
-                  <tr
-                    key={report.id}
-                    className={`border-b border-gray-200 ${
-                      theme === "light" ? "hover:bg-gray-100" : "hover:bg-green-300/50"
-                    }`}
-                  >
-                    <td className="py-2 px-4">{report.id}</td>
-                    <td className="py-2 px-4">
-                      {report.user?.username} ({report.user?.email})
-                    </td>
-                    <td className="py-2 px-4">
-                      <div className="flex items-center space-x-4">
-                        <span className="w-40 text-gray-700 dark:text-gray-300">
-                          {report.question?.text.slice(0, 30)}...
+        <div className="overflow-x-auto">
+          <table className="w-full border-collapse text-left">
+            <thead>
+              <tr className="border-b border-main-green text-gray-800">
+                <th className="py-2 px-4 text-[hsl(var(--foreground))]">ID</th>
+                <th className="py-2 px-4 text-[hsl(var(--foreground))]">User</th>
+                <th className="py-2 px-4 text-[hsl(var(--foreground))]">Question</th>
+                <th className="py-2 px-4 text-[hsl(var(--foreground))]">Description</th>
+                <th className="py-2 px-4 text-[hsl(var(--foreground))]">Date Submitted</th>
+                <th className="py-2 px-4 text-[hsl(var(--foreground))]">Status</th>
+                <th className="py-2 px-4 text-[hsl(var(--foreground))]">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {loading && reports.length === 0 ? (
+                renderSkeletonRows()
+              ) : (
+                <>
+                  {filteredReports.map((report) => (
+                    <tr
+                      key={report.id}
+                      className={`border-b border-gray-200 ${
+                        theme === "light" ? "hover:bg-gray-100" : "hover:bg-green-300/50"
+                      }`}
+                    >
+                      <td className="py-2 px-4">{report.id}</td>
+                      <td className="py-2 px-4">
+                        {report.user?.username} ({report.user?.email})
+                      </td>
+                      <td className="py-2 px-4">
+                        <div className="flex items-center space-x-4">
+                          <span className="w-40 text-gray-700 dark:text-gray-300">
+                            {report.question?.text.slice(0, 30)}...
+                          </span>
+                          <a
+                            href={`/question/${report.question?.id}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-main-green hover:text-main-green/80"
+                            aria-label="View Question"
+                          >
+                            <ExternalLink className="w-4 h-4" />
+                          </a>
+                        </div>
+                      </td>
+                      <td className="py-2 px-4">
+                        {report.description?.slice(0, 100)}...
+                      </td>
+                      <td className="py-2 px-4">
+                        {new Date(report.createdAt).toLocaleString()}
+                      </td>
+                      <td className="py-2 px-4">
+                        <span
+                          className={`px-2 py-1 block text-center w-24 rounded ${
+                            report.status === "Resolved"
+                              ? "bg-green-200 text-green-800"
+                              : report.status === "Reviewed"
+                              ? "bg-yellow-200 text-yellow-800"
+                              : "bg-red-200 text-red-800"
+                          }`}
+                        >
+                          {report.status}
                         </span>
-                        <a
-                          href={`/question/${report.question?.id}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-main-green hover:text-main-green/80"
-                          aria-label="View Question"
-                        >
-                          <ExternalLink className="w-4 h-4" />
-                        </a>
-                      </div>
-                    </td>
-                    <td className="py-2 px-4">
-                      {report.description?.slice(0, 100)}...
-                    </td>
-                    <td className="py-2 px-4">
-                      {new Date(report.createdAt).toLocaleString()}
-                    </td>
-                    <td className="py-2 px-4">
-                      <span
-                        className={`px-2 py-1 block text-center w-24 rounded ${
-                          report.status === "Resolved"
-                            ? "bg-green-200 text-green-800"
-                            : report.status === "Reviewed"
-                            ? "bg-yellow-200 text-yellow-800"
-                            : "bg-red-200 text-red-800"
-                        }`}
-                      >
-                        {report.status}
-                      </span>
-                    </td>
-                    <td className="py-4 px-4 flex items-center space-x-2">
-                      {/* Centered Buttons */}
-                      {report.status === "Pending" && (
-                        <>
-                          <Button
-                            variant="outline"
-                            className="bg-yellow-200 hover:bg-yellow-400 text-black transition-colors duration-200 w-24 shadow-sm"
-                            onClick={() => handleApprove(report.id)}
-                          >
-                            Review
-                          </Button>
-                          <Button
-                            variant="outline"
-                            className="bg-green-200 hover:bg-green-400 text-black transition-colors duration-200 w-24 shadow-sm"
-                            onClick={() => handleResolve(report.id)}
-                          >
-                            Resolve
-                          </Button>
+                      </td>
+                      <td className="py-4 px-4 flex flex-col md:flex-row items-center space-y-2 md:space-y-0 md:space-x-2">
+                        {report.status === "Pending" && (
+                          <>
+                            <Button
+                              variant="outline"
+                              className="bg-yellow-200 hover:bg-yellow-400 text-black transition-colors duration-200 w-full md:w-24 shadow-sm"
+                              onClick={() => handleApprove(report.id)}
+                            >
+                              Review
+                            </Button>
+                            <Button
+                              variant="outline"
+                              className="bg-green-200 hover:bg-green-400 text-black transition-colors duration-200 w-full md:w-24 shadow-sm"
+                              onClick={() => handleResolve(report.id)}
+                            >
+                              Resolve
+                            </Button>
+                            <Button
+                              variant="destructive"
+                              onClick={() => handleDelete(report.id)}
+                              className="bg-red-200 hover:bg-red-400 text-black transition-colors duration-200 w-full md:w-24 shadow-sm"
+                            >
+                              Delete
+                            </Button>
+                          </>
+                        )}
+                        {report.status === "Reviewed" && (
+                          <>
+                            <Button
+                              variant="outline"
+                              className="bg-green-200 hover:bg-green-400 text-black transition-colors duration-200 w-full md:w-24 shadow-sm"
+                              onClick={() => handleResolve(report.id)}
+                            >
+                              Resolve
+                            </Button>
+                            <Button
+                              variant="destructive"
+                              onClick={() => handleDelete(report.id)}
+                              className="bg-red-200 hover:bg-red-400 text-black transition-colors duration-200 w-full md:w-24 shadow-sm"
+                            >
+                              Delete
+                            </Button>
+                          </>
+                        )}
+                        {report.status === "Resolved" && (
                           <Button
                             variant="destructive"
                             onClick={() => handleDelete(report.id)}
-                            className="bg-red-200 hover:bg-red-400 text-black transition-colors duration-200 w-24 shadow-sm"
+                            className="bg-red-200 hover:bg-red-400 text-black transition-colors duration-200 w-full md:w-24 shadow-sm"
                           >
                             Delete
                           </Button>
-                        </>
-                      )}
-                      {report.status === "Reviewed" && (
-                        <>
-                          <Button
-                            variant="outline"
-                            className="bg-green-200 hover:bg-green-400 text-black transition-colors duration-200 w-24 shadow-sm"
-                            onClick={() => handleResolve(report.id)}
-                          >
-                            Resolve
-                          </Button>
-                          <Button
-                            variant="destructive"
-                            onClick={() => handleDelete(report.id)}
-                            className="bg-red-200 hover:bg-red-400 text-black transition-colors duration-200 w-24 shadow-sm"
-                          >
-                            Delete
-                          </Button>
-                        </>
-                      )}
-                      {report.status === "Resolved" && (
-                        <Button
-                          variant="destructive"
-                          onClick={() => handleDelete(report.id)}
-                          className="bg-red-200 hover:bg-red-400 text-black transition-colors duration-200 w-24 shadow-sm"
-                        >
-                          Delete
-                        </Button>
-                      )}
-                    </td>
-                  </tr>
-                ))}
-
-                {/* No Reports Found */}
-                {filteredReports.length === 0 && !loading && (
-                  <tr>
-                    <td colSpan={7} className="text-center py-4">
-                      No reports found.
-                    </td>
-                  </tr>
-                )}
-
-                {/* Additional Loading */}
-                {loading && reports.length > 0 && renderSkeletonRows()}
-              </>
-            )}
-          </tbody>
-        </table>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                  {filteredReports.length === 0 && !loading && (
+                    <tr>
+                      <td colSpan={7} className="text-center py-4">
+                        No reports found.
+                      </td>
+                    </tr>
+                  )}
+                  {loading && reports.length > 0 && renderSkeletonRows()}
+                </>
+              )}
+            </tbody>
+          </table>
+        </div>
       </Card>
     </>
   );

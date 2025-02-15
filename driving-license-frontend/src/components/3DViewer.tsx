@@ -158,11 +158,8 @@ const Viewer: React.FC<Props> = ({ group }) => {
         onMouseMove={handleMouseMove}
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
-        // The classes below add a smooth hover scale effect
-        className="rounded-md border shadow-lg overflow-hidden transform transition-transform duration-300 hover:scale-105 hover:cursor-move"
+        className="rounded-md border shadow-lg overflow-hidden transform transition-transform duration-300 hover:scale-105 hover:cursor-move w-full sm:w-2/3 h-64 sm:h-[35rem]"
         style={{
-          width: "66%",
-          height: "35rem",
           background: "hsl(var(--card-bg))",
           borderColor: "hsl(var(--border))",
         }}
