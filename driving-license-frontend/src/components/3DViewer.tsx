@@ -12,6 +12,9 @@ interface Props {
 const models: { [key: string]: string } = {
   B: "/models/car.glb",
   C: "/models/truck.glb",
+  D: "/models/bus.glb",
+  A: "/models/motorbike.glb",
+  T: "/models/tractor.glb",
 };
 
 const getShadeOfColor = (baseColor: THREE.Color): THREE.Color => {
