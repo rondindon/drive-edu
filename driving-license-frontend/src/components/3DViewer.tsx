@@ -12,9 +12,9 @@ interface Props {
 const models: { [key: string]: string } = {
   B: "/models/car.glb",
   C: "/models/truck.glb",
-  D: "/models/bus.glb",
+  D: "/models/buss.glb",
   A: "/models/bike.glb",
-  T: "/models/tractor.glb",
+  T: "/models/tractorr.glb",
 };
 
 const getShadeOfColor = (baseColor: THREE.Color): THREE.Color => {
@@ -84,10 +84,11 @@ const Viewer: React.FC<Props> = ({ group }) => {
 
   // Custom starting positions for models.
   const startingPositions: { [key: string]: [number, number, number] } = {
-    B: [0, -50, -200],  // Car
+    B: [0, -70, -200],  // Car
     A: [0, -20, -200],  // Bike
     C: [0, -90, -300],  // Truck
-    D: [0, -40, -150],  // Bus: adjusted to be closer
+    D: [0, -40, -150],  // Bus
+    T: [0, -120, -250],  // Tractor: moved further back
   };
   const defaultPosition: [number, number, number] = [0, -60, 0];
 
@@ -95,25 +96,19 @@ const Viewer: React.FC<Props> = ({ group }) => {
   const modelScales: { [key: string]: number } = {
     A: 0.25, // Bike
     C: 0.8,  // Truck
-    D: 50.0,  // Bus: increased scale to appear larger
+    D: 50.0, // Bus
+    T: 0.6,  // Tractor: scaled down
     default: 1.5,
   };
 
-  // Define model-specific rotation offsets.
-  // For example, rotate the truck (group C) by 180° on the Y-axis.
+  // For models (other than tractor) we use static rotation offsets if needed.
   const modelRotationOffsets: { [key: string]: [number, number, number] } = {
     C: [0, Math.PI, 0],
   };
 
-  // Calculate the final rotation by adding any model-specific offset.
-  const finalRotation: [number, number, number] =
-    group && group in modelRotationOffsets
-      ? [
-          rotation[0] + modelRotationOffsets[group][0],
-          rotation[1] + modelRotationOffsets[group][1],
-          rotation[2] + modelRotationOffsets[group][2],
-        ]
-      : rotation;
+  // For the tractor we want a static offset *separate* from the global spin.
+  // Adjust this offset so the tractor is oriented correctly.
+  const tractorStaticOffset: [number, number, number] = [Math.PI / 2, Math.PI, 0];
 
   const calculateContinuousAngle = (current: number, target: number): number => {
     while (target - current > Math.PI) target -= Math.PI * 2;
@@ -153,9 +148,9 @@ const Viewer: React.FC<Props> = ({ group }) => {
     setTargetRotation([rotation[0], rotation[1], 0]);
   };
 
+  // Global spin: update rotation state based on targetRotation
   useEffect(() => {
     let animationFrame: number;
-
     const smoothTransition = () => {
       setRotation((prevRotation) => {
         const step = 0.1;
@@ -177,15 +172,12 @@ const Viewer: React.FC<Props> = ({ group }) => {
         return newRotation;
       });
     };
-
     animationFrame = requestAnimationFrame(smoothTransition);
-
     return () => cancelAnimationFrame(animationFrame);
   }, [targetRotation]);
 
   useEffect(() => {
     let spinInterval: number;
-
     if (!isMouseOver && group) {
       spinInterval = window.setInterval(() => {
         setTargetRotation((prevRotation) => [
@@ -195,7 +187,6 @@ const Viewer: React.FC<Props> = ({ group }) => {
         ]);
       }, 16);
     }
-
     return () => clearInterval(spinInterval);
   }, [isMouseOver, group]);
 
@@ -230,20 +221,35 @@ const Viewer: React.FC<Props> = ({ group }) => {
               }}
             >
               <ambientLight intensity={theme === "dark" ? 0.25 : 0.5} />
-              <directionalLight
-                intensity={theme === "dark" ? 0.6 : 0.8}
-                position={[2, 2, 2]}
-              />
+              <directionalLight intensity={theme === "dark" ? 0.6 : 0.8} position={[2, 2, 2]} />
               <group
                 position={group in startingPositions ? startingPositions[group] : defaultPosition}
                 scale={group in modelScales ? modelScales[group] : modelScales.default}
               >
-                <Model
-                  url={models[group]}
-                  rotation={finalRotation}
-                  currentColor={currentColor}
-                  targetColor={targetColor}
-                />
+                {/* Apply global spin via an outer group */}
+                <group rotation={rotation}>
+                  {group === "T" ? (
+                    // For the tractor, apply the static offset in an inner group
+                    <group rotation={tractorStaticOffset}>
+                      <Model
+                        url={models[group]}
+                        rotation={[0, 0, 0]}
+                        currentColor={currentColor}
+                        targetColor={targetColor}
+                      />
+                    </group>
+                  ) : (
+                    // For other models, apply any static offset if needed
+                    <group rotation={group in modelRotationOffsets ? modelRotationOffsets[group] : [0, 0, 0]}>
+                      <Model
+                        url={models[group]}
+                        rotation={[0, 0, 0]}
+                        currentColor={currentColor}
+                        targetColor={targetColor}
+                      />
+                    </group>
+                  )}
+                </group>
               </group>
             </Canvas>
           </Suspense>
