@@ -55,7 +55,11 @@ const itemVariants = {
 
 const carouselItemVariants = {
   hidden: { opacity: 0, x: -20 },
-  visible: { opacity: 1, x: 0, transition: { type: 'spring', stiffness: 300, damping: 20 } },
+  visible: { 
+    opacity: 1,
+    x: 0,
+    transition: { type: 'spring', stiffness: 300, damping: 20 },
+  },
 };
 
 const LandingPage: React.FC = () => {
@@ -206,7 +210,7 @@ const LandingPage: React.FC = () => {
           </motion.div>
         ) : (
           <motion.div
-            className="w-2/3 mx-auto overflow-x-auto flex gap-4 scrollbar-hide pt-4 pb-5"
+            className="w-2/3 mx-auto grid grid-cols-8 gap-4 pt-4 pb-5"
             initial="hidden"
             animate="visible"
             variants={{
@@ -219,12 +223,11 @@ const LandingPage: React.FC = () => {
                 variants={carouselItemVariants}
                 whileHover={{ scale: 1.05, boxShadow: "0px 8px 15px rgba(0,0,0,0.2)" }}
                 onClick={() => setSelectedGroup(item.group)}
-                className={`min-w-[150px] p-4 border rounded cursor-pointer flex flex-col items-center text-center shadow-lg
+                className={`aspect-square p-4 border rounded cursor-pointer flex flex-col items-center justify-center shadow-lg
                   ${selectedGroup === item.group ? "border-main-green" : "border-gray-300"}`}
               >
                 <div>{item.icon}</div>
                 <div className="mt-2 font-semibold">{item.group}</div>
-                <div className="text-sm">{item.description}</div>
               </motion.div>
             ))}
           </motion.div>
