@@ -468,6 +468,9 @@ export async function getUserTests(req: AuthenticatedRequest, res: Response) {
       include: {
         user: true
       },
+      orderBy: {
+        createdAt: 'desc'
+      }
     });
 
     console.log(tests);
