@@ -27,7 +27,7 @@ const QuestionDetails: React.FC = () => {
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch(`https://drive-edu.onrender.com/api/question/${questionId}`);
+      const response = await fetch(`http://localhost:4444/api/question/${questionId}`);
       if (!response.ok) {
         throw new Error("Failed to fetch the question");
       }

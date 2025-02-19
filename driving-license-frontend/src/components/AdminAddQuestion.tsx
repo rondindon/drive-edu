@@ -55,7 +55,7 @@ const AdminAddQuestion: React.FC = () => {
     e.preventDefault();
 
     try {
-      const response = await fetch('https://drive-edu.onrender.com/api/admin/questions', {
+      const response = await fetch('http://localhost:4444/api/admin/questions', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

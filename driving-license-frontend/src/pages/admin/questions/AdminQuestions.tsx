@@ -154,7 +154,7 @@ const AdminQuestions: React.FC = () => {
       params.set("limit", "10000");
 
       const response = await fetch(
-        `https://drive-edu.onrender.com/api/admin/questions?${params.toString()}`,
+        `http://localhost:4444/api/admin/questions?${params.toString()}`,
         {
           headers: {
             "Content-Type": "application/json",
@@ -200,7 +200,7 @@ const AdminQuestions: React.FC = () => {
   const fetchQuestionStats = useCallback(async () => {
     try {
       const response = await fetch(
-        `https://drive-edu.onrender.com/api/admin/question-stats`,
+        `http://localhost:4444/api/admin/question-stats`,
         {
           headers: {
             "Content-Type": "application/json",
@@ -257,7 +257,7 @@ const AdminQuestions: React.FC = () => {
 
     try {
       const response = await fetch(
-        `https://drive-edu.onrender.com/api/admin/questions/${questionId}`,
+        `http://localhost:4444/api/admin/questions/${questionId}`,
         {
           method: "DELETE",
           headers: {
@@ -282,7 +282,7 @@ const AdminQuestions: React.FC = () => {
     try {
       if (question.id) {
         const response = await fetch(
-          `https://drive-edu.onrender.com/api/admin/questions/${question.id}`,
+          `http://localhost:4444/api/admin/questions/${question.id}`,
           {
             method: "PUT",
             headers: {
@@ -301,7 +301,7 @@ const AdminQuestions: React.FC = () => {
         );
       } else {
         const response = await fetch(
-          "https://drive-edu.onrender.com/api/admin/questions",
+          "http://localhost:4444/api/admin/questions",
           {
             method: "POST",
             headers: {

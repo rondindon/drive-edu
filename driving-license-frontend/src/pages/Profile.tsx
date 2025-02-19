@@ -90,7 +90,7 @@ const Profile: React.FC = () => {
 
   const handleProfilePicSelect = async (url: string) => {
     setProfilePicture(url);
-    axios.put('https://drive-edu.onrender.com/api/users/updateProfilePicture', { profilePicture: url }, { headers: { Authorization: `Bearer ${token}` } });
+    axios.put('http://localhost:4444/api/users/updateProfilePicture', { profilePicture: url }, { headers: { Authorization: `Bearer ${token}` } });
     setProfilePicDialogOpen(false);
   };
 
@@ -98,7 +98,7 @@ const Profile: React.FC = () => {
     const fetchTestSummary = async () => {
       setTestStatsLoading(true);
       try {
-        const response = await axios.get("https://drive-edu.onrender.com/api/user/stats/test-summary", {
+        const response = await axios.get("http://localhost:4444/api/user/stats/test-summary", {
           headers: { Authorization: `Bearer ${token}` },
         });
         const { testsTaken, testsPassed } = response.data;
@@ -123,7 +123,7 @@ const Profile: React.FC = () => {
     const fetchTestsPerDay = async () => {
       setTestsPerDayLoading(true);
       try {
-        const response = await axios.get("https://drive-edu.onrender.com/api/user/stats/tests", {
+        const response = await axios.get("http://localhost:4444/api/user/stats/tests", {
           headers: { Authorization: `Bearer ${token}` },
         });
         setTestsPerDay(response.data.testsOverTimeDay ?? []);
@@ -143,7 +143,7 @@ const Profile: React.FC = () => {
       setUserTestsLoading(true);
       setUserTestsError(null);
       try {
-        const response = await axios.get("https://drive-edu.onrender.com/api/user/tests", {
+        const response = await axios.get("http://localhost:4444/api/user/tests", {
           headers: { Authorization: `Bearer ${token}` },
         });
         setUserTests(response.data);
@@ -161,7 +161,7 @@ const Profile: React.FC = () => {
     const fetchStreak = async () => {
       setStreakLoading(true);
       try {
-        const response = await axios.get("https://drive-edu.onrender.com/api/user/stats/streak", {
+        const response = await axios.get("http://localhost:4444/api/user/stats/streak", {
           headers: { Authorization: `Bearer ${token}` },
         });
         setStreak(response.data.streak);
@@ -179,7 +179,7 @@ const Profile: React.FC = () => {
     const fetchBadges = async () => {
       setBadgesLoading(true);
       try {
-        const response = await axios.get("https://drive-edu.onrender.com/api/user/badges", {
+        const response = await axios.get("http://localhost:4444/api/user/badges", {
           headers: { Authorization: `Bearer ${token}` },
         });
         setBadges(response.data);

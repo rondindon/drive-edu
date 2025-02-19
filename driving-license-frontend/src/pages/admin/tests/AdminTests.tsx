@@ -80,7 +80,7 @@ const AdminTests: React.FC = () => {
 
       try {
         const response = await fetch(
-          `https://drive-edu.onrender.com/api/admin/tests?${params.toString()}`,
+          `http://localhost:4444/api/admin/tests?${params.toString()}`,
           {
             headers: {
               "Content-Type": "application/json",
@@ -153,7 +153,7 @@ const AdminTests: React.FC = () => {
 
     try {
       const response = await fetch(
-        `https://drive-edu.onrender.com/api/admin/tests/${testId}`,
+        `http://localhost:4444/api/admin/tests/${testId}`,
         {
           method: "DELETE",
           headers: {

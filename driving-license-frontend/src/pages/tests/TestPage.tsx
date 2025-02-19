@@ -78,7 +78,7 @@ const TestPage: React.FC = () => {
             message: 'User forcibly left. Partial data?',
           });
           const blob = new Blob([quickPayload], { type: 'application/json' });
-          navigator.sendBeacon('https://drive-edu.onrender.com/api/tests/finish-quick', blob);
+          navigator.sendBeacon('http://localhost:4444/api/tests/finish-quick', blob);
         }
       }
     };
@@ -175,7 +175,7 @@ const TestPage: React.FC = () => {
       if (isCorrect) finalScore += (q.points || 0);
 
       questionStatsPromises.push(
-        fetch('https://drive-edu.onrender.com/api/question-stats', {
+        fetch('http://localhost:4444/api/question-stats', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -221,7 +221,7 @@ const TestPage: React.FC = () => {
       })),
     });
 
-    fetch('https://drive-edu.onrender.com/api/tests/finish', {
+    fetch('http://localhost:4444/api/tests/finish', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -261,7 +261,7 @@ const TestPage: React.FC = () => {
     }
 
     try {
-      const resp = await fetch('https://drive-edu.onrender.com/api/report', {
+      const resp = await fetch('http://localhost:4444/api/report', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

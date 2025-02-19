@@ -35,7 +35,7 @@ const Register: React.FC = () => {
         setMessage(`Error: ${error.message}`);
         setShowAlert(true);
       } else if (data.user) {
-        const response = await fetch("https://drive-edu.onrender.com/api/user", {
+        const response = await fetch("http://localhost:4444/api/user", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",

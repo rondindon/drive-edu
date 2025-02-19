@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_URL = 'https://drive-edu.onrender.com/api';
+const API_URL = 'http://localhost:4444/api';
 
 export const registerUser = async (email: string, password: string) => {
   const response = await axios.post(`${API_URL}/register`, { email, password });

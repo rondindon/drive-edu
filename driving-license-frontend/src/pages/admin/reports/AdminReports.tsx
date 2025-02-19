@@ -105,7 +105,7 @@ const AdminReports: React.FC = () => {
     }
 
     try {
-      const response = await fetch("https://drive-edu.onrender.com/api/admin/report", {
+      const response = await fetch("http://localhost:4444/api/admin/report", {
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
@@ -178,7 +178,7 @@ const AdminReports: React.FC = () => {
   const handleApprove = async (reportId: number) => {
     try {
       const response = await fetch(
-        `https://drive-edu.onrender.com/api/admin/reports/${reportId}/review`,
+        `http://localhost:4444/api/admin/reports/${reportId}/review`,
         {
           method: "POST",
           headers: {
@@ -207,7 +207,7 @@ const AdminReports: React.FC = () => {
   const handleResolve = async (reportId: number) => {
     try {
       const response = await fetch(
-        `https://drive-edu.onrender.com/api/admin/reports/${reportId}/resolve`,
+        `http://localhost:4444/api/admin/reports/${reportId}/resolve`,
         {
           method: "POST",
           headers: {
@@ -240,7 +240,7 @@ const AdminReports: React.FC = () => {
 
     try {
       const response = await fetch(
-        `https://drive-edu.onrender.com/api/admin/reports/${reportId}/delete`,
+        `http://localhost:4444/api/admin/reports/${reportId}/delete`,
         {
           method: "DELETE",
           headers: {

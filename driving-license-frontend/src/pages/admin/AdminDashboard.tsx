@@ -56,7 +56,7 @@ const AdminDashboard: React.FC = () => {
     setError(null);
 
     try {
-      const usersResponse = await axios.get("https://drive-edu.onrender.com/api/admin/users", {
+      const usersResponse = await axios.get("http://localhost:4444/api/admin/users", {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -64,7 +64,7 @@ const AdminDashboard: React.FC = () => {
       const users = usersResponse.data as Array<any>;
       setTotalUsers(users.length);
 
-      const testsResponse = await axios.get("https://drive-edu.onrender.com/api/admin/tests", {
+      const testsResponse = await axios.get("http://localhost:4444/api/admin/tests", {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -72,7 +72,7 @@ const AdminDashboard: React.FC = () => {
       const tests = testsResponse.data as Array<any>;
       setTestsTaken(tests.length);
 
-      const summaryResponse = await axios.get("https://drive-edu.onrender.com/api/user/stats/test-summary", {
+      const summaryResponse = await axios.get("http://localhost:4444/api/user/stats/test-summary", {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -81,7 +81,7 @@ const AdminDashboard: React.FC = () => {
       const rate = summary.testsTaken > 0 ? ((summary.testsPassed / summary.testsTaken) * 100).toFixed(2) : "0";
       setPassRate(`${rate}%`);
 
-      const reportsResponse = await axios.get("https://drive-edu.onrender.com/api/admin/report", {
+      const reportsResponse = await axios.get("http://localhost:4444/api/admin/report", {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -90,7 +90,7 @@ const AdminDashboard: React.FC = () => {
       const pending = reports.length > 0 ? reports.filter(report => report.status === "Pending").length : 0;
       setPendingReports(pending);
 
-      const adminStatsResponse = await axios.get("https://drive-edu.onrender.com/api/admin/stats/tests", {
+      const adminStatsResponse = await axios.get("http://localhost:4444/api/admin/stats/tests", {
         headers: {
           Authorization: `Bearer ${token}`,
         },
