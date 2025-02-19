@@ -2,6 +2,7 @@ import express from 'express';
 import routes from './routes';
 import cors from 'cors';
 import 'dotenv/config';
+import path from 'path';
 
 const app = express();
 app.use(express.json());
@@ -10,6 +11,9 @@ const corsOptions = {
   optionsSuccessStatus: 200, // For legacy browser support
 };
 app.use(cors(corsOptions));
+
+const publicPath = path.join(__dirname, 'public');
+app.use(express.static(publicPath));
 
 app.use('/api', routes);
 
