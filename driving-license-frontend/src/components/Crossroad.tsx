@@ -15,8 +15,33 @@ const Crossroad: React.FC<CrossroadProps> = ({ scenario, onCarClick, selectedOrd
     west: '-rotate-90',
   };
 
+  const signMap: { [key: string]: string } = {
+    stop: '/images/stop.png',       // the octagonal stop sign
+    'main-road': '/images/main_road.png', // the diamond-shaped main road sign
+  };
+
+  // Rotation for signs (assuming “north” = no rotation, “south” = 180°, etc.)
+  const signRotationMap: { [key: string]: string } = {
+    north: 'rotate(0deg)',
+    south: 'rotate(180deg)',
+    east: 'rotate(90deg)',
+    west: 'rotate(-90deg)',
+  };
+
+  // Map car color strings to Tailwind CSS classes
+  const carColorClasses: { [key: string]: string } = {
+    red: 'bg-red-500',
+    blue: 'bg-blue-500',
+    green: 'bg-green-500',
+    yellow: 'bg-yellow-900',
+    purple: 'bg-purple-500',
+    orange: 'bg-orange-500',
+    pink: 'bg-pink-500',
+    teal: 'bg-teal-500',
+  };
+
   return (
-    <div className="relative w-[60vw] h-[60vh] mx-auto my-auto bg-gray-200 border border-gray-400">
+    <div className="relative w-[60vw] h-[60vh] mx-auto my-2 bg-gray-200 border border-gray-400">
       {/* Horizontal Road */}
       <div className="absolute top-1/2 left-0 w-full h-[15vh] bg-gray-400 transform -translate-y-1/2">
         <div className="absolute top-1/2 left-0 w-full h-1 bg-white transform -translate-y-1/2 dashed"></div>
@@ -27,14 +52,41 @@ const Crossroad: React.FC<CrossroadProps> = ({ scenario, onCarClick, selectedOrd
         <div className="absolute left-1/2 top-0 h-full w-1 bg-white transform -translate-x-1/2 dashed-up"></div>
       </div>
 
+      {/* Traffic Signs */}
+      {scenario.signs.map((sign, index) => {
+        // Find the correct image for this sign type
+        const imgSrc = signMap[sign.type];
+        if (!imgSrc) return null;
+
+        // Determine rotation based on sign direction
+        const rotation = signRotationMap[sign.direction] || 'rotate(0deg)';
+
+        return (
+          <img
+            key={index}
+            src={imgSrc}
+            alt={sign.type}
+            className="absolute"
+            style={{
+              top: `${sign.position.x}%`,
+              left: `${sign.position.y}%`,
+              width: '3vw',
+              height: '3vw',
+              transform: `translate(-50%, -50%) ${rotation}`,
+            }}
+          />
+        );
+      })}
+
       {/* Cars */}
       {scenario.cars.map((car) => {
         const orderIndex = selectedOrder.indexOf(car.id) + 1;
+        const bgClass = carColorClasses[car.color] || 'bg-gray-500';
 
         return (
           <div
             key={car.id}
-            className={`absolute w-[5%] h-[9%] flex items-center justify-center cursor-pointer`}
+            className="absolute w-[5%] h-[9%] flex items-center justify-center cursor-pointer"
             style={{
               top: `${car.position.x}%`,
               left: `${car.position.y}%`,
@@ -44,9 +96,7 @@ const Crossroad: React.FC<CrossroadProps> = ({ scenario, onCarClick, selectedOrd
           >
             {/* Car Body */}
             <div
-              className={`w-full h-full bg-${car.color}-500 rounded-md relative transform ${
-                rotationAngles[car.direction]
-              }`}
+              className={`w-full h-full ${bgClass} rounded-md relative transform ${rotationAngles[car.direction]}`}
             >
               {/* Left Blinker */}
               {car.blinker === 'left' && (

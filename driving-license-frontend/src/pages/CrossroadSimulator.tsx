@@ -1,19 +1,40 @@
-// src/pages/CrossroadSimulator.tsx
 import React, { useState } from "react";
 import Crossroad from "../components/Crossroad";
 import { scenarios, Scenario } from "../utils/scenarios";
 import { FaExclamationCircle } from "react-icons/fa";
 import { motion, AnimatePresence } from "framer-motion";
 
+// Helper to randomize car colors
+const randomizeScenarioColors = (scenario: Scenario): Scenario => {
+  const colorPalette = [
+    "red",
+    "blue",
+    "green",
+    "yellow",
+    "purple",
+    "orange",
+    "pink",
+    "teal",
+  ];
+  const randomizedCars = scenario.cars.map((car) => ({
+    ...car,
+    color: colorPalette[Math.floor(Math.random() * colorPalette.length)],
+  }));
+  return { ...scenario, cars: randomizedCars };
+};
+
 const CrossroadSimulator: React.FC = () => {
-  // All scenario IDs
   const allScenarioIds = scenarios.map((s) => s.id);
 
   // State to track which scenario IDs haven't been solved yet
-  const [unusedScenarioIds, setUnusedScenarioIds] = useState<string[]>([...allScenarioIds]);
+  const [unusedScenarioIds, setUnusedScenarioIds] = useState<string[]>([
+    ...allScenarioIds,
+  ]);
 
-  // Pick the first scenario by default
-  const [selectedScenario, setSelectedScenario] = useState<Scenario>(scenarios[0]);
+  // Pick the first scenario by default, randomizing its colors
+  const [selectedScenario, setSelectedScenario] = useState<Scenario>(
+    randomizeScenarioColors(scenarios[0])
+  );
   const [selectedOrder, setSelectedOrder] = useState<string[]>([]);
 
   // Feedback message for correct/incorrect attempts
@@ -30,63 +51,58 @@ const CrossroadSimulator: React.FC = () => {
   // On car click, toggle it in the user’s chosen order
   const handleCarClick = (carId: string) => {
     if (selectedOrder.includes(carId)) {
-      // remove the car
       setSelectedOrder((prev) => prev.filter((id) => id !== carId));
     } else {
-      // add if there's room
       if (selectedOrder.length < selectedScenario.cars.length) {
         setSelectedOrder((prev) => [...prev, carId]);
       }
     }
   };
 
-  // Randomly pick a scenario from the list of unused scenarios
-  // If none left, reset them to the full scenario list
+  // Updated pickRandomScenario to avoid picking the current scenario when unsolved ones are available.
   const pickRandomScenario = () => {
     setFeedback({ type: null, message: "" });
 
-    // If we've used them all, reset
-    if (unusedScenarioIds.length === 0) {
-      setUnusedScenarioIds([...allScenarioIds]);
+    // Determine available scenario IDs:
+    // If there are unsolved scenarios, use them; otherwise, reset to all.
+    let availableIds =
+      unusedScenarioIds.length > 0 ? [...unusedScenarioIds] : [...allScenarioIds];
+
+    // If there's more than one available, filter out the current scenario.
+    if (availableIds.length > 1) {
+      availableIds = availableIds.filter((id) => id !== selectedScenario.id);
     }
 
-    // Re-check in case we just reset
-    const randomList =
-      unusedScenarioIds.length === 0 ? [...allScenarioIds] : unusedScenarioIds;
-    const randomId = randomList[Math.floor(Math.random() * randomList.length)];
+    const randomId = availableIds[Math.floor(Math.random() * availableIds.length)];
     const found = scenarios.find((s) => s.id === randomId);
 
     if (found) {
-      setSelectedScenario(found);
+      setSelectedScenario(randomizeScenarioColors(found));
       setSelectedOrder([]);
     } else {
-      // fallback if not found
-      setSelectedScenario(scenarios[0]);
+      setSelectedScenario(randomizeScenarioColors(scenarios[0]));
       setSelectedOrder([]);
     }
   };
 
-  // Called when the user guesses the correct order
   const handleCorrectOrder = () => {
     setFeedback({
       type: "success",
       message: "Correct order!",
     });
 
-    // Mark current scenario as used
+    // Mark current scenario as solved by removing it from the unused list
     const usedId = selectedScenario.id;
     setUnusedScenarioIds((prev) => prev.filter((id) => id !== usedId));
 
-    // After a brief delay, pick a new scenario
+    // After a brief delay, pick a new scenario.
     setTimeout(() => {
       pickRandomScenario();
       resetOrder();
     }, 1000);
   };
 
-  // Validate user’s chosen order
   const validateOrder = () => {
-    // If there's a custom validator, use that
     if (selectedScenario.validateOrder) {
       const isCorrect = selectedScenario.validateOrder(selectedOrder);
       if (isCorrect) {
@@ -94,13 +110,12 @@ const CrossroadSimulator: React.FC = () => {
       } else {
         setFeedback({
           type: "error",
-          message: "Incorrect. Please review the special rules for this scenario.",
+          message: "Incorrect order, please try again.",
         });
       }
       return;
     }
 
-    // Otherwise check the array
     if (selectedScenario.correctOrder) {
       const correct =
         JSON.stringify(selectedOrder) === JSON.stringify(selectedScenario.correctOrder);
@@ -109,63 +124,60 @@ const CrossroadSimulator: React.FC = () => {
       } else {
         setFeedback({
           type: "error",
-          message: "Incorrect order! Check your priority rules.",
+          message: "Incorrect order, please try again.",
         });
       }
     } else {
       setFeedback({
         type: "error",
-        message: "No correctOrder or custom validation provided for this scenario.",
+        message: "Validation error: missing correct order data.",
       });
     }
   };
 
   const canValidate = selectedOrder.length === selectedScenario.cars.length;
 
-  // Called when user selects a scenario from the <select> (dev usage)
+  // Called when user selects a scenario from the <select> (development usage)
   const handleScenarioSelect = (scenarioId: string) => {
     const found = scenarios.find((s) => s.id === scenarioId);
-    setSelectedScenario(found || scenarios[0]);
+    setSelectedScenario(randomizeScenarioColors(found || scenarios[0]));
     resetOrder();
   };
 
-  // Define animation variants for the main container
+  // Animation variants and button hover (unchanged)
   const pageVariants = {
     hidden: { opacity: 0, y: +50 },
-    visible: { 
-      opacity: 1, 
+    visible: {
+      opacity: 1,
       y: 0,
       transition: { duration: 0.8, ease: "easeOut" },
     },
-    exit: { 
-      opacity: 0, 
+    exit: {
+      opacity: 0,
       y: 50,
       transition: { duration: 0.5, ease: "easeIn" },
     },
   };
 
-  // Define variants for the feedback popup
   const feedbackVariants = {
     hidden: { opacity: 0, scale: 0.95 },
-    visible: { 
-      opacity: 1, 
+    visible: {
+      opacity: 1,
       scale: 1,
       transition: { duration: 0.3, ease: "easeOut" },
     },
-    exit: { 
-      opacity: 0, 
+    exit: {
+      opacity: 0,
       scale: 0.95,
       transition: { duration: 0.2, ease: "easeIn" },
     },
   };
 
-  // Define hover animation for buttons
   const buttonHover = {
     scale: 1.05,
     boxShadow: "0px 4px 15px rgba(0, 0, 0, 0.2)",
   };
 
-  // Define variants for selected order items
   const orderItemVariants = {
     hidden: { opacity: 0, scale: 0.8 },
     visible: (i: number) => ({
@@ -184,9 +196,6 @@ const CrossroadSimulator: React.FC = () => {
         exit="exit"
         className="flex flex-col items-center gap-4 p-8 bg-[hsl(var(--background))] text-[hsl(var(--foreground))] min-h-screen"
       >
-        <h1 className="text-2xl font-bold">Crossroad Simulator</h1>
-
-        {/* Scenario <select> (development usage) */}
         <motion.select
           className="p-2 border border-[hsl(var(--muted))] rounded bg-[hsl(var(--card))] text-[hsl(var(--card-foreground))]"
           value={selectedScenario.id}
@@ -200,6 +209,30 @@ const CrossroadSimulator: React.FC = () => {
             </option>
           ))}
         </motion.select>
+
+        {/* Selected Order Display */}
+        <motion.div
+          className="mt-4 flex items-center justify-center w-full max-w-xl min-h-[48px]"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.5 }}
+        >
+          <h2 className="text-lg font-bold mr-4">Selected Order:</h2>
+          <div className="flex gap-2">
+            {selectedOrder.map((carId, index) => (
+              <motion.div
+                key={carId}
+                custom={index}
+                variants={orderItemVariants}
+                initial="hidden"
+                animate="visible"
+                className="px-2 py-1 bg-[hsl(var(--muted))] rounded border border-[hsl(var(--foreground))] text-[hsl(var(--foreground))]"
+              >
+                {index + 1}. {carId.toUpperCase()}
+              </motion.div>
+            ))}
+          </div>
+        </motion.div>
 
         {/* Crossroad Display */}
         <Crossroad
@@ -221,11 +254,13 @@ const CrossroadSimulator: React.FC = () => {
                 ${
                   feedback.type === "error"
                     ? "bg-[hsl(var(--destructive))] text-[hsl(var(--destructive-foreground))]"
-                    : "bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))]"
+                    : "bg-green-500 text-white"
                 }
               `}
             >
-              {feedback.type === "error" && <FaExclamationCircle className="text-xl" />}
+              {feedback.type === "error" && (
+                <FaExclamationCircle className="text-xl" />
+              )}
               <span>{feedback.message}</span>
             </motion.div>
           )}
@@ -260,67 +295,6 @@ const CrossroadSimulator: React.FC = () => {
             Validate Order
           </motion.button>
         </div>
-
-        {/* Show scenario details only if user guessed incorrectly */}
-        <AnimatePresence>
-          {feedback.type === "error" && (
-            <motion.div
-              variants={{
-                hidden: { opacity: 0, height: 0 },
-                visible: { 
-                  opacity: 1, 
-                  height: "auto",
-                  transition: { duration: 0.5, ease: "easeOut" },
-                },
-                exit: { 
-                  opacity: 0, 
-                  height: 0,
-                  transition: { duration: 0.3, ease: "easeIn" },
-                },
-              }}
-              initial="hidden"
-              animate="visible"
-              exit="exit"
-              className="mt-4 text-center bg-[hsl(var(--card))] text-[hsl(var(--card-foreground))] p-4 rounded shadow w-full max-w-xl overflow-hidden"
-            >
-              <h2 className="text-lg font-bold mb-2">{selectedScenario.name}</h2>
-              <p className="mb-2 text-sm">{selectedScenario.description}</p>
-              <ul className="list-disc list-inside text-xs text-left space-y-1">
-                {selectedScenario.rules.map((rule, i) => (
-                  <li key={i}>{rule}</li>
-                ))}
-              </ul>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        {/* User's Chosen Order with Animations */}
-        <motion.div
-          className="mt-4 text-center w-full max-w-xl"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.5 }}
-        >
-          <h2 className="text-lg font-bold">Selected Order</h2>
-          <div className="flex gap-2 flex-wrap justify-center mt-2">
-            {selectedOrder.map((carId, index) => (
-              <motion.div
-                key={carId}
-                custom={index}
-                variants={orderItemVariants}
-                initial="hidden"
-                animate="visible"
-                className="
-                  px-2 py-1 bg-[hsl(var(--muted))]
-                  rounded border border-[hsl(var(--foreground))]
-                  text-[hsl(var(--foreground))]
-                "
-              >
-                {index + 1}. {carId.toUpperCase()}
-              </motion.div>
-            ))}
-          </div>
-        </motion.div>
       </motion.div>
     </AnimatePresence>
   );
