@@ -34,7 +34,6 @@ interface ModelProps {
   targetColor: THREE.Color;
   duration?: number;
   scale?: number;
-  /** "in" for entrance (scale 0 → target), "out" for exit (scale target → 0) */
   animateDirection?: "in" | "out";
 }
 
@@ -50,7 +49,7 @@ const Model = ({
   const gltf = useGLTF(url);
   const modelRef = useRef<THREE.Group>(null);
 
-  // Color animation (unchanged)
+  // Color animation
   useEffect(() => {
     let startTime: number | null = null;
     const updateColor = (time: number) => {
@@ -74,10 +73,10 @@ const Model = ({
     requestAnimationFrame(updateColor);
   }, [targetColor, currentColor, gltf, duration]);
 
-  // Scale animation: animate "in" from 0→scale or "out" from scale→0.
+  // Scale animation
   useEffect(() => {
     let startTime: number | null = null;
-    // For "in", start at zero; for "out", start at full scale.
+    // For "in", start 0; for "out", start full
     const startScale =
       animateDirection === "in"
         ? new THREE.Vector3(0, 0, 0)
@@ -134,7 +133,6 @@ const Viewer: React.FC<Props> = ({ group }) => {
     }
   }, [group, currentGroup, transitionDuration]);
 
-  // Custom starting positions for models.
   const startingPositions: { [key: string]: [number, number, number] } = {
     B: [0, -70, -200],
     BE: [0, -70, -200],
@@ -147,7 +145,6 @@ const Viewer: React.FC<Props> = ({ group }) => {
   };
   const defaultPosition: [number, number, number] = [0, -60, 0];
 
-  // Custom scales for models.
   const modelScales: { [key: string]: number } = {
     A: 0.25,
     C: 0.8,
@@ -158,7 +155,6 @@ const Viewer: React.FC<Props> = ({ group }) => {
     default: 1.6,
   };
 
-  // For models (other than tractor) we use static rotation offsets if needed.
   const modelRotationOffsets: { [key: string]: [number, number, number] } = {
     C: [0, Math.PI, 0],
     CE: [0, Math.PI, 0],

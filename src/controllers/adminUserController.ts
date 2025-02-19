@@ -13,7 +13,6 @@ export const getAllUsers = async (req: Request, res: Response) => {
     let whereClause: any = {};
 
     if (search) {
-      // Search by email or username (case-insensitive)
       whereClause.OR = [
         { email: { contains: search, mode: 'insensitive' } },
         { username: { contains: search, mode: 'insensitive' } }
@@ -44,7 +43,7 @@ export const updateUser = async (req: Request, res: Response) => {
   try {
     const data: any = {};
     if (role) data.role = role;
-    if (username !== undefined) data.username = username || null; // handle empty string as null
+    if (username !== undefined) data.username = username || null;
 
     const updatedUser = await prisma.user.update({
       where: { id: Number(id) },

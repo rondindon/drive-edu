@@ -1,5 +1,3 @@
-// src/pages/admin/reports/ReportDetailModal.tsx
-
 import React from "react";
 import {
   Dialog,
@@ -27,7 +25,6 @@ const ReportDetailModal: React.FC<ReportDetailModalProps> = ({
   onResolve,
   onDelete,
 }) => {
-  // Local handlers that call parent callbacks with `report.id`
   const handleApprove = () => onApprove(report.id);
   const handleResolve = () => onResolve(report.id);
   const handleDelete = () => onDelete(report.id);
@@ -84,12 +81,10 @@ const ReportDetailModal: React.FC<ReportDetailModalProps> = ({
         </div>
 
         <div className="flex justify-end space-x-2 mt-6">
-          {/* Always visible close */}
           <Button variant="secondary" onClick={onClose}>
             Close
           </Button>
 
-          {/* Status-based actions */}
           {report.status === "Pending" && (
             <>
               <Button

@@ -16,14 +16,13 @@ interface Question {
 }
 
 const QuestionDetails: React.FC = () => {
-  const { id } = useParams<{ id: string }>(); // Current question ID from the URL
-  const navigate = useNavigate(); // Navigation for next/previous question
+  const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
 
   const [question, setQuestion] = useState<Question | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Function to fetch the question data
   const fetchQuestion = async (questionId: string) => {
     setLoading(true);
     setError(null);
@@ -41,18 +40,15 @@ const QuestionDetails: React.FC = () => {
     }
   };
 
-  // Fetch question when component mounts or when ID changes
   useEffect(() => {
     fetchQuestion(id!);
   }, [id]);
 
-  // Handler for moving to the next question
   const handleNextQuestion = () => {
     const nextId = Number(id) + 1;
     navigate(`/question/${nextId}`);
   };
 
-  // Handler for moving to the previous question
   const handlePreviousQuestion = () => {
     const prevId = Number(id) - 1;
     if (prevId > 0) {
@@ -138,7 +134,6 @@ const QuestionDetails: React.FC = () => {
           </p>
         </div>
 
-        {/* Navigation Buttons */}
         <div className="flex justify-end gap-4 mt-6">
           <button
             onClick={handlePreviousQuestion}

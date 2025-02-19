@@ -1,5 +1,3 @@
-// src/pages/admin/AdminDashboard.tsx
-
 import React, { useState, useEffect, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "src/components/ui/card";
 import { Button } from "src/components/ui/button";
@@ -8,15 +6,15 @@ import {
   User, 
   ClipboardList, 
   ClipboardCheck, 
-  BarChart as LucideBarChart, // Alias Lucide's BarChart
+  BarChart as LucideBarChart,
   RefreshCw 
 } from "lucide-react";
-import axios from "axios"; // Using Axios for data fetching
+import axios from "axios";
 import { toast } from "react-toastify";
 import PerformanceChart from "src/components/PerformanceChart";
 import { Skeleton } from "src/components/ui/skeleton";
 import {
-  BarChart as RechartsBarChart, // Alias Recharts' BarChart
+  BarChart as RechartsBarChart,
   Bar,
   XAxis,
   YAxis,
@@ -39,7 +37,6 @@ interface TestPerformanceMonth {
 const AdminDashboard: React.FC = () => {
   const navigate = useNavigate();
 
-  // State Variables
   const [totalUsers, setTotalUsers] = useState<number>(0);
   const [testsTaken, setTestsTaken] = useState<number>(0);
   const [passRate, setPassRate] = useState<string>("0%");
@@ -49,18 +46,15 @@ const AdminDashboard: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
-  const token = localStorage.getItem("supabaseToken"); // Ensure token is correctly stored
+  const token = localStorage.getItem("supabaseToken");
 
-  // Cache key for the statistics
   const CACHE_KEY = "adminDashboardStats";
 
-  // Fetch Statistics (and update cache)
   const fetchStatistics = useCallback(async () => {
     setLoading(true);
     setError(null);
 
     try {
-      // Fetch Total Users
       const usersResponse = await axios.get("https://drive-edu.onrender.com/api/admin/users", {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -69,7 +63,6 @@ const AdminDashboard: React.FC = () => {
       const users = usersResponse.data as Array<any>;
       setTotalUsers(users.length);
 
-      // Fetch Tests Taken
       const testsResponse = await axios.get("https://drive-edu.onrender.com/api/admin/tests", {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -78,7 +71,6 @@ const AdminDashboard: React.FC = () => {
       const tests = testsResponse.data as Array<any>;
       setTestsTaken(tests.length);
 
-      // Fetch Test Summary for Pass Rate
       const summaryResponse = await axios.get("https://drive-edu.onrender.com/api/user/stats/test-summary", {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -88,7 +80,6 @@ const AdminDashboard: React.FC = () => {
       const rate = summary.testsTaken > 0 ? ((summary.testsPassed / summary.testsTaken) * 100).toFixed(2) : "0";
       setPassRate(`${rate}%`);
 
-      // Fetch Pending Reports
       const reportsResponse = await axios.get("https://drive-edu.onrender.com/api/admin/report", {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -98,7 +89,6 @@ const AdminDashboard: React.FC = () => {
       const pending = reports.length > 0 ? reports.filter(report => report.status === "Pending").length : 0;
       setPendingReports(pending);
 
-      // Fetch Admin Test Stats
       const adminStatsResponse = await axios.get("https://drive-edu.onrender.com/api/admin/stats/tests", {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -106,15 +96,12 @@ const AdminDashboard: React.FC = () => {
       });
       const adminStats = adminStatsResponse.data;
 
-      // Set Tests Taken per Month
       const testsOverTimeMonth = adminStats.testsOverTimeMonth as AdminTestStatsMonth[];
       setTestsTakenPerMonth(testsOverTimeMonth);
 
-      // Set Test Performance by Month
       const testPerformance = adminStats.testPerformanceByMonth as TestPerformanceMonth[];
       setTestPerformanceByMonth(testPerformance);
 
-      // Build the cache object
       const statsCache = {
         totalUsers: users.length,
         testsTaken: tests.length,
@@ -124,7 +111,6 @@ const AdminDashboard: React.FC = () => {
         testPerformanceByMonth: testPerformance,
       };
 
-      // Update cache in localStorage
       localStorage.setItem(CACHE_KEY, JSON.stringify(statsCache));
 
       setLoading(false);
@@ -136,7 +122,6 @@ const AdminDashboard: React.FC = () => {
     }
   }, [token]);
 
-  // On component mount, try to load cached stats (if available)
   useEffect(() => {
     const cachedStats = localStorage.getItem(CACHE_KEY);
     if (cachedStats) {
@@ -153,7 +138,6 @@ const AdminDashboard: React.FC = () => {
     }
   }, [fetchStatistics]);
 
-  // Refresh function that always fetches new stats (and updates cache)
   const handleRefresh = () => {
     fetchStatistics();
   };
@@ -161,7 +145,6 @@ const AdminDashboard: React.FC = () => {
   if (loading) {
     return (
       <div className="space-y-6">
-        {/* Quick Actions Skeleton */}
         <div>
           <div className="flex justify-between items-center mb-4">
             <Skeleton className="w-1/6 h-8 rounded" />
@@ -175,13 +158,11 @@ const AdminDashboard: React.FC = () => {
           </div>
         </div>
 
-        {/* Header Skeleton */}
         <div className="flex justify-between items-center mb-4">
           <Skeleton className="w-1/3 h-8 rounded" />
           <Skeleton className="w-24 h-10 rounded" />
         </div>
 
-        {/* Dashboard Cards Skeleton */}
         <div className="grid gap-4 lg:grid-cols-4 sm:grid-cols-2 grid-cols-1">
           {Array.from({ length: 4 }).map((_, index) => (
             <Card key={index} className="hover:shadow-lg transition">
@@ -198,7 +179,6 @@ const AdminDashboard: React.FC = () => {
           ))}
         </div>
 
-        {/* Charts Skeleton */}
         <div className="grid gap-4 lg:grid-cols-2 sm:grid-cols-1">
           {Array.from({ length: 2 }).map((_, index) => (
             <Card key={index}>
@@ -228,7 +208,6 @@ const AdminDashboard: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      {/* Quick Actions at the Top */}
       <div>
         <h2 className="text-2xl font-semibold mb-4 text-[hsl(var(--primary))]">Quick Actions</h2>
         <div className="flex flex-wrap gap-4">
@@ -267,7 +246,6 @@ const AdminDashboard: React.FC = () => {
         </div>
       </div>
 
-      {/* Header with Refresh Button */}
       <div className="flex justify-between items-center mb-4">
         <h1 className="text-2xl font-bold text-[hsl(var(--primary))]">Admin Dashboard</h1>
         <Button
@@ -279,7 +257,6 @@ const AdminDashboard: React.FC = () => {
         </Button>
       </div>
 
-      {/* Dashboard Cards */}
       <div className="grid gap-4 lg:grid-cols-4 sm:grid-cols-2 grid-cols-1">
         <Card className="hover:shadow-lg transition">
           <CardHeader>
@@ -330,9 +307,7 @@ const AdminDashboard: React.FC = () => {
         </Card>
       </div>
 
-      {/* Charts Side by Side */}
       <div className="grid gap-4 lg:grid-cols-2 sm:grid-cols-1">
-        {/* Tests Taken per Month Chart */}
         <Card>
           <CardHeader>
             <CardTitle>Tests Taken per Month</CardTitle>
@@ -350,7 +325,6 @@ const AdminDashboard: React.FC = () => {
           </CardContent>
         </Card>
 
-        {/* Test Performance by Month Chart */}
         <Card>
           <CardHeader>
             <CardTitle>Test Performance by Month</CardTitle>

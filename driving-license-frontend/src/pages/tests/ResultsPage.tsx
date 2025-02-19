@@ -1,5 +1,3 @@
-// src/pages/ResultsPage.tsx
-
 import React from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Button } from 'src/components/ui/button';
@@ -11,18 +9,18 @@ interface Question {
   text: string;
   options: string[];
   correctAnswer: string;
-  userAnswer?: string; // user’s selected letter
+  userAnswer?: string;
   points: number;
   imageUrl?: string;
 }
 
 interface ResultsState {
   isPassed: boolean;
-  score: number; // out of 100
+  score: number;
   totalQuestions: number;
   testDate: string;
   group: string;
-  timeTaken: number; // in seconds
+  timeTaken: number;
   questions: Question[];
 }
 
@@ -41,25 +39,19 @@ const ResultsPage: React.FC = () => {
   } = (state || {}) as ResultsState;
 
   const headingText = isPassed ? 'You Passed!' : 'You Failed';
-
-  // Score-based success rate (score out of 100)
   const successRate = Math.round(score);
 
-  // Count how many questions the user got correct
   let correctCount = 0;
   questions.forEach((q) => {
     if (q.userAnswer === q.correctAnswer) correctCount++;
   });
 
-  // For the progress bar, clamp at 100
   const progressValue = Math.min(score, 100);
 
-  // Convert timeTaken (seconds) to mm:ss
   const minutes = Math.floor(timeTaken / 60);
   const seconds = timeTaken % 60;
   const timeDisplay = `${minutes}:${String(seconds).padStart(2, '0')}`;
 
-  // By default, open the first question if it exists
   const [selectedQuestionId, setSelectedQuestionId] = React.useState<number | null>(
     questions.length > 0 ? questions[0].id : null
   );
@@ -69,7 +61,6 @@ const ResultsPage: React.FC = () => {
     setSelectedQuestionId(qId);
   };
 
-  // Bottom Buttons
   const goHome = () => {
     navigate('/');
   };
@@ -77,7 +68,6 @@ const ResultsPage: React.FC = () => {
   return (
     <div className="min-h-screen w-full bg-[hsl(var(--background))] text-[hsl(var(--foreground))] animate-fadeIn">
       <div className="max-w-5xl mx-auto px-6 py-10">
-        {/* Pass/Fail + Basic Info */}
         <div className="text-center mb-10">
           <h1 className="text-3xl font-extrabold mb-4">
             {headingText}
@@ -92,7 +82,6 @@ const ResultsPage: React.FC = () => {
           </div>
         </div>
 
-        {/* Score Progress Bar */}
         <div className="bg-[hsl(var(--card))] text-[hsl(var(--card-foreground))] rounded-md shadow p-6 mb-8 max-w-xl mx-auto">
           <h2 className="text-lg font-semibold mb-3 text-center">Overall Score</h2>
           <Progress
@@ -106,9 +95,7 @@ const ResultsPage: React.FC = () => {
           <p className="text-center text-base mt-2">{score}/100 Points</p>
         </div>
 
-        {/* Icons Row (3 icons), now more colorful with purple #8884d8 */}
         <div className="flex flex-row gap-12 items-center justify-center mb-10">
-          {/* Icon 1: Success Rate */}
           <div className="flex flex-col items-center justify-center">
             <FaPercent className="text-4xl text-[hsl(var(--foreground))] mb-2" />
             <p className="text-lg text-[hsl(var(--foreground))] font-semibold">Success Rate</p>
@@ -117,7 +104,6 @@ const ResultsPage: React.FC = () => {
             </p>
           </div>
 
-          {/* Icon 2: Total Questions */}
           <div className="flex flex-col items-center justify-center">
             <FaQuestionCircle className="text-4xl text-[hsl(var(--foreground))] mb-2" />
             <p className="text-lg text-[hsl(var(--foreground))] font-semibold">Total Questions</p>
@@ -126,7 +112,6 @@ const ResultsPage: React.FC = () => {
             </p>
           </div>
 
-          {/* Icon 3: Time */}
           <div className="flex flex-col items-center justify-center">
             <FaClock className="text-4xl text-[hsl(var(--foreground))] mb-2" />
             <p className="text-lg text-[hsl(var(--foreground))] font-semibold">Time Taken</p>
@@ -136,7 +121,6 @@ const ResultsPage: React.FC = () => {
           </div>
         </div>
 
-        {/* Navigation for final question review */}
         <div className="bg-[hsl(var(--card))] text-[hsl(var(--card-foreground))] rounded-md shadow p-6 mb-8 border-solid border-2 border-[#8884d8]/20">
           <h2 className="text-lg font-semibold mb-4 text-[hsl(var(--foreground))]">
             Question Review
@@ -160,7 +144,6 @@ const ResultsPage: React.FC = () => {
             })}
           </div>
 
-          {/* If a question is selected, show user’s selected vs correct */}
           {selectedQuestion && (
             <div className="p-4 rounded-md border border-[hsl(var(--muted))]">
               <h3 className="font-bold mb-2 text-base">
@@ -183,10 +166,8 @@ const ResultsPage: React.FC = () => {
 
                   let bgClass = 'bg-[hsl(var(--card))]';
                   if (selectedQuestion.userAnswer === selectedQuestion.correctAnswer) {
-                    // correct
                     if (isCorrectAnswer) bgClass = 'bg-main-green/80';
                   } else {
-                    // incorrect
                     if (isUserSelected) bgClass = 'bg-[hsl(var(--destructive))]/80';
                     if (isCorrectAnswer) bgClass = 'bg-main-green/80';
                   }
@@ -202,7 +183,6 @@ const ResultsPage: React.FC = () => {
           )}
         </div>
 
-        {/* Bottom Buttons: Home and Start Another Test */}
         <div className="flex justify-center gap-6">
           <Button
             onClick={goHome}

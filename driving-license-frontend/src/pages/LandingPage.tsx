@@ -69,8 +69,8 @@ const LandingPage: React.FC = () => {
   const token = localStorage.getItem("supabaseToken");
   const { theme } = useContext(ThemeContext);
 
-  // Check if user is logged in (using Supabase session)
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(!!token);
+  
   useEffect(() => {
     async function checkAuthStatus() {
       const { data } = await supabase.auth.getSession();
@@ -85,7 +85,6 @@ const LandingPage: React.FC = () => {
     return () => authListener.subscription.unsubscribe();
   }, []);
 
-  // For responsive carousel vs. dropdown select
   const [isSmallScreen, setIsSmallScreen] = useState<boolean>(window.innerWidth < 640);
   useEffect(() => {
     const handleResize = () => setIsSmallScreen(window.innerWidth < 640);
@@ -93,7 +92,6 @@ const LandingPage: React.FC = () => {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  // Loading / typed messages states
   const [isLoading, setIsLoading] = useState(false);
   const [typedIndex, setTypedIndex] = useState(0);
   const [showMessage, setShowMessage] = useState<string>("");
@@ -136,7 +134,6 @@ const LandingPage: React.FC = () => {
         throw new Error(errorData.message || 'Error starting test.');
       }
       const data = await response.json();
-      // data contains { testId, questions }
       navigate(`/test/${data.testId}`, {
         state: { questions: data.questions, testId: data.testId },
       });
@@ -172,7 +169,6 @@ const LandingPage: React.FC = () => {
       variants={containerVariants}
     >
       <div className="p-5 text-center flex flex-col items-center justify-center space-y-6 animate-fadeIn min-h-screen bg-[hsl(var(--background))] text-[hsl(var(--foreground))]">
-        {/* Header */}
         <motion.h1
           className="tracking-wider text-4xl font-bold text-[hsl(var(--primary))] mb-4 font-inclusive pt-6"
           variants={itemVariants}
@@ -233,7 +229,6 @@ const LandingPage: React.FC = () => {
           </motion.div>
         )}
 
-        {/* 3D Viewer */}
         <motion.div
           className={`my-6 w-full flex justify-center transition-transform duration-500 ${
             selectedGroup ? 'scale-100 opacity-100' : 'scale-95 opacity-50'
@@ -254,7 +249,6 @@ const LandingPage: React.FC = () => {
           )}
         </motion.div>
 
-        {/* Start Test Button */}
         <motion.button
           onClick={handleStartTest}
           className="px-6 py-3 text-base font-semibold text-white bg-main-green rounded-md shadow-md hover:bg-secondary-red hover:scale-105 transition-transform transition-shadow duration-300 disabled:bg-gray-400 disabled:cursor-not-allowed"

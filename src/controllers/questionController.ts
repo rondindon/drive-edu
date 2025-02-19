@@ -12,13 +12,12 @@ function shuffleArray<T>(array: T[]): T[] {
   return arr;
 }
 
-// Get a single question by ID
 export const getQuestionById = async (req: Request, res: Response): Promise<Response> => {
   const { id } = req.params;
 
   try {
     const question = await prisma.question.findUnique({
-      where: { id: Number(id) }, // Ensure the ID is treated as an integer
+      where: { id: Number(id) },
     });
 
     if (!question) {
@@ -65,10 +64,8 @@ export async function getAllQuestionStats(req: Request, res: Response) {
       GROUP BY "questionId"
     `;
     
-    // Execute the raw query using prisma.$queryRawUnsafe
     const stats = await prisma.$queryRawUnsafe<any[]>(query);
-    
-    // Convert any BigInt values in the results to numbers
+  
     const safeStats = stats.map(row => {
       const safeRow: Record<string, any> = {};
       for (const key in row) {

@@ -16,7 +16,6 @@ const Register: React.FC = () => {
   const [message, setMessage] = useState<string | null>(null);
   const [showAlert, setShowAlert] = useState<boolean>(false);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
-  const { login, loginWithGoogle, user } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -163,20 +162,17 @@ const Register: React.FC = () => {
             </Button>
           </form>
 
-          {/* Separator */}
           <div className="relative my-6">
             <div className="absolute inset-0 flex items-center">
               <div className="w-full border-t border-[hsl(var(--muted))]"></div>
             </div>
             <div className="relative flex justify-center text-sm">
-              {/* We can keep a small 'box' with card background color */}
               <span className="px-2 bg-[hsl(var(--card))] text-[hsl(var(--foreground))]">
                 OR
               </span>
             </div>
           </div>
 
-          {/* Google Register */}
           <Button
             onClick={handleGoogleRegister}
             className="

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 
 const AdminAddQuestion: React.FC = () => {
-  const allGroups = ['A', 'B', 'BE', 'C', 'CE', 'D', 'DE', 'T']; // List of available groups
+  const allGroups = ['A', 'B', 'BE', 'C', 'CE', 'D', 'DE', 'T'];
   const categories = [
     { name: 'Pravidlá cestnej premávky', points: 3 },
     { name: 'Uplatňovanie pravidiel prednosti v jazde a rýchlostné obmedzenia', points: 3 },
@@ -70,7 +70,7 @@ const AdminAddQuestion: React.FC = () => {
           imageUrl: imageUrl || null,
           difficulty,
           explanation,
-          role: 'ADMIN', // Role should come from authentication context in production
+          role: 'ADMIN',
         }),
       });
 
@@ -99,7 +99,6 @@ const AdminAddQuestion: React.FC = () => {
       <h2>Add New Question</h2>
       {message && <p>{message}</p>}
 
-      {/* Group Selection via Buttons */}
       <div>
         <label>Groups: </label>
         <div>
@@ -129,7 +128,6 @@ const AdminAddQuestion: React.FC = () => {
         </div>
       </div>
 
-      {/* Category Dropdown */}
       <div>
         <label>Category: </label>
         <select value={category} onChange={(e) => setCategory(e.target.value)} required>
@@ -144,13 +142,11 @@ const AdminAddQuestion: React.FC = () => {
         </select>
       </div>
 
-      {/* Display points for the selected category */}
       <div>
         <label>Points: </label>
         <input type="number" value={points} readOnly />
       </div>
 
-      {/* Question Text Input */}
       <div>
         <label>Question Text: </label>
         <textarea
@@ -161,7 +157,6 @@ const AdminAddQuestion: React.FC = () => {
         />
       </div>
 
-      {/* Options Inputs (A, B, C) */}
       <div>
         <label>Options (A, B, C): </label>
         {['A', 'B', 'C'].map((label, index) => (
@@ -181,7 +176,6 @@ const AdminAddQuestion: React.FC = () => {
         ))}
       </div>
 
-      {/* Correct Answer Selection */}
       <div>
         <label>Correct Answer: </label>
         <select value={correctAnswer} onChange={(e) => setCorrectAnswer(e.target.value)} required>
@@ -191,7 +185,6 @@ const AdminAddQuestion: React.FC = () => {
         </select>
       </div>
 
-      {/* Image URL Input */}
       <div>
         <label>Image URL (optional): </label>
         <input
@@ -202,7 +195,6 @@ const AdminAddQuestion: React.FC = () => {
         />
       </div>
 
-      {/* Difficulty Selection */}
       <div>
         <label>Difficulty: </label>
         <select value={difficulty} onChange={(e) => setDifficulty(e.target.value)} required>
@@ -212,7 +204,6 @@ const AdminAddQuestion: React.FC = () => {
         </select>
       </div>
 
-      {/* Explanation Input */}
       <div>
         <label>Explanation: </label>
         <textarea

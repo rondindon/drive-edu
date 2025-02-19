@@ -10,7 +10,6 @@ const FireAnimation: React.FC<{ width?: number; height?: number }> = ({ width = 
       viewBox="0 0 185.68 238.8"
       width={width}
       height={height}
-      // Initial animation state
       initial={{ opacity: 0, scale: 0.8 }}
       animate={{ opacity: 1, scale: 1 }}
       transition={{ duration: 0.5 }}
@@ -92,7 +91,6 @@ const FireAnimation: React.FC<{ width?: number; height?: number }> = ({ width = 
       </g>
       
       <g data-name="Layer 3">
-        {/* sideFlames */}
         <motion.path
           className="cls-2 sideFlame1"
           d="M47.38,151c-9.76-4-34.9-17.48-34.9-17.48s2.29,46,15,68.12l.06.1q.33.58.68,1.13l.25.41a30.73,30.73,0,0,0,3.93,5.06l.18.17a34,34,0,0,0,46.91,2.17c14.19-12.33,16.39-34.45,3.38-48C71,150.36,57.14,155.07,47.38,151Z"
@@ -120,7 +118,6 @@ const FireAnimation: React.FC<{ width?: number; height?: number }> = ({ width = 
           }}
         /> 
         
-        {/* MainFlames */}
         <motion.path
           className="cls-1 flame"
           d="M158.83,151.17C145.08,107.52,91.48,42.72,91.48,42.72S39.85,107.18,25.64,148.44a60.27,60.27,0,0,0-5.34,24.82c0,20.82,10.67,39.35,27.26,51.29l.59.42,1.26.87A75.2,75.2,0,0,0,92,238.8c39.32,0,71.19-29.19,71.19-65.2A60.19,60.19,0,0,0,158.83,151.17Z"

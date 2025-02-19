@@ -44,7 +44,6 @@ const AboutPage: React.FC = () => {
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-[hsl(var(--background))] text-[hsl(var(--foreground))]">
-      {/* Main Content with Fade-In Animation */}
       <motion.div
         variants={cardVariants}
         initial="hidden"
@@ -56,16 +55,14 @@ const AboutPage: React.FC = () => {
             variants={childVariants}
             className="flex flex-col items-center"
           >
-            {/* Avatar with Glow Effect */}
             <motion.div className="relative group" {...glowAnimation}>
               <Avatar className="w-32 h-32 mb-6 rounded-full overflow-hidden border-4 border-[hsl(var(--ring))] sm:w-24 sm:h-24">
                 <img
-                  src="https://github.com/rondindon.png" // GitHub profile picture URL
+                  src="https://github.com/rondindon.png"
                   alt="Rondindon Avatar"
                   className="w-full h-full object-cover"
                 />
               </Avatar>
-              {/* Glow Effect */}
               <motion.div
                 className="absolute top-0 left-0 w-32 h-32 rounded-full bg-[hsl(var(--ring))] opacity-10 blur-lg sm:w-24 sm:h-24"
                 variants={{
@@ -82,7 +79,6 @@ const AboutPage: React.FC = () => {
               ></motion.div>
             </motion.div>
 
-            {/* Name */}
             <motion.h1
               variants={childVariants}
               className="text-3xl font-bold text-[hsl(var(--foreground))] mb-2"
@@ -90,7 +86,6 @@ const AboutPage: React.FC = () => {
               Rondindon
             </motion.h1>
 
-            {/* Introduction */}
             <motion.p
               variants={childVariants}
               className="text-center text-[hsl(var(--muted-foreground))] mb-6 leading-relaxed"
@@ -99,12 +94,10 @@ const AboutPage: React.FC = () => {
               I love exploring new technologies and continuously improving my skills.
             </motion.p>
 
-            {/* Social Buttons */}
             <motion.div
               variants={childVariants}
               className="flex space-x-4"
             >
-              {/* GitHub Button */}
               <Button
                 asChild
                 variant="outline"
@@ -122,7 +115,6 @@ const AboutPage: React.FC = () => {
                 </a>
               </Button>
 
-              {/* LinkedIn Button */}
               <Button
                 asChild
                 variant="outline"

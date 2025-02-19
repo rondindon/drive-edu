@@ -2,8 +2,8 @@ import React, { useEffect, useState } from "react";
 
 interface TypedTextProps {
   text: string;
-  typingSpeed?: number; // Optional: ms delay between letters
-  onTypingComplete?: () => void; // Optional: callback after typing finishes
+  typingSpeed?: number;
+  onTypingComplete?: () => void;
 }
 
 const TypedText: React.FC<TypedTextProps> = ({

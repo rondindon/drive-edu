@@ -40,29 +40,24 @@ const Profile: React.FC = () => {
   const [message, setMessage] = useState<string | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
 
-  // ** Test Summary State **
   const [testsTaken, setTestsTaken] = useState<number>(0);
   const [testsPassed, setTestsPassed] = useState<number>(0);
   const [successRate, setSuccessRate] = useState<number>(0);
   const [testStatsLoading, setTestStatsLoading] = useState<boolean>(true);
   const [testStatsError, setTestStatsError] = useState<string | null>(null);
 
-  // ** Tests Per Day State **
   const [testsPerDay, setTestsPerDay] = useState<TestsPerDay[]>([]);
   const [testsPerDayLoading, setTestsPerDayLoading] = useState<boolean>(true);
   const [testsPerDayError, setTestsPerDayError] = useState<string | null>(null);
 
-  // ** History State **
   const [userTests, setUserTests] = useState<any[]>([]);
   const [userTestsLoading, setUserTestsLoading] = useState<boolean>(false);
   const [userTestsError, setUserTestsError] = useState<string | null>(null);
 
-  // ** Streak State **
   const [streak, setStreak] = useState<number>(0);
   const [streakLoading, setStreakLoading] = useState<boolean>(true);
   const [streakError, setStreakError] = useState<string | null>(null);
 
-  // ** Badges State **
   const [badges, setBadges] = useState<{ title: string; rank: string; description: string }[]>([]);
   const [badgesLoading, setBadgesLoading] = useState<boolean>(true);
   const [badgeDialogOpen, setBadgeDialogOpen] = useState(false);
@@ -87,13 +82,11 @@ const Profile: React.FC = () => {
     BRONZE: "bg-yellow-600 text-white border border-yellow-800",
   };
 
-  // Base animation variant for non-glowing badges
   const badgeVariants = {
     hidden: { opacity: 0, scale: 0.8 },
     visible: { opacity: 1, scale: 1, transition: { duration: 0.3 } },
   };
 
-  // Handler for selecting a new profile picture
   const handleProfilePicSelect = async (url: string) => {
     setProfilePicture(url);
     axios.put('https://drive-edu.onrender.com/api/users/updateProfilePicture', { profilePicture: url }, { headers: { Authorization: `Bearer ${token}` } });
@@ -215,7 +208,6 @@ const Profile: React.FC = () => {
     }
   };
 
-  // Animation variants for the page and test cards
   const pageVariants = {
     hidden: { opacity: 0, y: 10 },
     visible: { opacity: 1, y: 0, transition: { duration: 0.4 } },
@@ -230,11 +222,6 @@ const Profile: React.FC = () => {
     }),
   };
 
-  const navButtonVariants = {
-    hover: { scale: 1.1 },
-    tap: { scale: 0.95 },
-  };
-
   return (
     <motion.div
       initial="hidden"
@@ -245,9 +232,9 @@ const Profile: React.FC = () => {
       <div className="max-w-5xl w-full">
         {/* Profile Card with Avatar, Calendar, and Achievements */}
         <Card className="mt-5 py-12 shadow-lg rounded-md flex flex-col md:flex-row justify-between items-start space-y-6 md:space-y-0 md:space-x-6 bg-[hsl(var(--card))] text-[hsl(var(--card-foreground))] items-center justify-around">
-          {/* Avatar Section */}
+
           <div className="flex flex-col items-center md:items-start space-y-4">
-            {/* Make the Avatar clickable to open the profile picture selection dialog */}
+
             <div onClick={() => setProfilePicDialogOpen(true)} className="cursor-pointer">
               <Avatar className="w-24 h-24">
                 <AvatarImage src={profilePicture} alt={username || "Avatar"} />

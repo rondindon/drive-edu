@@ -5,14 +5,10 @@ import { Card } from "src/components/ui/card";
 import { useAuth } from "src/context/AuthContext";
 import { useNavigate } from "react-router-dom";
 import {
-  User,
-  ClipboardList,
-  ClipboardCheck,
-  BarChart as LucideBarChart, // Alias Lucide's BarChart
-  RefreshCw,
-  ExternalLink, // Import ExternalLink icon
+  BarChart as LucideBarChart,
+  ExternalLink,
 } from "lucide-react";
-import { Skeleton } from "src/components/ui/skeleton"; // Import Skeleton
+import { Skeleton } from "src/components/ui/skeleton";
 import {
   Select,
   SelectTrigger,
@@ -24,10 +20,8 @@ import {
 import { Report, ReportStatus } from "./ReportTypes";
 import { ThemeContext } from "src/context/ThemeContext";
 
-// Example status/type arrays
 const reportStatuses: ReportStatus[] = ["Pending", "Reviewed", "Resolved"];
 
-// --- Skeleton Rows for loading state ---
 const SkeletonRow: React.FC = () => (
   <tr className="border-b border-gray-200">
     <td className="py-2 px-4">
@@ -61,14 +55,12 @@ const AdminReports: React.FC = () => {
   const { role } = useAuth();
   const navigate = useNavigate();
 
-  // 1) Ensure only Admin can access
   useEffect(() => {
     if (role !== "ADMIN") {
       navigate("/login");
     }
   }, [role, navigate]);
 
-  // 2) State management
   const [reports, setReports] = useState<Report[]>([]);
   const [filteredReports, setFilteredReports] = useState<Report[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -80,10 +72,9 @@ const AdminReports: React.FC = () => {
   const token = localStorage.getItem("supabaseToken");
   const { theme } = useContext(ThemeContext);
 
-  // Local cache key
   const cacheKey = "adminReportsCache";
 
-  // 3) Fetch Reports with caching
+  // Fetch Reports with caching
   const fetchReports = useCallback(async () => {
     setLoading(true);
     setError(null);
@@ -99,7 +90,6 @@ const AdminReports: React.FC = () => {
           timestamp: number;
         };
 
-        // If cache is still valid, use it
         if (now - parsedCache.timestamp < cacheExpiry) {
           setReports(parsedCache.reports);
           setLoading(false);
@@ -113,7 +103,6 @@ const AdminReports: React.FC = () => {
       }
     }
 
-    // If no valid cache, fetch from server
     try {
       const response = await fetch("https://drive-edu.onrender.com/api/admin/report", {
         headers: {
@@ -152,7 +141,6 @@ const AdminReports: React.FC = () => {
           console.error("Failed to set cache:", e);
         }
       }
-
       setLoading(false);
     } catch (err) {
       console.error(err);
@@ -161,12 +149,10 @@ const AdminReports: React.FC = () => {
     }
   }, [token]);
 
-  // Run on mount
   useEffect(() => {
     fetchReports();
   }, [fetchReports]);
 
-  // 4) Filtering logic
   useEffect(() => {
     let temp = [...reports];
 
@@ -188,7 +174,6 @@ const AdminReports: React.FC = () => {
     setFilteredReports(temp);
   }, [reports, statusFilter, searchTerm]);
 
-  // 5) Handlers for Approve, Resolve, Delete
   const handleApprove = async (reportId: number) => {
     try {
       const response = await fetch(
@@ -275,7 +260,6 @@ const AdminReports: React.FC = () => {
     }
   };
 
-  // 7) Refresh button
   const handleRefresh = () => {
     localStorage.removeItem(cacheKey);
     fetchReports();
@@ -283,7 +267,6 @@ const AdminReports: React.FC = () => {
 
   return (
     <>
-      {/* Header */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4">
         <h1 className="text-2xl font-bold text-[hsl(var(--foreground))]">Reports</h1>
         <div className="mt-4 md:mt-0 flex space-x-2">
@@ -296,7 +279,6 @@ const AdminReports: React.FC = () => {
         </div>
       </div>
 
-      {/* Filters and Search */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 space-y-4 md:space-y-0">
         <div className="flex flex-col md:flex-row items-start md:items-center space-y-4 md:space-x-4 text-[hsl(var(--foreground))] w-full">
           <Input
@@ -327,14 +309,12 @@ const AdminReports: React.FC = () => {
         </div>
       </div>
 
-      {/* Error Handling */}
       {error && (
         <div className="bg-red-100 text-red-700 p-2 rounded mb-4">
           {error}
         </div>
       )}
 
-      {/* Reports Table */}
       <Card className="p-4">
         <div className="overflow-x-auto">
           <table className="w-full border-collapse text-left">

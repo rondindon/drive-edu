@@ -18,13 +18,11 @@ const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({ children }) => {
       role="status"
       aria-label="Loading"
     >
-      {/* Horizontal Lines to the Left */}
       <div className="absolute left-0 flex flex-col gap-4">
         <div className="line bg-[hsl(var(--primary))]" />
         <div className="line delay-2 bg-[hsl(var(--primary))]" />
       </div>
 
-      {/* Bouncing Car SVG */}
       <svg
         className="car relative z-10"
         width="102"
@@ -34,19 +32,14 @@ const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({ children }) => {
       >
         <g
           transform="translate(2 1)"
-          // Use theme-based colors:
-          // "stroke-[hsl(var(--foreground))]" for main lines,
-          // or "stroke-[hsl(var(--primary))]" where desired
           className="stroke-[hsl(var(--foreground))] fill-none fill-rule-evenodd stroke-cap-round stroke-join-round"
         >
-          {/* Car Body */}
           <path
             className="car__body animate-shake"
             d="M47.293 2.375C52.927.792 54.017.805 54.017.805c2.613-.445 6.838-.337 9.42.237l8.381 1.863c2.59.576 6.164 2.606 7.98 4.531l6.348 6.732 6.245 1.877c3.098.508 5.609 3.431 5.609 6.507v4.206c0 .29-2.536 4.189-5.687 4.189H36.808c-2.655 0-4.34-2.1-3.688-4.67 0 0 3.71-19.944 14.173-23.902zM36.5 15.5h54.01"
             strokeWidth="3"
           />
 
-          {/* Wheels (kept white for contrast; feel free to theme) */}
           <ellipse
             className="car__wheel--left"
             strokeWidth="3.2"
@@ -66,12 +59,10 @@ const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({ children }) => {
             ry="6.808"
           />
 
-          {/* Animated Lines (Use theme-based stroke for green lines) */}
           <path
             className="car__line car__line--top animate-line"
             d="M22.5 16.5H2.475"
             strokeWidth="3"
-            // Replacing #27AE60 with theme-based color for 'primary'
             style={{ stroke: '#27AE60' }}
           />
           <path
@@ -89,7 +80,6 @@ const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({ children }) => {
         </g>
       </svg>
 
-      {/* Children area for typed/animated messages below the spinner */}
       <div className="mt-4 ml-8 text-sm min-h-[1.5rem] text-center">
         {children}
       </div>

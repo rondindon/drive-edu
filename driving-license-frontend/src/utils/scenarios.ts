@@ -24,7 +24,6 @@ export type Scenario = {
 };
 
 export const scenarios: Scenario[] = [
-  // 1) Original Scenario
   {
     id: 'crossroad1',
     name: 'Simple Crossroad (No Signs)',
@@ -56,8 +55,6 @@ export const scenarios: Scenario[] = [
     rules: ['Yield to the right'],
     correctOrder: ['car2', 'car1', 'car3'],
   },
-
-  // 2) Original Scenario
   {
     id: 'crossroad2',
     name: 'Simple Crossroad (No Signs)',
@@ -89,8 +86,6 @@ export const scenarios: Scenario[] = [
     rules: ['Yield to the right'],
     correctOrder: ['car2', 'car3', 'car1'],
   },
-
-  // 3) Original Scenario
   {
     id: 'crossroad3',
     name: 'Simultaneous Movement Example',
@@ -136,15 +131,12 @@ export const scenarios: Scenario[] = [
       return JSON.stringify(lastTwo) === JSON.stringify(['car1', 'car2']);
     },
   },
-
-  // 4) New Scenario (Main Road East-West, No Overlapping Signs)
   {
     id: 'crossroad4',
     name: 'Main Road East-West (Side Road from North)',
     description:
       'East-west road is the main road. The north approach is a side road with a stop sign. Signs are offset and oriented correctly.',
     cars: [
-      // West-bound (main road)
       {
         id: 'car1',
         color: 'placeholder',
@@ -152,7 +144,6 @@ export const scenarios: Scenario[] = [
         blinker: 'off',
         direction: 'west',
       },
-      // North-bound (side road)
       {
         id: 'car2',
         color: 'placeholder',
@@ -160,7 +151,6 @@ export const scenarios: Scenario[] = [
         blinker: 'off',
         direction: 'north',
       },
-      // East-bound (main road)
       {
         id: 'car3',
         color: 'placeholder',
@@ -170,25 +160,19 @@ export const scenarios: Scenario[] = [
       },
     ],
     signs: [
-      // Main Road Sign for East-bound approach (car3)
-      // Car traveling east => sign direction is 'east'
       {
         type: 'main-road',
-        position: { x: 68, y: 31 }, // offset slightly above
+        position: { x: 68, y: 31 },
         direction: 'east',
       },
-      // Main Road Sign for West-bound approach (car1)
-      // Car traveling west => sign direction is 'west'
       {
         type: 'main-road',
-        position: { x: 32, y:66 }, // offset below
+        position: { x: 32, y:66 },
         direction: 'west',
       },
-      // Stop Sign for North-bound approach (car2)
-      // Car traveling north => sign direction is 'north'
       {
         type: 'stop',
-        position: { x: 80, y: 60 }, // offset to the right
+        position: { x: 80, y: 60 },
         direction: 'north',
       },
     ],
@@ -196,7 +180,6 @@ export const scenarios: Scenario[] = [
       'East-west is the main road; north approach must stop.',
       'Main-road cars have priority.',
     ],
-    // For example, east-bound goes first, then west-bound, then north
     validateOrder: (selectedOrder: string[]) => {
       if (selectedOrder.length !== 3) return false;
       if (selectedOrder[2] !== 'car2') return false;

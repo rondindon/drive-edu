@@ -14,8 +14,6 @@ import { MoreVertical } from "lucide-react";
 import { Skeleton } from "src/components/ui/skeleton";
 import TestDetailsDialog from "./TestDetailsDialog"; // Ensure the path is correct
 import { ThemeContext } from "src/context/ThemeContext";
-
-// Updated User Interface with 'username'
 export interface User {
   id: number;
   name: string;
@@ -39,34 +37,29 @@ const AdminTests: React.FC = () => {
   const { role } = useAuth();
   const navigate = useNavigate();
 
-  // Authentication and Authorization
   useEffect(() => {
     if (role !== "ADMIN") {
       navigate("/login");
     }
   }, [role, navigate]);
 
-  // State Management
   const [search, setSearch] = useState("");
   const [tests, setTests] = useState<Test[]>([]);
   const [filteredTests, setFilteredTests] = useState<Test[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Pagination states
   const [offset, setOffset] = useState(0);
   const [hasMore, setHasMore] = useState(true);
   const limit = 100;
 
   const token = localStorage.getItem("supabaseToken");
 
-  // State for Test Details Dialog
   const [selectedTest, setSelectedTest] = useState<Test | null>(null);
   const [openDetailsDialog, setOpenDetailsDialog] = useState(false);
 
   const { theme } = useContext(ThemeContext);
 
-  // Caching
   const getCacheKey = () => {
     return `adminTestsCache_${search}`;
   };
@@ -121,18 +114,16 @@ const AdminTests: React.FC = () => {
     [search, limit, token]
   );
 
-  // Fetch tests on mount and when search changes
   useEffect(() => {
-    setOffset(0); // Reset offset when search changes
+    setOffset(0);
     fetchTests(0, search, false);
   }, [fetchTests, search]);
 
-  // Update filteredTests based on search
   useEffect(() => {
     const sortedTests = [...tests].sort((a, b) => a.id - b.id);
 
     let filtered = sortedTests.filter((t) => {
-      const userName = t.user?.username || ""; // Use 'username' instead of 'name'
+      const userName = t.user?.username || "";
       const email = t.user?.email || "";
       const group = t.group || "";
       const searchLower = search.toLowerCase();
@@ -173,7 +164,6 @@ const AdminTests: React.FC = () => {
         throw new Error("Failed to delete test");
       }
       setTests((prev) => prev.filter((t) => t.id !== testId));
-      // Invalidate cache by removing it
       localStorage.removeItem(getCacheKey());
     } catch (err) {
       console.error(err);
@@ -226,7 +216,6 @@ const AdminTests: React.FC = () => {
     return skeletonRows;
   };
 
-  // Render error state
   if (error) {
     return (
       <div className="p-6 text-red-500">
@@ -237,14 +226,12 @@ const AdminTests: React.FC = () => {
 
   return (
     <>
-      {/* Header and Add/Refresh Button */}
       <div className="flex flex-col md:flex-row justify-between items-center mb-4">
         <h1 className="text-2xl font-bold text-[hsl(var(--foreground))]">
           User Tests
         </h1>
       </div>
 
-      {/* Filters and Search Bar */}
       <div className="flex flex-col md:flex-row items-start md:items-center justify-between space-y-4 md:space-y-0 md:space-x-4 mb-4">
         <Input
           placeholder="Search by username, email, or group..."
@@ -253,12 +240,10 @@ const AdminTests: React.FC = () => {
           className="w-full md:w-1/3"
         />
         <div className="flex space-x-2">
-          {/* Refresh Button */}
           <Button
             onClick={() => {
               setOffset(0);
               fetchTests(0, search, false);
-              // Optionally, clear cache to force fresh fetch
               localStorage.removeItem(getCacheKey());
             }}
             className="bg-main-green text-white hover:bg-main-green/90 cursor-pointer"
@@ -266,28 +251,25 @@ const AdminTests: React.FC = () => {
             Refresh
           </Button>
         </div>
-        {/* You can add more filters here if needed */}
       </div>
 
-      {/* Tests Table */}
       <Card className="p-4">
         <div className="overflow-x-auto">
           <table className="w-full border-collapse text-left">
             <thead>
               <tr className="border-b border-main-green text-gray-800">
                 <th className="py-2 px-4 text-[hsl(var(--foreground))]">ID</th>
-                <th className="py-2 px-4 text-[hsl(var(--foreground))]">User</th> {/* New Username Column */}
-                <th className="py-2 px-4 text-[hsl(var(--foreground))]">Email</th> {/* Renamed User to Email */}
+                <th className="py-2 px-4 text-[hsl(var(--foreground))]">User</th>
+                <th className="py-2 px-4 text-[hsl(var(--foreground))]">Email</th>
                 <th className="py-2 px-4 text-[hsl(var(--foreground))]">Group</th>
                 <th className="py-2 px-4 text-[hsl(var(--foreground))]">Score</th>
-                <th className="py-2 px-4 text-[hsl(var(--foreground))]">Time Taken</th> {/* Reformatted Time */}
+                <th className="py-2 px-4 text-[hsl(var(--foreground))]">Time Taken</th> 
                 <th className="py-2 px-4 text-[hsl(var(--foreground))]">Passed</th>
                 <th className="py-2 px-4 text-[hsl(var(--foreground))]">Created At</th>
                 <th className="py-2 px-4 text-[hsl(var(--foreground))]">Actions</th>
               </tr>
             </thead>
             <tbody>
-              {/* If loading and no tests yet, show skeleton rows */}
               {loading && tests.length === 0 ? (
                 renderSkeletonRows()
               ) : (
@@ -311,7 +293,6 @@ const AdminTests: React.FC = () => {
                       <td className="py-2 px-4">{t.group}</td>
                       <td className="py-2 px-4">{t.score}</td>
                       <td className="py-2 px-4">
-                        {/* Convert timeTaken from seconds to "MM:SS" format */}
                         {Math.floor(t.timeTaken / 60)}m {t.timeTaken % 60}s
                       </td>
                       <td className="py-2 px-4">
@@ -343,7 +324,6 @@ const AdminTests: React.FC = () => {
                     </tr>
                   ))}
 
-                  {/* If no tests found after filtering */}
                   {filteredTests.length === 0 && !loading && (
                     <tr>
                       <td colSpan={9} className="text-center py-4">
@@ -352,7 +332,6 @@ const AdminTests: React.FC = () => {
                     </tr>
                   )}
 
-                  {/* If loading more data, append skeleton rows */}
                   {loading && tests.length > 0 && renderSkeletonRows()}
                 </>
               )}
@@ -360,7 +339,6 @@ const AdminTests: React.FC = () => {
           </table>
         </div>
 
-        {/* Load More Button */}
         {hasMore && (
           <div className="mt-4 text-center">
             {loading && tests.length > 0 ? (
@@ -382,7 +360,6 @@ const AdminTests: React.FC = () => {
         )}
       </Card>
 
-      {/* Test Details Dialog */}
       {openDetailsDialog && selectedTest && (
         <TestDetailsDialog
           open={openDetailsDialog}

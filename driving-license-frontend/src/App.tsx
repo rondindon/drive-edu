@@ -8,11 +8,11 @@ import CrossroadSimulator from './pages/CrossroadSimulator';
 import ProtectedRoute from './components/ProtectedRoute';
 import { Slide, ToastContainer } from 'react-toastify';
 
-// Import Layouts
+// Layouts
 import PublicLayout from './layouts/PublicLayout';
 import AdminLayout from './layouts/AdminLayout';
 
-// Import Admin Pages
+// Admin Pages
 import AdminDashboard from './pages/admin/AdminDashboard';
 import AdminUsers from './pages/admin/users/AdminUsers';
 import AdminQuestions from './pages/admin/questions/AdminQuestions';
@@ -38,10 +38,9 @@ function App() {
     draggable
     pauseOnHover
     theme="light"
-    transition={Slide} // Choose from Slide, Zoom, Flip, Bounce, etc.
+    transition={Slide}
   />
     <Routes>
-      {/* Public Routes with PublicLayout */}
       <Route element={<PublicLayout />}>
         <Route path="/" element={<LandingPage />} />
         <Route path="/question/:id" element={<ProtectedRoute allowedRoles={['ADMIN']}><QuestionDetails /></ProtectedRoute>} />
@@ -49,7 +48,6 @@ function App() {
         <Route path="/register" element={<Register />} />
         <Route path="/simulator" element={<CrossroadSimulator />} />
 
-      {/* Profile Route */}
         <Route
             path="/profile"
             element={
@@ -88,7 +86,6 @@ function App() {
             />
       </Route>
 
-      {/* Admin Routes with AdminLayout */}
       <Route
         path="/admin/*"
         element={
@@ -97,18 +94,14 @@ function App() {
           </ProtectedRoute>
         }
       >
-        {/* Admin Nested Routes */}
         <Route index element={<AdminDashboard />} />
         <Route path="users" element={<AdminUsers />} />
         <Route path="tests" element={<AdminTests />} />
         <Route path="questions" element={<AdminQuestions />} />
         <Route path="reports" element={<AdminReports />} />
         <Route path="add-question" element={<AdminAddQuestion />} />
-        {/* Add other admin routes here */}
       </Route>
 
-      {/* Catch-All Route (Optional) */}
-      {/* <Route path="*" element={<NotFound />} /> */}
     </Routes>
     </>
   );

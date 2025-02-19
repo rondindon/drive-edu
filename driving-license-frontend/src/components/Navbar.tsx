@@ -1,7 +1,7 @@
 // src/components/Navbar.tsx
 import React, { useContext } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { Helmet } from "react-helmet"; // Import Helmet
+import { Helmet } from "react-helmet";
 import { Button } from "./ui/button";
 import {
   DropdownMenu,
@@ -39,13 +39,11 @@ const Navbar: React.FC = () => {
 
   return (
     <>
-      {/* Fallback title using Helmet */}
       <Helmet>
         <title>DriveReady</title>
       </Helmet>
       <header className="w-full bg-main-darkBlue shadow-md">
         <nav className="container mx-auto flex items-center justify-between py-4 px-6">
-          {/* Left Section: Logo */}
           <div className="flex-1">
             <a
               href="/"
@@ -55,7 +53,6 @@ const Navbar: React.FC = () => {
             </a>
           </div>
 
-          {/* Center Section: Navigation Links (Visible on md and above) */}
           <div className="hidden md:flex flex-1 justify-center space-x-6">
             <a href="/" className={isActive("/")}>
               Home
@@ -71,9 +68,7 @@ const Navbar: React.FC = () => {
             </a>
           </div>
 
-          {/* Right Section: Profile, Admin, Theme Toggle (md) */}
           <div className="hidden md:flex flex-1 justify-end items-center space-x-4">
-            {/* Profile */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button
@@ -129,7 +124,6 @@ const Navbar: React.FC = () => {
               </DropdownMenuContent>
             </DropdownMenu>
 
-            {/* Admin Panel */}
             {user && role === "ADMIN" && (
               <Button
                 variant="outline"
@@ -140,7 +134,6 @@ const Navbar: React.FC = () => {
               </Button>
             )}
 
-            {/* Theme Toggle */}
             <div className="flex items-center space-x-2">
               <Sun
                 className={`w-5 h-5 ${
@@ -160,7 +153,6 @@ const Navbar: React.FC = () => {
             </div>
           </div>
 
-          {/* Mobile Menu (below md) */}
           <div className="flex md:hidden flex-1 justify-end">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -175,7 +167,6 @@ const Navbar: React.FC = () => {
                 align="end"
                 className="w-56 bg-main-darkBlue border border-main-green text-secondary-lightGray"
               >
-                {/* Navigation Links */}
                 <div className="px-4 py-2 border-b border-main-green">
                   <a
                     href="/"
@@ -203,7 +194,6 @@ const Navbar: React.FC = () => {
                   </a>
                 </div>
 
-                {/* User Options */}
                 <div className="px-4 py-2 border-b border-main-green">
                   {!user ? (
                     <>
@@ -249,7 +239,6 @@ const Navbar: React.FC = () => {
                   )}
                 </div>
 
-                {/* Theme Toggle (Mobile) */}
                 <div className="flex items-center space-x-2 px-4 py-2">
                   <Sun
                     className={`w-5 h-5 ${

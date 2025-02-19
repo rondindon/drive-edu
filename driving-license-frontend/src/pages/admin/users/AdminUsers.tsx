@@ -21,7 +21,6 @@ import {
 import { Skeleton } from "src/components/ui/skeleton"; // Import Skeleton
 import { ThemeContext } from "src/context/ThemeContext";
 
-// Updated User Interface with 'username'
 interface User {
   id: number;
   email: string;
@@ -30,13 +29,11 @@ interface User {
   updatedAt: string;
   username?: string | null;
 }
-
-// Define Cache Structure
 interface UserCache {
   users: User[];
   offset: number;
   hasMore: boolean;
-  timestamp: number; // For optional time-based cache invalidation
+  timestamp: number;
 }
 
 const SkeletonRow: React.FC = () => (
@@ -62,7 +59,6 @@ const SkeletonRow: React.FC = () => (
   </tr>
 );
 
-// Function to render multiple SkeletonRows
 const renderSkeletonRows = (count: number = 5) => {
   return Array.from({ length: count }).map((_, index) => (
     <SkeletonRow key={index} />
@@ -75,7 +71,6 @@ const AdminUsers: React.FC = () => {
   const { role } = useAuth();
   const navigate = useNavigate();
 
-  // Authentication and Authorization
   useEffect(() => {
     if (role !== "ADMIN") {
       navigate("/login");
@@ -97,7 +92,6 @@ const AdminUsers: React.FC = () => {
   const token = localStorage.getItem("supabaseToken");
   const { theme } = useContext(ThemeContext);
 
-  // Caching
   const getCacheKey = () => {
     return `adminUsersCache_${search}_${roleFilter}`;
   };
@@ -110,8 +104,7 @@ const AdminUsers: React.FC = () => {
       const cacheKey = getCacheKey();
       const cachedData = localStorage.getItem(cacheKey);
 
-      // Optional: Time-Based Cache Invalidation (e.g., 5 minutes)
-      const cacheExpiry = 5 * 60 * 1000; // 5 minutes in milliseconds
+      const cacheExpiry = 5 * 60 * 1000;
       const now = Date.now();
 
       if (cachedData) {
@@ -342,7 +335,6 @@ const AdminUsers: React.FC = () => {
         </Button>
       </div>
 
-      {/* Users Table with responsive container */}
       <Card className="p-4">
         <div className="overflow-x-auto">
           <table className="min-w-full border-collapse text-left">
@@ -438,7 +430,7 @@ const AdminUsers: React.FC = () => {
             </tbody>
           </table>
         </div>
-        {/* Load More Button */}
+
         {hasMore && filteredUsers.length > 0 && (
           <div className="mt-4 text-center">
             {loading && users.length > 0 ? (

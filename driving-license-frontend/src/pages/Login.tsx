@@ -6,9 +6,8 @@ import { Input } from "../components/ui/input";
 import { Button } from "../components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "../components/ui/alert";
-import { FcGoogle } from "react-icons/fc"; // Google icon for styling
+import { FcGoogle } from "react-icons/fc";
 import { toast } from "react-toastify";
-// Import supabase client to use reset password functionality
 import { supabase } from "../services/supabase";
 
 const Login: React.FC = () => {
@@ -19,7 +18,6 @@ const Login: React.FC = () => {
   const { login, loginWithGoogle, user } = useAuth();
   const navigate = useNavigate();
 
-  // Redirect to home if the user is already logged in
   useEffect(() => {
     if (user && !message) {
       navigate("/");
@@ -65,7 +63,6 @@ const Login: React.FC = () => {
   const handleGoogleLogin = async () => {
     try {
       await loginWithGoogle();
-      // AuthProvider handles any success logic
     } catch (err: any) {
       setMessage(`Google sign-in failed: ${err.message}`);
       setShowAlert(true);
@@ -100,7 +97,6 @@ const Login: React.FC = () => {
         </CardHeader>
 
         <CardContent>
-          {/* Alert with animation */}
           <div
             className={`mb-4 transition-all duration-500 ease-out ${
               showAlert ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-10 h-0"
@@ -125,7 +121,6 @@ const Login: React.FC = () => {
             )}
           </div>
 
-          {/* Email and Password Login */}
           <form onSubmit={handleLogin} className="space-y-6">
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-[hsl(var(--foreground))]">
@@ -164,7 +159,6 @@ const Login: React.FC = () => {
               />
             </div>
 
-            {/* Forgot Password Link */}
             <div className="text-right">
               <button
                 type="button"
@@ -190,7 +184,6 @@ const Login: React.FC = () => {
             </Button>
           </form>
 
-          {/* Separator */}
           <div className="relative my-6">
             <div className="absolute inset-0 flex items-center">
               <div className="w-full border-t border-[hsl(var(--muted))]"></div>
@@ -202,7 +195,6 @@ const Login: React.FC = () => {
             </div>
           </div>
 
-          {/* Google Login */}
           <Button
             onClick={handleGoogleLogin}
             className="

@@ -10,11 +10,9 @@ const Logout: React.FC = () => {
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
 
-      // Clear local storage
       localStorage.removeItem('supabaseToken');
       localStorage.removeItem('role');
 
-      // Navigate to login or home page
       navigate('/login');
     } catch (err) {
       console.error('Error logging out:', err);

@@ -4,7 +4,6 @@ import { scenarios, Scenario } from "../utils/scenarios";
 import { FaExclamationCircle } from "react-icons/fa";
 import { motion, AnimatePresence } from "framer-motion";
 
-// Helper to randomize car colors
 const randomizeScenarioColors = (scenario: Scenario): Scenario => {
   const colorPalette = [
     "red",
@@ -26,29 +25,24 @@ const randomizeScenarioColors = (scenario: Scenario): Scenario => {
 const CrossroadSimulator: React.FC = () => {
   const allScenarioIds = scenarios.map((s) => s.id);
 
-  // State to track which scenario IDs haven't been solved yet
   const [unusedScenarioIds, setUnusedScenarioIds] = useState<string[]>([
     ...allScenarioIds,
   ]);
 
-  // Pick the first scenario by default, randomizing its colors
   const [selectedScenario, setSelectedScenario] = useState<Scenario>(
     randomizeScenarioColors(scenarios[0])
   );
   const [selectedOrder, setSelectedOrder] = useState<string[]>([]);
 
-  // Feedback message for correct/incorrect attempts
   const [feedback, setFeedback] = useState<{
     type: "error" | "success" | null;
     message: string;
   }>({ type: null, message: "" });
 
-  // Helper to reset the user’s chosen order & feedback
   const resetOrder = () => {
     setSelectedOrder([]);
   };
 
-  // On car click, toggle it in the user’s chosen order
   const handleCarClick = (carId: string) => {
     if (selectedOrder.includes(carId)) {
       setSelectedOrder((prev) => prev.filter((id) => id !== carId));
@@ -59,16 +53,13 @@ const CrossroadSimulator: React.FC = () => {
     }
   };
 
-  // Updated pickRandomScenario to avoid picking the current scenario when unsolved ones are available.
   const pickRandomScenario = () => {
     setFeedback({ type: null, message: "" });
 
-    // Determine available scenario IDs:
-    // If there are unsolved scenarios, use them; otherwise, reset to all.
+    // Determine available scenario IDs: unused or all if none left
     let availableIds =
       unusedScenarioIds.length > 0 ? [...unusedScenarioIds] : [...allScenarioIds];
 
-    // If there's more than one available, filter out the current scenario.
     if (availableIds.length > 1) {
       availableIds = availableIds.filter((id) => id !== selectedScenario.id);
     }
@@ -91,11 +82,9 @@ const CrossroadSimulator: React.FC = () => {
       message: "Correct order!",
     });
 
-    // Mark current scenario as solved by removing it from the unused list
     const usedId = selectedScenario.id;
     setUnusedScenarioIds((prev) => prev.filter((id) => id !== usedId));
 
-    // After a brief delay, pick a new scenario.
     setTimeout(() => {
       pickRandomScenario();
       resetOrder();
@@ -144,7 +133,6 @@ const CrossroadSimulator: React.FC = () => {
     resetOrder();
   };
 
-  // Animation variants and button hover (unchanged)
   const pageVariants = {
     hidden: { opacity: 0, y: +50 },
     visible: {
@@ -210,7 +198,6 @@ const CrossroadSimulator: React.FC = () => {
           ))}
         </motion.select>
 
-        {/* Selected Order Display */}
         <motion.div
           className="mt-4 flex items-center justify-center w-full max-w-xl min-h-[48px]"
           initial={{ opacity: 0 }}
@@ -234,14 +221,12 @@ const CrossroadSimulator: React.FC = () => {
           </div>
         </motion.div>
 
-        {/* Crossroad Display */}
         <Crossroad
           scenario={selectedScenario}
           onCarClick={handleCarClick}
           selectedOrder={selectedOrder}
         />
 
-        {/* Feedback Popup with Animation */}
         <AnimatePresence>
           {feedback.type && (
             <motion.div
@@ -266,7 +251,6 @@ const CrossroadSimulator: React.FC = () => {
           )}
         </AnimatePresence>
 
-        {/* Buttons with Hover Animations */}
         <div className="flex gap-4">
           <motion.button
             whileHover={buttonHover}

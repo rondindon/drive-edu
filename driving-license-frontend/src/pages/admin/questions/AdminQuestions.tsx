@@ -59,10 +59,9 @@ interface QuestionCache {
 export interface QuestionStats {
   questionId: number;
   totalAnswers: number;
-  accuracy: number; // percentage (e.g. 75.50)
+  accuracy: number;
 }
 
-// --- Skeleton Rows for loading state ---
 const SkeletonRow: React.FC = () => (
   <tr className="border-b border-gray-200">
     <td className="py-2 px-4">
@@ -99,14 +98,12 @@ const AdminQuestions: React.FC = () => {
   const { role } = useAuth();
   const navigate = useNavigate();
 
-  // Ensure only Admin can access
   useEffect(() => {
     if (role !== "ADMIN") {
       navigate("/login");
     }
   }, [role, navigate]);
 
-  // State management
   const [search, setSearch] = useState("");
   const [questions, setQuestions] = useState<Question[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -114,26 +111,22 @@ const AdminQuestions: React.FC = () => {
   const [openDialog, setOpenDialog] = useState(false);
   const [editQuestion, setEditQuestion] = useState<Question | null>(null);
 
-  // Filters
   const [categoryFilter, setCategoryFilter] = useState<string>("All");
   const [difficultyFilter, setDifficultyFilter] = useState<string>("All");
 
   const token = localStorage.getItem("supabaseToken");
   const { theme } = useContext(ThemeContext);
 
-  // Local cache key
   const cacheKey = "adminQuestionsCache";
 
-  // State for question stats (aggregated from UserAnswer)
   const [questionStats, setQuestionStats] = useState<Record<number, QuestionStats>>({});
 
-  // Fetch Questions Function with Caching
   const fetchQuestions = useCallback(async () => {
     setLoading(true);
     setError(null);
 
     const cachedData = localStorage.getItem(cacheKey);
-    const cacheExpiry = 5 * 60 * 1000; // 5 minutes in milliseconds
+    const cacheExpiry = 5 * 60 * 1000;
     const now = Date.now();
 
     if (cachedData) {
@@ -203,7 +196,6 @@ const AdminQuestions: React.FC = () => {
     fetchQuestions();
   }, [fetchQuestions]);
 
-  // Fetch Question Stats from backend
   const fetchQuestionStats = useCallback(async () => {
     try {
       const response = await fetch(
@@ -219,7 +211,6 @@ const AdminQuestions: React.FC = () => {
         throw new Error("Failed to fetch question stats");
       }
       const data = await response.json();
-      // data should be of shape { stats: QuestionStats[] }
       const statsArray = data.stats as QuestionStats[];
       const statsMap: Record<number, QuestionStats> = {};
       statsArray.forEach((stat) => {
@@ -235,7 +226,6 @@ const AdminQuestions: React.FC = () => {
     fetchQuestionStats();
   }, [fetchQuestionStats]);
 
-  // Filtering logic for questions
   const getFilteredQuestions = () => {
     return questions.filter((q) => {
       const matchesSearch = q.text.toLowerCase().includes(search.toLowerCase());
@@ -249,7 +239,6 @@ const AdminQuestions: React.FC = () => {
 
   const filteredQuestions = getFilteredQuestions();
 
-  // Handlers for Add/Edit/Delete etc.
   const handleAddNew = () => {
     setEditQuestion(null);
     setOpenDialog(true);
@@ -335,7 +324,6 @@ const AdminQuestions: React.FC = () => {
     }
   };
 
-  // Refresh button
   const handleRefresh = () => {
     localStorage.removeItem(cacheKey);
     fetchQuestions();
@@ -343,7 +331,6 @@ const AdminQuestions: React.FC = () => {
 
   return (
     <>
-      {/* Header and Add/Refresh Buttons */}
       <div className="flex flex-col md:flex-row justify-between items-center mb-4">
         <h1 className="text-2xl font-bold text-[hsl(var(--foreground))]">
           Questions
@@ -364,7 +351,6 @@ const AdminQuestions: React.FC = () => {
         </div>
       </div>
 
-      {/* Filters and Search Bar */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between space-y-4 sm:space-y-0 mb-4">
         <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-4 sm:space-y-0 sm:space-x-4">
           <Input
@@ -373,7 +359,6 @@ const AdminQuestions: React.FC = () => {
             onChange={(e) => setSearch(e.target.value)}
             className="w-full sm:w-1/3"
           />
-          {/* Category Filter */}
           <div className="flex items-center space-x-2">
             <span className="whitespace-nowrap">Category:</span>
             <Select
@@ -392,7 +377,6 @@ const AdminQuestions: React.FC = () => {
               </SelectContent>
             </Select>
           </div>
-          {/* Difficulty Filter */}
           <div className="flex items-center space-x-2">
             <span className="whitespace-nowrap">Difficulty:</span>
             <Select
@@ -416,7 +400,6 @@ const AdminQuestions: React.FC = () => {
         </div>
       </div>
 
-      {/* Questions Table */}
       <Card className="p-4">
         <div className="overflow-x-auto">
           <table className="w-full border-collapse text-left">
@@ -510,7 +493,6 @@ const AdminQuestions: React.FC = () => {
         </div>
       </Card>
 
-      {/* Add/Edit Question Dialog */}
       {openDialog && (
         <AddEditQuestionDialog
           open={openDialog}

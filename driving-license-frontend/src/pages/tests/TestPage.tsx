@@ -3,7 +3,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Button } from 'src/components/ui/button';
 import { Progress } from 'src/components/ui/progress';
-import { FaFlag } from 'react-icons/fa'; // For the "report" icon
+import { FaFlag } from 'react-icons/fa';
 
 interface Question {
   id: number;
@@ -25,15 +25,12 @@ const TestPage: React.FC = () => {
     testId = null,
   }: { questions: Question[]; testId: number | null } = state || {};
 
-  // Track if the test is fully finished (so we don’t prompt user again)
   const [testFinished, setTestFinished] = useState(false);
 
-  // Standard local states
   const [currentIndex, setCurrentIndex] = useState(0);
   const [score, setScore] = useState(0);
 
-  // We'll treat timeLeft as a number of seconds
-  const totalDuration = 30 * 60; // 30 min in seconds
+  const totalDuration = 30 * 60; 
   const [timeLeft, setTimeLeft] = useState(totalDuration);
 
   const [userAnswers, setUserAnswers] = useState<string[]>(
@@ -42,13 +39,10 @@ const TestPage: React.FC = () => {
 
   const letterMap = ['A', 'B', 'C'];
 
-  // ================================
-  // 1. Intercept Browser “Back”
-  // ================================
+  // Intercept Browser “Back”
   useEffect(() => {
     const handlePopState = (e: PopStateEvent) => {
       if (!testFinished) {
-        // This intercepts the user pressing the back button
         e.preventDefault();
 
         const confirmLeave = window.confirm(
@@ -56,15 +50,13 @@ const TestPage: React.FC = () => {
             'If you confirm, the test will be submitted and you will leave this page.'
         );
         if (confirmLeave) {
-          finishTest(true); // finish the test, then navigate(-1)
+          finishTest(true);
           navigate(-1);
         } else {
           window.history.pushState(null, '', window.location.href);
         }
       }
     };
-
-    // We push a dummy state so the user can always go “back” in a controlled manner
     window.history.pushState(null, '', window.location.href);
 
     window.addEventListener('popstate', handlePopState);
@@ -74,15 +66,11 @@ const TestPage: React.FC = () => {
     };
   }, [testFinished]);
 
-  // ================================
-  // 2. Beforeunload Prompt
-  // ================================
   useEffect(() => {
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
       if (!testFinished) {
         e.preventDefault();
-        e.returnValue = ''; // Some browsers ignore custom text
-        // Attempt minimal send if you like:
+        e.returnValue = '';
         if (testId) {
           const quickPayload = JSON.stringify({
             testId,
@@ -100,21 +88,14 @@ const TestPage: React.FC = () => {
     };
   }, [testFinished, testId]);
 
-  // ================================
-  // 3. Timer => auto-submit
-  // ================================
-  // Important: Use a "real-time" approach so it won't freeze when tabbed out.
+  // "real-time" approach so it won't freeze when tabbed out.
   useEffect(() => {
     if (!questions.length) return;
-
-    // We'll store the "start" time once, so we know the actual time elapsed.
-    const startTimestamp = Date.now(); // in ms
+    const startTimestamp = Date.now();
 
     const timer = setInterval(() => {
-      // how many seconds have actually passed
       const elapsed = Math.floor((Date.now() - startTimestamp) / 1000);
 
-      // The newTimeLeft is the total minus elapsed
       const newTimeLeft = totalDuration - elapsed;
 
       if (newTimeLeft <= 0) {
@@ -129,19 +110,13 @@ const TestPage: React.FC = () => {
     return () => clearInterval(timer);
   }, [questions]);
 
-  // For the progress bar
   const progressValue = (timeLeft / totalDuration) * 100;
 
-  // For display
   const minutes = Math.floor(timeLeft / 60);
   const seconds = timeLeft % 60;
 
-  // Unique categories in the question set
   const categories = Array.from(new Set(questions.map((q) => q.category)));
 
-  // ================================
-  // 4. Handling answers
-  // ================================
   const handleAnswer = (selectedIndex: number) => {
     if (!questions.length) return;
     const q = questions[currentIndex];
@@ -154,16 +129,13 @@ const TestPage: React.FC = () => {
       return updated;
     });
 
-    // Optionally track local score
     if (isCorrect) {
       setScore((prev) => prev + (q.points || 0));
     } else {
-      // deduct points if you like, or handle differently
       setScore((prev) => Math.max(prev - (q.points || 0), 0));
     }
   };
 
-  // Next/Prev
   const nextQuestion = () => {
     if (currentIndex < questions.length - 1) {
       setCurrentIndex((prev) => prev + 1);
@@ -175,22 +147,17 @@ const TestPage: React.FC = () => {
     }
   };
 
-  // Jump to question
   const jumpToQuestion = (index: number) => {
     if (index >= 0 && index < questions.length) {
       setCurrentIndex(index);
     }
   };
 
-  // Jump to category
   const jumpToCategory = (cat: string) => {
     const idx = questions.findIndex((q) => q.category === cat);
     if (idx !== -1) setCurrentIndex(idx);
   };
 
-  // ================================
-  // 5. Finishing the Test
-  // ================================
   const finishTest = (navigateBackAfter?: boolean) => {
     // If no valid test or already finished, just return or navigate away
     if (!testId) {
@@ -199,7 +166,6 @@ const TestPage: React.FC = () => {
       return;
     }
 
-    // 1) compute final
     let finalScore = 0;
     const questionStatsPromises: Promise<any>[] = [];
     userAnswers.forEach((answer, idx) => {
@@ -207,7 +173,6 @@ const TestPage: React.FC = () => {
       const isCorrect = answer === q.correctAnswer;
       if (isCorrect) finalScore += (q.points || 0);
 
-      // background stats
       questionStatsPromises.push(
         fetch('https://drive-edu.onrender.com/api/question-stats', {
           method: 'POST',
@@ -221,10 +186,7 @@ const TestPage: React.FC = () => {
     });
 
     const isPassed = finalScore >= 90;
-    // how many seconds were actually used
     const timeTaken = totalDuration - timeLeft;
-
-    // 2) Build results data
     const resultsData = {
       isPassed,
       score: finalScore,
@@ -238,15 +200,14 @@ const TestPage: React.FC = () => {
       })),
     };
 
-    // 3) Show results
+    // Show results
     navigate('/results', {
       state: resultsData,
     });
 
-    // 4) Fire off questionStats
+    // Fire off questionStats
     Promise.all(questionStatsPromises);
 
-    // 5) final test data
     const payload = JSON.stringify({
       testId,
       score: finalScore,
@@ -270,19 +231,13 @@ const TestPage: React.FC = () => {
       .then((res) => res.json())
       .then((data) => console.log('[finishTest] =>', data))
       .catch((err) => console.error('[finishTest] error =>', err));
-
-    // Mark test as finished => no more prompts
     setTestFinished(true);
 
-    // If we came from the "popstate" scenario, go back
     if (navigateBackAfter) {
       navigate(-1);
     }
   };
 
-  // ================================
-  // 6. Reporting logic
-  // ================================
   const [showReportPopup, setShowReportPopup] = useState(false);
   const [reportDescription, setReportDescription] = useState('');
   const [reportQuestionId, setReportQuestionId] = useState<number | null>(null);
@@ -329,7 +284,6 @@ const TestPage: React.FC = () => {
     }
   };
 
-  // If no questions
   if (!questions.length) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-[hsl(var(--background))] text-[hsl(var(--foreground))]">
@@ -340,7 +294,6 @@ const TestPage: React.FC = () => {
     );
   }
 
-  // Current question details
   const currentQuestion = questions[currentIndex];
   const selectedAnswer = userAnswers[currentIndex];
 
@@ -392,7 +345,6 @@ const TestPage: React.FC = () => {
           </div>
         </aside>
 
-        {/* Main column */}
         <main className="flex-1 flex flex-col gap-4">
           {/* Navigation row of question numbers */}
           <div className="flex flex-wrap gap-2">
@@ -400,10 +352,8 @@ const TestPage: React.FC = () => {
               let bgClass =
                 'bg-[hsl(var(--card))] text-[hsl(var(--foreground))]';
               if (isActive(i)) {
-                // Darker green if active
                 bgClass = 'bg-main-green text-white';
               } else if (isAnswered(i)) {
-                // Lighter green if answered
                 bgClass = 'bg-main-green/50 text-white';
               }
 
@@ -431,7 +381,6 @@ const TestPage: React.FC = () => {
 
           {/* Question content */}
           <div className="relative bg-[hsl(var(--card))] text-[hsl(var(--card-foreground))] rounded shadow p-6 flex-1 overflow-auto">
-            {/* Report icon at top-right */}
             <Button
               variant="outline"
               className="md:absolute md:top-2 md:right-6 md:mt-4 mb-4 h-8 px-2 flex items-center justify-center hover:bg-[hsl(var(--destructive))] hover:text-[hsl(var(--destructive-foreground))]"

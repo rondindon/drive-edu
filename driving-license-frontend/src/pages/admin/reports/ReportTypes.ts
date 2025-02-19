@@ -17,7 +17,6 @@ export interface Question {
   id: number;
   text: string;
   imageUrl?: string;
-  // Add other relevant fields as per your Question model
 }
 
 export interface Report {

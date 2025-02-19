@@ -17,16 +17,14 @@ import {
   Bar,
 } from 'recharts';
 import { Card } from './ui/card';
-import LoadingSpinner from './LoadingSpinner';
-import { Skeleton } from '../components/ui/skeleton'; // <-- Import Skeleton
-import { addDays, subDays, parseISO } from 'date-fns'; // Ensure date-fns is installed
+import { Skeleton } from '../components/ui/skeleton';
+import { addDays, subDays, parseISO } from 'date-fns';
 import { ChevronLeftIcon, ChevronRightIcon } from 'lucide-react';
 import { ThemeContext } from '../context/ThemeContext';
 import { motion } from 'framer-motion';
 
-// Define TypeScript interfaces for the data
 interface TestStat {
-  period: string; // 'YYYY-MM-DD' or 'YYYY-MM'
+  period: string; // 'YYYY-MM-DD'
   count: number;
 }
 
@@ -63,21 +61,19 @@ interface BadgeStats {
 interface WorstAccuracyQuestion {
   questionId: number;
   questionText: string;
-  imageUrl?: string; // Now only allows string or undefined
+  imageUrl?: string;
   correctCount: number;
   wrongCount: number;
-  accuracy: number; // Percentage (0 - 100)
-  options: string[]; // Array of answer options
-  correctAnswer: string; // The correct answer
+  accuracy: number;
+  options: string[];
+  correctAnswer: string;
 }
 
 const COLORS = ['#27AE60', '#E74C3C', '#F1C40F', '#2C3E50'];
 
 const ActivityStats: React.FC = () => {
-  // Access theme context
   const { theme } = useContext(ThemeContext);
 
-  // **State Declarations**
   const [testStatsDay, setTestStatsDay] = useState<TestStat[]>([]);
   const [testStatsMonth, setTestStatsMonth] = useState<TestStat[]>([]);
   const [averageScore, setAverageScore] = useState<number | null>(null);
@@ -87,17 +83,15 @@ const ActivityStats: React.FC = () => {
   const [worstAccuracyQuestions, setWorstAccuracyQuestions] = useState<WorstAccuracyQuestion[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-  const [selectedAggregation, setSelectedAggregation] = useState<'day' | 'month'>('month'); // Default to 'month'
-  const [currentQuestionIndex, setCurrentQuestionIndex] = useState<number>(0); // For carousel
+  const [selectedAggregation, setSelectedAggregation] = useState<'day' | 'month'>('month');
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState<number>(0);
 
   const token = localStorage.getItem('supabaseToken');
 
-  // **Data Fetching**
   useEffect(() => {
     const fetchStats = async () => {
       setLoading(true);
       try {
-        // Fetch Test Stats by Day and Month
         const [testsRes, answersRes, badgesRes, worstQuestionsRes] = await Promise.all([
           axios.get('https://drive-edu.onrender.com/api/user/stats/tests', {
             headers: { Authorization: `Bearer ${token}` },
@@ -113,20 +107,17 @@ const ActivityStats: React.FC = () => {
           }),
         ]);
 
-        // Set Test Statistics
         setTestStatsDay(testsRes.data.testsOverTimeDay || []);
         setTestStatsMonth(testsRes.data.testsOverTimeMonth || []);
         setAverageScore(testsRes.data.averageScore ?? null);
         setPassRate(testsRes.data.passRate ?? null);
 
-        // Set Answer Statistics
         setAnswerStats({
           correctCount: answersRes.data.correctCount || 0,
           wrongCount: answersRes.data.wrongCount || 0,
           performanceByCategory: answersRes.data.performanceByCategory || [],
         });
 
-        // Set Badge Statistics
         setBadgeStats({
           badges: badgesRes.data.badges || [],
           badgesOverTime: badgesRes.data.badgesOverTime || [],
@@ -152,17 +143,14 @@ const ActivityStats: React.FC = () => {
     fetchStats();
   }, [token]);
 
-  // Determine Current Test Stats Based on Aggregation
   const currentTestStats = useMemo(() => {
     return selectedAggregation === 'month' ? testStatsMonth : testStatsDay;
   }, [selectedAggregation, testStatsDay, testStatsMonth]);
 
-  // Calculate Maximum Test Count
   const maxTestCount = useMemo(() => {
     return currentTestStats.length > 0 ? Math.max(...currentTestStats.map(stat => stat.count)) : 0;
   }, [currentTestStats]);
 
-  // Calculate Y-Axis Upper Bound
   const upperBound = useMemo(() => {
     if (maxTestCount === 0) return 10;
     const magnitude = Math.pow(10, Math.floor(Math.log10(maxTestCount)));
@@ -171,7 +159,6 @@ const ActivityStats: React.FC = () => {
 
   const getBadgeProgression = (badge: { title: string; createdAt: string }): string => {
     if (!badgeStats) return '';
-    // Scholar badges are based on answered questions
     if (badge.title.includes('Scholar')) {
       if (badgeStats.answeredQuestions >= 500) {
         return `${badgeStats.answeredQuestions} questions answered!`;
@@ -185,7 +172,6 @@ const ActivityStats: React.FC = () => {
         return `${badgeStats.answeredQuestions} / 10 questions answered!`;
       }
     }
-    // Tester badges are based on completed tests
     if (badge.title.includes('Tester')) {
       if (badgeStats.completedTests >= 50) {
         return `${badgeStats.completedTests} tests completed!`;
@@ -265,7 +251,6 @@ const ActivityStats: React.FC = () => {
     [currentTestStats, selectedAggregation]
   );
 
-  // Format X-Axis Labels
   const formatXAxis = (period: string): string => {
     if (selectedAggregation === 'day') {
       const date = parseISO(period);
@@ -277,12 +262,10 @@ const ActivityStats: React.FC = () => {
     }
   };
 
-  // Toggle Button Handler
   const toggleAggregation = () => {
     setSelectedAggregation(prev => (prev === 'month' ? 'day' : 'month'));
   };
 
-  // Carousel Navigation Handlers
   const goToPreviousQuestion = () => {
     setCurrentQuestionIndex(prevIndex =>
       prevIndex === 0 ? worstAccuracyQuestions.length - 1 : prevIndex - 1
@@ -294,7 +277,6 @@ const ActivityStats: React.FC = () => {
     );
   };
 
-  // Keyboard Navigation for Carousel
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'ArrowLeft') {
@@ -308,7 +290,6 @@ const ActivityStats: React.FC = () => {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [worstAccuracyQuestions]);
 
-  // Animation Variants for container and cards
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
@@ -324,7 +305,6 @@ const ActivityStats: React.FC = () => {
     visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: 'easeOut' } },
   };
 
-  // If still loading, display shadcn Skeletons
   if (loading) {
     return (
       <div className="space-y-6 min-h-screen px-4 py-6">
@@ -336,7 +316,6 @@ const ActivityStats: React.FC = () => {
     );
   }
 
-  // Global check: if no stats available
   const noStatsAvailable =
     !loading &&
     !error &&
@@ -360,7 +339,6 @@ const ActivityStats: React.FC = () => {
     );
   }
 
-  // Early return for error state
   if (error) {
     return (
       <div className="text-center text-red-500 min-h-screen flex items-center justify-center">
@@ -376,7 +354,6 @@ const ActivityStats: React.FC = () => {
       animate="visible"
       variants={containerVariants}
     >
-      {/* Test Performance Over Time */}
       <motion.div variants={cardVariants}>
         <Card className="p-6 shadow-lg rounded-md bg-[hsl(var(--card))] text-[hsl(var(--card-foreground))]">
           <div className="flex items-center justify-between mb-4">
@@ -438,19 +415,16 @@ const ActivityStats: React.FC = () => {
         </Card>
       </motion.div>
 
-      {/* Test Summary */}
       <motion.div variants={cardVariants}>
         <Card className="p-6 shadow-lg rounded-md bg-[hsl(var(--card))] text-[hsl(var(--card-foreground))]">
           <h2 className="text-xl font-semibold text-[hsl(var(--primary))] mb-4">Test Summary</h2>
           <div className="flex flex-col md:flex-row md:space-x-6 space-y-4 md:space-y-0">
-            {/* Average Score */}
             <div className="flex-1">
               <span className="text-[hsl(var(--muted-foreground))]">Average Score</span>
               <div className="text-3xl font-bold text-[hsl(var(--primary))]">
                 {averageScore !== null ? averageScore.toFixed(2) : 'N/A'}
               </div>
             </div>
-            {/* Pass Rate */}
             <div className="flex-1">
               <span className="text-[hsl(var(--muted-foreground))]">Pass Rate</span>
               <div className="text-3xl font-bold text-[hsl(var(--primary))]">
@@ -461,7 +435,6 @@ const ActivityStats: React.FC = () => {
         </Card>
       </motion.div>
 
-      {/* Answer Distribution */}
       <motion.div variants={cardVariants}>
         <Card className="p-6 shadow-lg rounded-md bg-[hsl(var(--card))] text-[hsl(var(--card-foreground))]">
           <h2 className="text-xl font-semibold text-[hsl(var(--primary))] mb-4">Answer Distribution</h2>
@@ -503,7 +476,6 @@ const ActivityStats: React.FC = () => {
         </Card>
       </motion.div>
 
-      {/* Performance by Category */}
       <motion.div variants={cardVariants}>
         <Card className="p-6 shadow-lg rounded-md bg-[hsl(var(--card))] text-[hsl(var(--card-foreground))]">
           <h2 className="text-xl font-semibold text-[hsl(var(--primary))] mb-4">Performance by Category</h2>
@@ -532,38 +504,36 @@ const ActivityStats: React.FC = () => {
       </motion.div>
 
       <motion.div variants={cardVariants}>
-  <Card className="p-6 shadow-lg rounded-md bg-[hsl(var(--card))] text-[hsl(var(--card-foreground))]">
-    <h2 className="text-xl font-semibold text-[hsl(var(--primary))] mb-4">Badges Earned</h2>
-    {badgeStats && badgeStats.badges.length > 0 ? (
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-        {badgeStats.badges.map((badge, index) => (
-          <div
-            key={index}
-            className="flex flex-col items-center space-y-2 p-4 bg-[hsl(var(--card))] rounded-md shadow-sm"
-          >
-            <div className="w-12 h-12 bg-[hsl(var(--primary))] rounded-full flex items-center justify-center text-white text-lg font-bold">
-              {badge.title.charAt(0)}
+        <Card className="p-6 shadow-lg rounded-md bg-[hsl(var(--card))] text-[hsl(var(--card-foreground))]">
+          <h2 className="text-xl font-semibold text-[hsl(var(--primary))] mb-4">Badges Earned</h2>
+          {badgeStats && badgeStats.badges.length > 0 ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+              {badgeStats.badges.map((badge, index) => (
+                <div
+                  key={index}
+                  className="flex flex-col items-center space-y-2 p-4 bg-[hsl(var(--card))] rounded-md shadow-sm"
+                >
+                  <div className="w-12 h-12 bg-[hsl(var(--primary))] rounded-full flex items-center justify-center text-white text-lg font-bold">
+                    {badge.title.charAt(0)}
+                  </div>
+                  <div className="text-center">
+                    <span className="font-semibold">{badge.title}</span>
+                    <div className="text-sm text-[hsl(var(--muted-foreground))]">
+                      Earned on {new Date(badge.createdAt).toLocaleDateString()}
+                    </div>
+                    <div className="text-xs text-[hsl(var(--muted-foreground))] mt-1">
+                      {getBadgeProgression(badge)}
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
-            <div className="text-center">
-              <span className="font-semibold">{badge.title}</span>
-              <div className="text-sm text-[hsl(var(--muted-foreground))]">
-                Earned on {new Date(badge.createdAt).toLocaleDateString()}
-              </div>
-              <div className="text-xs text-[hsl(var(--muted-foreground))] mt-1">
-                {getBadgeProgression(badge)}
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
-    ) : (
-      <div className="text-[hsl(var(--muted-foreground))]">No badges earned yet.</div>
-    )}
-  </Card>
-</motion.div>
+          ) : (
+            <div className="text-[hsl(var(--muted-foreground))]">No badges earned yet.</div>
+          )}
+        </Card>
+      </motion.div>
 
-
-      {/* Badges Over Time */}
       {badgeStats && badgeStats.badgesOverTime.length > 0 && (
         <motion.div variants={cardVariants}>
           <Card className="p-6 shadow-lg rounded-md bg-[hsl(var(--card))] text-[hsl(var(--card-foreground))]">

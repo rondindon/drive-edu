@@ -10,13 +10,11 @@ export const handleNewUser = async (req: Request, res: Response): Promise<Respon
   console.log('Creating new user:', email, username);
 
   try {
-    // Check if the user already exists in the Prisma table
     const existingUser = await prisma.user.findUnique({
       where: { email },
     });
 
     if (!existingUser) {
-      // Check if the username is already taken
       const existingUsername = await prisma.user.findUnique({
         where: { username },
       });
@@ -24,12 +22,11 @@ export const handleNewUser = async (req: Request, res: Response): Promise<Respon
         return res.status(400).json({ message: "Username already taken." });
       }
 
-      // Add the user to the Prisma User table
       const user = await prisma.user.create({
         data: {
           email,
-          username, // Add username to the user creation
-          role: "USER", // Assign default role
+          username,
+          role: "USER",
         },
       });
       return res.status(201).json({ user });
@@ -41,7 +38,6 @@ export const handleNewUser = async (req: Request, res: Response): Promise<Respon
   }
 };
 
-// New handler for GET /api/user?email=...
 export const getUserByEmail = async (req: Request, res: Response): Promise<Response> => {
   const email = req.query.email as string;
 
@@ -58,7 +54,6 @@ export const getUserByEmail = async (req: Request, res: Response): Promise<Respo
       return res.status(404).json({ error: 'User not found.' });
     }
 
-    // Exclude sensitive fields if necessary
     const { role, username } = user;
     return res.status(200).json({ role, username });
   } catch (error: any) {
@@ -85,7 +80,6 @@ export const updateUsername = async (req: Request, res: Response) => {
     return res.status(200).json({ message: 'Username updated successfully', updatedUser });
   } catch (error: any) {
     if (error.code === 'P2025') {
-      // Prisma error for record not found
       return res.status(404).json({ message: 'User not found' });
     }
 

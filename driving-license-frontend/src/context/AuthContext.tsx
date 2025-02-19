@@ -8,7 +8,6 @@ import LoadingSpinner from 'src/components/LoadingSpinner';
 interface UserData {
   role: string;
   username: string;
-  // Add other fields if necessary
 }
 
 interface AuthContextProps {
@@ -24,7 +23,6 @@ interface AuthContextProps {
 const AuthContext = createContext<AuthContextProps | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  // Initialize state from localStorage if available
   const [user, setUser] = useState<User | null>(() => {
     const storedUser = localStorage.getItem('user');
     return storedUser ? JSON.parse(storedUser) : null;
@@ -33,11 +31,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [username, setUsername] = useState<string | null>(() => localStorage.getItem('username'));
   const [isInitialized, setIsInitialized] = useState(true);
 
-  // Function to fetch additional user data from the backend API
   const fetchUserData = async (email: string): Promise<UserData> => {
     console.log(`Fetching user data for email: ${email}`);
 
-    // Check if user data is already present in state
     if (role && username) {
       console.log('User data already present. Skipping fetch.');
       return { role, username };
@@ -58,13 +54,12 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
       if (response.status === 404) {
         console.warn(`User with email ${email} not found in backend. Creating new user.`);
-        // Create the user in the backend
         const createResponse = await fetch(`${API_BASE_URL}/user`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({ email, username: email.split('@')[0] }), // Derive username from email
+          body: JSON.stringify({ email, username: email.split('@')[0] }),
         });
 
         if (!createResponse.ok) {
@@ -105,14 +100,12 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           const email = data.session.user.email;
 
           if (email) {
-            // Check if user data is already in state (from localStorage)
             if (!role || !username) {
               try {
                 const userData = await fetchUserData(email);
                 setRole(userData.role);
                 setUsername(userData.username);
 
-                // Store in localStorage
                 localStorage.setItem('supabaseToken', data.session.access_token);
                 localStorage.setItem('role', userData.role);
                 localStorage.setItem('username', userData.username);
@@ -155,7 +148,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             setRole(userData.role);
             setUsername(userData.username);
 
-            // Store in localStorage
             localStorage.setItem('supabaseToken', session.access_token);
             localStorage.setItem('role', userData.role);
             localStorage.setItem('username', userData.username);
@@ -185,7 +177,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       listener?.subscription.unsubscribe();
       console.log('Auth state change listener unsubscribed.');
     };
-  }, [role, username]); // Removed dependencies to prevent re-running
+  }, [role, username]);
 
   const login = async (email: string, password: string) => {
     console.log(`Logging in user with email: ${email}`);
@@ -216,7 +208,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       setRole(userData.role);
       setUsername(userData.username);
 
-      // Store in localStorage
       localStorage.setItem('supabaseToken', session.access_token);
       localStorage.setItem('role', userData.role);
       localStorage.setItem('username', userData.username);
@@ -236,7 +227,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       console.error('Google OAuth sign-in error:', error);
       throw error;
     }
-    // The session will be handled by the onAuthStateChange listener after redirection
   };
 
   const logout = async () => {

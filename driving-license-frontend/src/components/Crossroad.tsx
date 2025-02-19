@@ -16,11 +16,10 @@ const Crossroad: React.FC<CrossroadProps> = ({ scenario, onCarClick, selectedOrd
   };
 
   const signMap: { [key: string]: string } = {
-    stop: '/images/stop.png',       // the octagonal stop sign
-    'main-road': '/images/main_road.png', // the diamond-shaped main road sign
+    stop: '/images/stop.png',
+    'main-road': '/images/main_road.png',
   };
 
-  // Rotation for signs (assuming “north” = no rotation, “south” = 180°, etc.)
   const signRotationMap: { [key: string]: string } = {
     north: 'rotate(0deg)',
     south: 'rotate(180deg)',
@@ -28,7 +27,6 @@ const Crossroad: React.FC<CrossroadProps> = ({ scenario, onCarClick, selectedOrd
     west: 'rotate(-90deg)',
   };
 
-  // Map car color strings to Tailwind CSS classes
   const carColorClasses: { [key: string]: string } = {
     red: 'bg-red-500',
     blue: 'bg-blue-500',
@@ -54,11 +52,9 @@ const Crossroad: React.FC<CrossroadProps> = ({ scenario, onCarClick, selectedOrd
 
       {/* Traffic Signs */}
       {scenario.signs.map((sign, index) => {
-        // Find the correct image for this sign type
         const imgSrc = signMap[sign.type];
         if (!imgSrc) return null;
 
-        // Determine rotation based on sign direction
         const rotation = signRotationMap[sign.direction] || 'rotate(0deg)';
 
         return (
@@ -78,7 +74,6 @@ const Crossroad: React.FC<CrossroadProps> = ({ scenario, onCarClick, selectedOrd
         );
       })}
 
-      {/* Cars */}
       {scenario.cars.map((car) => {
         const orderIndex = selectedOrder.indexOf(car.id) + 1;
         const bgClass = carColorClasses[car.color] || 'bg-gray-500';

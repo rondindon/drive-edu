@@ -91,8 +91,8 @@ model UserAnswer {
   id         Int      @id @default(autoincrement())
   userId     Int
   questionId Int
-  testId     Int? // optional: link answers to a specific Test record
-  selected   String // e.g. "A", "B", "C" or full text if you prefer
+  testId     Int?
+  selected   String
   isCorrect  Boolean
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
@@ -102,7 +102,6 @@ model UserAnswer {
   question Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
   test     Test?    @relation(fields: [testId], references: [id])
 
-  // The KEY to enabling a compound unique in findUnique/update:
   @@unique([userId, questionId, testId], name: "user_question_test_unique")
   @@index([userId])
   @@index([questionId])

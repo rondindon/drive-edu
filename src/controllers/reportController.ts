@@ -1,14 +1,12 @@
-import { Request, Response } from 'express';
+import { Response } from 'express';
 import { AuthenticatedRequest } from '../interfaces/AuthenticatedRequest';
 import { PrismaClient } from '@prisma/client'; 
-// Adjust your interface path if needed
 const prisma = new PrismaClient();
 
 export async function createReport(req: AuthenticatedRequest, res: Response) {
     try {
-      const userId = req.user?.id; // user ID from auth
+      const userId = req.user?.id;
       const { questionId, description, status } = req.body;
-      // `status` is optional in the request body— if not provided, default to "Pending"
   
       if (!userId) {
         return res.status(401).json({ message: 'Not authenticated' });
@@ -17,13 +15,12 @@ export async function createReport(req: AuthenticatedRequest, res: Response) {
         return res.status(400).json({ message: 'questionId and description are required' });
       }
   
-      // Create a new report in the DB
       const newReport = await prisma.reports.create({
         data: {
           userId,
           questionId,
           description,
-          status: status || 'Pending', // if no status in body, use "Pending"
+          status: status || 'Pending',
         },
       });
   
@@ -55,8 +52,8 @@ export async function getAllReports(req: AuthenticatedRequest, res: Response) {
 
   export async function markReportReviewed(req: AuthenticatedRequest, res: Response) {
     try {
-      const userId = req.user?.id; // User ID from auth
-      const reportId = parseInt(req.params.id, 10); // Report ID from URL params
+      const userId = req.user?.id;
+      const reportId = parseInt(req.params.id, 10); 
   
       if (!userId) {
         return res.status(401).json({ message: 'Not authenticated' });
@@ -66,7 +63,6 @@ export async function getAllReports(req: AuthenticatedRequest, res: Response) {
         return res.status(400).json({ message: 'Invalid report ID' });
       }
   
-      // Check if the report exists
       const existingReport = await prisma.reports.findUnique({
         where: { id: reportId },
       });
@@ -75,7 +71,6 @@ export async function getAllReports(req: AuthenticatedRequest, res: Response) {
         return res.status(404).json({ message: 'Report not found' });
       }
   
-      // Update the report status to "Reviewed"
       const updatedReport = await prisma.reports.update({
         where: { id: reportId },
         data: { status: 'Reviewed' },
@@ -91,13 +86,10 @@ export async function getAllReports(req: AuthenticatedRequest, res: Response) {
     }
   }
   
-  /**
-   * Update the status of a report to "Resolved"
-   */
   export async function markReportResolved(req: AuthenticatedRequest, res: Response) {
     try {
-      const userId = req.user?.id; // User ID from auth
-      const reportId = parseInt(req.params.id, 10); // Report ID from URL params
+      const userId = req.user?.id;
+      const reportId = parseInt(req.params.id, 10);
   
       if (!userId) {
         return res.status(401).json({ message: 'Not authenticated' });
@@ -107,9 +99,6 @@ export async function getAllReports(req: AuthenticatedRequest, res: Response) {
         return res.status(400).json({ message: 'Invalid report ID' });
       }
   
-      // Optional: Add authorization logic here (e.g., check if user is admin)
-  
-      // Check if the report exists
       const existingReport = await prisma.reports.findUnique({
         where: { id: reportId },
       });
@@ -118,7 +107,6 @@ export async function getAllReports(req: AuthenticatedRequest, res: Response) {
         return res.status(404).json({ message: 'Report not found' });
       }
   
-      // Update the report status to "Resolved"
       const updatedReport = await prisma.reports.update({
         where: { id: reportId },
         data: { status: 'Resolved' },
@@ -136,8 +124,8 @@ export async function getAllReports(req: AuthenticatedRequest, res: Response) {
 
   export async function deleteReport(req: AuthenticatedRequest, res: Response) {
     try {
-      const userId = req.user?.id; // User ID from auth
-      const reportId = parseInt(req.params.id, 10); // Report ID from URL params
+      const userId = req.user?.id;
+      const reportId = parseInt(req.params.id, 10);
   
       if (!userId) {
         return res.status(401).json({ message: 'Not authenticated' });
@@ -147,7 +135,6 @@ export async function getAllReports(req: AuthenticatedRequest, res: Response) {
         return res.status(400).json({ message: 'Invalid report ID' });
       }
   
-      // Check if the report exists
       const existingReport = await prisma.reports.findUnique({
         where: { id: reportId },
       });
@@ -156,7 +143,6 @@ export async function getAllReports(req: AuthenticatedRequest, res: Response) {
         return res.status(404).json({ message: 'Report not found' });
       }
   
-      // Delete the report
       await prisma.reports.delete({
         where: { id: reportId },
       });

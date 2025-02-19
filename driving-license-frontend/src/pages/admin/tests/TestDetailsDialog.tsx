@@ -26,7 +26,6 @@ const TestDetailsDialog: React.FC<TestDetailsDialogProps> = ({ open, onClose, te
           <p><strong>Passed:</strong> {test.isPassed ? "Yes" : "No"}</p>
           <p><strong>Created At:</strong> {new Date(test.createdAt).toLocaleString()}</p>
           <p><strong>Updated At:</strong> {new Date(test.updatedAt).toLocaleString()}</p>
-          {/* Add more details as necessary */}
         </div>
       </DialogContent>
     </Dialog>

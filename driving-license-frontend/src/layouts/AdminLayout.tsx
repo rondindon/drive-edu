@@ -3,7 +3,6 @@ import { NavLink, useNavigate, Outlet } from "react-router-dom";
 import { Button } from "src/components/ui/button";
 import { useAuth } from "src/context/AuthContext";
 
-// Importing icons from lucide-react
 import {
   Home,
   Users,
@@ -35,7 +34,6 @@ const AdminLayout: React.FC = () => {
 
   return (
     <div className="flex min-h-screen bg-[hsl(var(--background))]">
-      {/* Desktop Sidebar */}
       <aside className="hidden md:flex fixed top-0 left-0 w-64 h-screen bg-main-darkBlue text-secondary-lightGray flex-col">
         <div className="p-4 font-bold text-xl border-b border-main-green flex items-center justify-between">
           <span>Admin Panel</span>
@@ -99,7 +97,6 @@ const AdminLayout: React.FC = () => {
         </div>
       </header>
 
-      {/* Mobile Sidebar Drawer */}
       {sidebarOpen && (
         <div className="md:hidden fixed inset-0 z-50 flex">
           <div className="w-64 bg-main-darkBlue text-secondary-lightGray flex flex-col">
@@ -158,7 +155,6 @@ const AdminLayout: React.FC = () => {
         </div>
       )}
 
-      {/* Main Content Area */}
       <main className="md:ml-64 flex-1 overflow-y-auto p-6 mt-16 md:mt-0">
         <Outlet />
       </main>

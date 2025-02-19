@@ -223,32 +223,29 @@ const SignsPage: React.FC = () => {
     },
   };
 
-  // Animation variants for the options
   const optionVariants = {
     idle: { opacity: 1, scale: 1 },
     incorrect: {
-      backgroundColor: "#ef4444", // Tailwind red-500
+      backgroundColor: "#ef4444",
       color: "#fff",
       opacity: [1, 1, 0],
       scale: [1, 1.05, 0],
       transition: { duration: 0.5 },
     },
     correct: {
-      backgroundColor: "#10b981", // Tailwind green-500
+      backgroundColor: "#10b981",
       color: "#fff",
       scale: [1, 1.05, 1],
       transition: { duration: 0.5 },
     },
   };
 
-  // Animation variants for the card container
   const cardVariants = {
     hidden: { opacity: 0, y: 50 },
     visible: { opacity: 1, y: 0, transition: { duration: 0.5 } },
     exit: { opacity: 0, y: -50, transition: { duration: 0.3 } },
   };
 
-  // Animation variants for the navigation buttons
   const navButtonVariants = {
     hover: { scale: 1.1 },
     tap: { scale: 0.95 },
@@ -256,7 +253,6 @@ const SignsPage: React.FC = () => {
 
   return (
     <div className="min-h-screen flex flex-col items-center px-4 py-6 bg-[hsl(var(--background))] text-[hsl(var(--foreground))]">
-      {/* Progress Bar */}
       <div className="w-full max-w-xl mb-6 mt-12">
         <div className="h-3 bg-gray-200 rounded-md overflow-hidden">
           <motion.div
@@ -271,7 +267,6 @@ const SignsPage: React.FC = () => {
         </div>
       </div>
 
-      {/* AnimatePresence for question card transitions */}
       <AnimatePresence mode="wait">
         <motion.div
           key={currentQuestion.id}
@@ -282,10 +277,9 @@ const SignsPage: React.FC = () => {
           className="w-full max-w-xl"
         >
           <Card className="p-6 shadow-lg rounded-lg bg-[hsl(var(--card))] text-[hsl(var(--card-foreground))]">
-            {/* Animated Image */}
             {currentQuestion.imageUrl && (
               <motion.img
-                key={`${currentQuestion.id}-${animationState}`} // Force re-render on state change
+                key={`${currentQuestion.id}-${animationState}`}
                 src={currentQuestion.imageUrl}
                 alt="Road Sign"
                 className="w-64 h-64 object-contain rounded-md mx-auto mb-4"
@@ -296,7 +290,6 @@ const SignsPage: React.FC = () => {
               />
             )}
 
-            {/* Question Text */}
             <motion.h2
               className="text-xl font-semibold text-center mb-4"
               initial={{ opacity: 0 }}

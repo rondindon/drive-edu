@@ -13,14 +13,12 @@ export async function getTestStats(req: AuthenticatedRequest, res: Response) {
         return res.status(401).json({ message: 'Not authenticated' });
       }
   
-      // Fetch all tests for the user
       const tests = await prisma.test.findMany({
         where: { userId },
-        select: { createdAt: true, score: true, isPassed: true }, // Adjust based on your schema
+        select: { createdAt: true, score: true, isPassed: true },
         orderBy: { createdAt: 'asc' },
       });
   
-      // Group tests by day
       const testsByDayMap: { [key: string]: number } = {};
       tests.forEach((test) => {
         const day = test.createdAt.toISOString().split('T')[0]; // YYYY-MM-DD
@@ -34,7 +32,6 @@ export async function getTestStats(req: AuthenticatedRequest, res: Response) {
           count: testsByDayMap[day],
         }));
   
-      // Group tests by month
       const testsByMonthMap: { [key: string]: number } = {};
       tests.forEach((test) => {
         const month = `${test.createdAt.getFullYear()}-${(
@@ -52,10 +49,8 @@ export async function getTestStats(req: AuthenticatedRequest, res: Response) {
           count: testsByMonthMap[month],
         }));
   
-      // Calculate average score
       const averageScore = tests.length > 0 ? tests.reduce((acc, test) => acc + test.score, 0) / tests.length : null;
   
-      // Calculate pass rate
       const passRate = tests.length > 0 ? (tests.filter((test) => test.isPassed).length / tests.length) * 100 : null;
   
       return res.status(200).json({
@@ -70,11 +65,6 @@ export async function getTestStats(req: AuthenticatedRequest, res: Response) {
     }
   }
 
-/**
- * Get Answer Statistics for the authenticated user
- * - Correct vs. Wrong answers
- * - Performance by category
- */
 export async function getAnswerStats(
   req: AuthenticatedRequest,
   res: Response
@@ -86,7 +76,6 @@ export async function getAnswerStats(
       return res.status(401).json({ message: 'Not authenticated' });
     }
 
-    // Fetch all user answers
     const userAnswers = await prisma.userAnswer.findMany({
       where: { userId },
       include: {
@@ -108,7 +97,6 @@ export async function getAnswerStats(
     const correctCount = userAnswers.filter((ua) => ua.isCorrect).length;
     const wrongCount = userAnswers.length - correctCount;
 
-    // Calculate performance by category
     const performanceByCategoryMap: {
       [key: string]: { correct: number; total: number };
     } = {};
@@ -158,7 +146,6 @@ export async function getBadgeStats(req: AuthenticatedRequest, res: Response) {
       return res.status(401).json({ message: 'Not authenticated' });
     }
 
-    // Fetch all badges for the user
     const badges = await prisma.badge.findMany({
       where: { userId },
       select: {
@@ -176,7 +163,6 @@ export async function getBadgeStats(req: AuthenticatedRequest, res: Response) {
       where: { userId },
     });
 
-    // Process badges over time (e.g., monthly)
     const badgesOverTimeMap: { [key: string]: number } = {};
 
     badges.forEach((badge) => {
@@ -209,18 +195,16 @@ export async function getBadgeStats(req: AuthenticatedRequest, res: Response) {
 
 export async function getWorstAccuracyQuestions(req: AuthenticatedRequest, res: Response) {
     try {
-      // **Authentication:**
       const userId = req.user?.id;
   
       if (!userId) {
         return res.status(401).json({ message: 'Unauthorized: User not authenticated.' });
       }
   
-      // **Fetch QuestionStat Records with Related Questions:**
       const questionStats = await prisma.questionStat.findMany({
         where: { userId },
         include: {
-          question: true, // Include related question
+          question: true,
         },
       });
   
@@ -228,7 +212,6 @@ export async function getWorstAccuracyQuestions(req: AuthenticatedRequest, res: 
         return res.status(200).json({ message: 'No question statistics available.' });
       }
   
-      // **Calculate Accuracy and Prepare Data:**
       const worstAccuracyQuestions: WorstAccuracyQuestion[] = questionStats
         .map(stat => {
           const totalAttempts = stat.correctCount + stat.wrongCount;
@@ -245,14 +228,12 @@ export async function getWorstAccuracyQuestions(req: AuthenticatedRequest, res: 
             correctAnswer: stat.question.correctAnswer,
           };
         })
-        // **Sort by Ascending Accuracy and Descending WrongCount:**
         .sort((a, b) => {
           if (a.accuracy === b.accuracy) {
-            return b.wrongCount - a.wrongCount; // More wrong answers come first
+            return b.wrongCount - a.wrongCount;
           }
           return a.accuracy - b.accuracy; // Lower accuracy comes first
         })
-        // **Limit to Top N (e.g., Top 10 Worst):**
         .slice(0, 10);
   
       return res.status(200).json({ worstAccuracyQuestions });
@@ -270,7 +251,6 @@ export async function getWorstAccuracyQuestions(req: AuthenticatedRequest, res: 
         return res.status(401).json({ message: 'Unauthorized: User not authenticated.' });
       }
   
-      // **Fetch All Tests for the User:**
       const tests = await prisma.test.findMany({
         where: { userId },
         select: { isPassed: true },
@@ -292,9 +272,8 @@ export async function getWorstAccuracyQuestions(req: AuthenticatedRequest, res: 
 
   export async function getAdminTestStats(req: AuthenticatedRequest, res: Response) {
     try {
-      // Fetch all tests
       const tests = await prisma.test.findMany({
-        select: { createdAt: true, score: true, isPassed: true }, // Adjust based on your schema
+        select: { createdAt: true, score: true, isPassed: true },
         orderBy: { createdAt: 'asc' },
       });
   
@@ -346,12 +325,9 @@ export async function getWorstAccuracyQuestions(req: AuthenticatedRequest, res: 
         return res.status(401).json({ message: 'Unauthorized: User not authenticated.' });
       }
   
-      // Get today's date at midnight
       const today = new Date();
-      //convert to slovakian time
       today.setHours(today.getHours() + 2);
-  
-      // Fetch all tests (both passed and failed) for the user, ordered descending by createdAt
+
       const completedTests = await prisma.test.findMany({
         where: {
           userId,
@@ -378,7 +354,6 @@ export async function getWorstAccuracyQuestions(req: AuthenticatedRequest, res: 
         const dayStr = currentDate.toISOString().split('T')[0];
         if (completedDaysSet.has(dayStr)) {
           streak += 1;
-          // Move to previous day
           currentDate.setDate(currentDate.getDate() - 1);
         } else {
           break;

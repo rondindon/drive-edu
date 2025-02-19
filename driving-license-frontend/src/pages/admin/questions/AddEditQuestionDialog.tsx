@@ -13,7 +13,6 @@ import { Textarea } from "src/components/ui/textarea";
 import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from "src/components/ui/select";
 import { Question } from "./AdminQuestions";
 
-// Hardcoded groups and categories from your old code
 const allGroups = ['A', 'B', 'BE', 'C', 'CE', 'D', 'DE', 'T']; 
 const categories = [
   { name: 'Pravidlá cestnej premávky', points: 3 },
@@ -63,7 +62,6 @@ const AddEditQuestionDialog: React.FC<AddEditQuestionDialogProps> = ({
       setDifficulty(initialQuestion.difficulty || 'medium');
       setExplanation(initialQuestion.explanation || '');
     } else {
-      // Reset to defaults for adding new question
       setGroups([]);
       setCategory('');
       setPoints(0);
@@ -97,7 +95,6 @@ const AddEditQuestionDialog: React.FC<AddEditQuestionDialogProps> = ({
 
   const handleSaveClick = () => {
     if (!text.trim() || !category || options.some(o => !o.trim())) {
-      // Add more validation if needed
       return;
     }
 
@@ -125,7 +122,6 @@ const AddEditQuestionDialog: React.FC<AddEditQuestionDialogProps> = ({
         </DialogHeader>
         <div className="space-y-4 py-4">
 
-          {/* Groups */}
           <div>
             <Label>Groups</Label>
             <div className="flex flex-wrap gap-2 mt-2">
@@ -151,7 +147,6 @@ const AddEditQuestionDialog: React.FC<AddEditQuestionDialogProps> = ({
             </div>
           </div>
 
-          {/* Category & Points */}
           <div className="flex space-x-4">
             <div className="flex-1">
               <Label>Category</Label>
@@ -172,7 +167,6 @@ const AddEditQuestionDialog: React.FC<AddEditQuestionDialogProps> = ({
             </div>
           </div>
 
-          {/* Question Text */}
           <div>
             <Label>Question Text</Label>
             <Textarea
@@ -182,7 +176,6 @@ const AddEditQuestionDialog: React.FC<AddEditQuestionDialogProps> = ({
             />
           </div>
 
-          {/* Options */}
           <div>
             <Label>Options (A, B, C)</Label>
             {['A', 'B', 'C'].map((opt, idx) => (
@@ -200,7 +193,6 @@ const AddEditQuestionDialog: React.FC<AddEditQuestionDialogProps> = ({
             ))}
           </div>
 
-          {/* Correct Answer */}
           <div>
             <Label>Correct Answer</Label>
             <Select value={correctAnswer} onValueChange={(val: 'A'|'B'|'C') => setCorrectAnswer(val)}>
@@ -226,7 +218,6 @@ const AddEditQuestionDialog: React.FC<AddEditQuestionDialogProps> = ({
             />
           </div>
 
-          {/* Difficulty */}
           <div>
             <Label>Difficulty</Label>
             <Select value={difficulty} onValueChange={(val: 'easy'|'medium'|'hard') => setDifficulty(val)}>
@@ -241,7 +232,6 @@ const AddEditQuestionDialog: React.FC<AddEditQuestionDialogProps> = ({
             </Select>
           </div>
 
-          {/* Explanation */}
           <div>
             <Label>Explanation</Label>
             <Textarea

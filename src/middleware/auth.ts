@@ -17,7 +17,6 @@ export const authenticate = async (req: Request, res: Response, next: NextFuncti
     return res.status(401).json({ message: 'No token provided' });
   }
 
-  // Get user from Supabase
   const { data: userData, error } = await supabase.auth.getUser(token);
   if (error || !userData || !userData.user) {
     return res.status(401).json({ message: 'Invalid or expired token' });
@@ -28,10 +27,8 @@ export const authenticate = async (req: Request, res: Response, next: NextFuncti
     return res.status(401).json({ message: 'Email not found in user data' });
   }
 
-  // Fetch user from Prisma by email
   const user = await prisma.user.findUnique({ where: { email: userEmail } });
   if (!user) {
-    // If no user in database, decide if you want to create one or deny access
     return res.status(401).json({ message: 'User not found in database' });
   }
 

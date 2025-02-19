@@ -16,9 +16,9 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "src/components/ui/dialog"; // Adjust path as needed
-import { motion } from "framer-motion"; // <-- Import framer-motion
-import { ThemeContext } from "src/context/ThemeContext"; // <-- Import ThemeContext
+} from "src/components/ui/dialog";
+import { motion } from "framer-motion";
+import { ThemeContext } from "src/context/ThemeContext";
 
 export interface TestsPerDay {
   period: string; // 'YYYY-MM-DD'
@@ -31,9 +31,8 @@ interface CustomCalendarProps {
 
 const CustomCalendar: React.FC<CustomCalendarProps> = ({ testsPerDay }) => {
   const [currentMonth, setCurrentMonth] = React.useState(new Date());
-  const { theme } = useContext(ThemeContext); // Access current theme
+  const { theme } = useContext(ThemeContext);
 
-  // Minimal fade+slide variant for the entire calendar
   const calendarVariants = {
     hidden: { opacity: 0, y: 10 },
     visible: {
@@ -77,8 +76,8 @@ const CustomCalendar: React.FC<CustomCalendarProps> = ({ testsPerDay }) => {
 
   const renderDays = () => {
     const days = [];
-    const dateFormat = "EEE"; // Short day name, e.g., Mon, Tue
-    const startDate = startOfWeek(currentMonth, { weekStartsOn: 1 }); // Monday start
+    const dateFormat = "EEE"; // Short day name - Mon, Tue
+    const startDate = startOfWeek(currentMonth, { weekStartsOn: 1 });
 
     for (let i = 0; i < 7; i++) {
       const day = addDays(startDate, i);
@@ -112,7 +111,6 @@ const CustomCalendar: React.FC<CustomCalendarProps> = ({ testsPerDay }) => {
         const testData = testsPerDay.find((d) => d.period === isoDate);
         const count = testData ? testData.count : 0;
 
-        // Example logic: the more tests, the darker the green
         const lightness = count > 0 ? 90 - (count / maxTests) * 40 : undefined;
         const backgroundColor = count > 0 ? `hsl(120, 60%, ${lightness}%)` : "";
 
@@ -122,7 +120,6 @@ const CustomCalendar: React.FC<CustomCalendarProps> = ({ testsPerDay }) => {
         days.push(
           <Dialog key={day.toString()}>
             <DialogTrigger asChild>
-              {/* Replace <div> with <motion.div> to add hover animations */}
               <motion.div
                 className={`border rounded-md h-10 flex flex-col items-center justify-center cursor-pointer ${
                   isSameMonth(day, monthStart) ? "" : "opacity-30"
@@ -179,7 +176,6 @@ const CustomCalendar: React.FC<CustomCalendarProps> = ({ testsPerDay }) => {
   };
 
   return (
-    // Use framer-motion for minimal fade+slide in the entire calendar
     <motion.div
       className="w-full max-w-md rounded-md shadow-lg bg-[hsl(var(--card))] text-[hsl(var(--card-foreground))] px-5 py-3"
       initial="hidden"
