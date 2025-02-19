@@ -20,6 +20,7 @@ import {
 } from "src/components/ui/select";
 import { Skeleton } from "src/components/ui/skeleton"; // Import Skeleton
 import { ThemeContext } from "src/context/ThemeContext";
+import AppHelmet from "src/components/AppHelmet";
 
 interface User {
   id: number;
@@ -297,6 +298,7 @@ const AdminUsers: React.FC = () => {
 
   return (
     <div className="p-6 space-y-4">
+      <AppHelmet title="DriveReady - Admin Users" description="Manage users on DriveReady." />
       <h1 className="text-2xl font-bold text-[hsl(var(--foreground))]">Users</h1>
       {/* Responsive Filters */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between space-y-4 sm:space-y-0 sm:space-x-4 text-[hsl(var(--foreground))]">

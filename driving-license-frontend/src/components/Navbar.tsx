@@ -1,7 +1,6 @@
 // src/components/Navbar.tsx
 import React, { useContext } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { Helmet } from "react-helmet";
 import { Button } from "./ui/button";
 import {
   DropdownMenu,
@@ -14,6 +13,7 @@ import { useAuth } from "../context/AuthContext";
 import { ThemeContext } from "../context/ThemeContext";
 import { User, Menu, Sun, Moon } from "lucide-react";
 import { toast } from "react-toastify";
+import AppHelmet from "./AppHelmet";
 
 const Navbar: React.FC = () => {
   const location = useLocation();
@@ -39,9 +39,7 @@ const Navbar: React.FC = () => {
 
   return (
     <>
-      <Helmet>
-        <title>DriveReady</title>
-      </Helmet>
+      <AppHelmet/>
       <header className="w-full bg-main-darkBlue shadow-md">
         <nav className="container mx-auto flex items-center justify-between py-4 px-6">
           <div className="flex-1">

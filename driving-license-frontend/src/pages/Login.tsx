@@ -9,6 +9,7 @@ import { Alert, AlertDescription, AlertTitle } from "../components/ui/alert";
 import { FcGoogle } from "react-icons/fc";
 import { toast } from "react-toastify";
 import { supabase } from "../services/supabase";
+import AppHelmet from "src/components/AppHelmet";
 
 const Login: React.FC = () => {
   const [email, setEmail] = useState<string>("");
@@ -89,6 +90,7 @@ const Login: React.FC = () => {
 
   return (
     <div className="flex items-center justify-center h-screen bg-[hsl(var(--background))] text-[hsl(var(--foreground))]">
+      <AppHelmet title="DriveReady - Sign in" description="Sign in to your DriveReady account to access your driving license tests and resources." />
       <Card className="w-full max-w-md shadow-lg transform hover:scale-105 transition-transform duration-300 bg-[hsl(var(--card))] text-[hsl(var(--card-foreground))]">
         <CardHeader>
           <CardTitle className="text-center text-xl font-semibold text-[hsl(var(--foreground))]">

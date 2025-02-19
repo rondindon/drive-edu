@@ -19,6 +19,7 @@ import {
 
 import { Report, ReportStatus } from "./ReportTypes";
 import { ThemeContext } from "src/context/ThemeContext";
+import AppHelmet from "src/components/AppHelmet";
 
 const reportStatuses: ReportStatus[] = ["Pending", "Reviewed", "Resolved"];
 
@@ -268,6 +269,7 @@ const AdminReports: React.FC = () => {
   return (
     <>
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4">
+        <AppHelmet title="DriveReady - Admin Reports" description="View and manage reports submitted by users." />
         <h1 className="text-2xl font-bold text-[hsl(var(--foreground))]">Reports</h1>
         <div className="mt-4 md:mt-0 flex space-x-2">
           <Button

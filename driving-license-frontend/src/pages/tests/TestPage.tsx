@@ -4,6 +4,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { Button } from 'src/components/ui/button';
 import { Progress } from 'src/components/ui/progress';
 import { FaFlag } from 'react-icons/fa';
+import AppHelmet from 'src/components/AppHelmet';
 
 interface Question {
   id: number;
@@ -302,7 +303,9 @@ const TestPage: React.FC = () => {
   const isActive = (i: number) => i === currentIndex;
 
   return (
+    
     <div className="flex flex-col items-center justify-start min-h-screen bg-[hsl(var(--background))] text-[hsl(var(--foreground))] px-4 py-8">
+      <AppHelmet title="DriveReady - Test Page" description='DriveReady tests'/>
       {/* Timer + progress + question points */}
       <div className="mb-6 w-[70%] flex items-center justify-between gap-4">
         <div className="flex items-center w-2/3 gap-2">

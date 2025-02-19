@@ -6,6 +6,7 @@ import { Button } from 'src/components/ui/button';
 import { Avatar } from 'src/components/ui/avatar';
 import { FaGithub, FaLinkedin } from 'react-icons/fa'; // Combined import
 import { motion } from "framer-motion"; // Import framer-motion
+import AppHelmet from 'src/components/AppHelmet';
 
 const AboutPage: React.FC = () => {
   // Define animation variants
@@ -44,6 +45,7 @@ const AboutPage: React.FC = () => {
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-[hsl(var(--background))] text-[hsl(var(--foreground))]">
+    <AppHelmet title="DriveReady - About me" description="Learn more about Rondindon, a passionate developer specializing in building efficient and scalable web applications." />
       <motion.div
         variants={cardVariants}
         initial="hidden"

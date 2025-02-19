@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card"
 import { Alert, AlertDescription, AlertTitle } from "../components/ui/alert";
 import { FcGoogle } from "react-icons/fc"; // Google icon for styling
 import { useAuth } from "src/context/AuthContext";
+import AppHelmet from "src/components/AppHelmet";
 
 const Register: React.FC = () => {
   const [email, setEmail] = useState<string>("");
@@ -70,6 +71,7 @@ const Register: React.FC = () => {
 
   return (
     <div className="flex items-center justify-center h-screen bg-[hsl(var(--background))] text-[hsl(var(--foreground))]">
+      <AppHelmet title="DriveReady - Register" description="Register for a new account on DriveReady." />
       <Card className="w-full max-w-md shadow-lg transform hover:scale-105 transition-transform duration-300 bg-[hsl(var(--card))] text-[hsl(var(--card-foreground))]">
         <CardHeader>
           <CardTitle className="text-center text-xl font-semibold text-[hsl(var(--foreground))]">

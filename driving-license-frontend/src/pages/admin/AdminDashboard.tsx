@@ -22,6 +22,7 @@ import {
   ResponsiveContainer,
   CartesianGrid,
 } from 'recharts';
+import AppHelmet from "src/components/AppHelmet";
 
 interface AdminTestStatsMonth {
   period: string; // YYYY-MM
@@ -145,6 +146,7 @@ const AdminDashboard: React.FC = () => {
   if (loading) {
     return (
       <div className="space-y-6">
+        <AppHelmet title="DriveReady - Admin Dashboard" description="Admin dashboard for DriveReady." />
         <div>
           <div className="flex justify-between items-center mb-4">
             <Skeleton className="w-1/6 h-8 rounded" />

@@ -21,6 +21,7 @@ import {
 } from "src/components/ui/select";
 import { Skeleton } from "src/components/ui/skeleton";
 import { ThemeContext } from "src/context/ThemeContext";
+import AppHelmet from "src/components/AppHelmet";
 
 export interface Question {
   id?: number;
@@ -332,6 +333,7 @@ const AdminQuestions: React.FC = () => {
   return (
     <>
       <div className="flex flex-col md:flex-row justify-between items-center mb-4">
+        <AppHelmet title="DriveReady - Admin Questions" description="Admin panel for managing driving license test questions." />
         <h1 className="text-2xl font-bold text-[hsl(var(--foreground))]">
           Questions
         </h1>

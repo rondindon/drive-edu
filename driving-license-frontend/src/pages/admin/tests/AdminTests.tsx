@@ -14,6 +14,7 @@ import { MoreVertical } from "lucide-react";
 import { Skeleton } from "src/components/ui/skeleton";
 import TestDetailsDialog from "./TestDetailsDialog"; // Ensure the path is correct
 import { ThemeContext } from "src/context/ThemeContext";
+import AppHelmet from "src/components/AppHelmet";
 export interface User {
   id: number;
   name: string;
@@ -227,6 +228,7 @@ const AdminTests: React.FC = () => {
   return (
     <>
       <div className="flex flex-col md:flex-row justify-between items-center mb-4">
+        <AppHelmet title="DriveReady - Admin Tests" description="View and manage user tests." />
         <h1 className="text-2xl font-bold text-[hsl(var(--foreground))]">
           User Tests
         </h1>

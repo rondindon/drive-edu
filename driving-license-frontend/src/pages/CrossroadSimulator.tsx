@@ -3,6 +3,7 @@ import Crossroad from "../components/Crossroad";
 import { scenarios, Scenario } from "../utils/scenarios";
 import { FaExclamationCircle } from "react-icons/fa";
 import { motion, AnimatePresence } from "framer-motion";
+import AppHelmet from "src/components/AppHelmet";
 
 const randomizeScenarioColors = (scenario: Scenario): Scenario => {
   const colorPalette = [
@@ -177,6 +178,7 @@ const CrossroadSimulator: React.FC = () => {
 
   return (
     <AnimatePresence>
+      <AppHelmet title="DriveReady - Crossroad Simulator" description="Practice your driving skills with the Crossroad Simulator. Click on cars to select the correct order of passing." />
       <motion.div
         variants={pageVariants}
         initial="hidden"

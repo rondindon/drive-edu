@@ -31,6 +31,7 @@ import ActivityStats from "../components/ActivityStats";
 import CustomCalendar, { TestsPerDay } from "../components/CustomCalendar";
 import { toast } from "react-toastify";
 import FireAnimation from "../components/FireAnimation";
+import AppHelmet from "src/components/AppHelmet";
 
 const Profile: React.FC = () => {
   const { user, username, role, updateUsername } = useAuth();
@@ -229,6 +230,7 @@ const Profile: React.FC = () => {
       variants={pageVariants}
       className="p-6 bg-[hsl(var(--background))] min-h-screen flex flex-col items-center text-[hsl(var(--foreground))]"
     >
+      <AppHelmet title="DriveReady - Profile" description="View your profile information, test history, and activity statistics." />
       <div className="max-w-5xl w-full">
         {/* Profile Card with Avatar, Calendar, and Achievements */}
         <Card className="mt-5 py-12 shadow-lg rounded-md flex flex-col md:flex-row justify-between items-start space-y-6 md:space-y-0 md:space-x-6 bg-[hsl(var(--card))] text-[hsl(var(--card-foreground))] items-center justify-around">

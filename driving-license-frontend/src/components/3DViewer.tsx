@@ -249,7 +249,7 @@ const Viewer: React.FC<Props> = ({ group }) => {
         onMouseMove={handleMouseMove}
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
-        className="rounded-md border shadow-lg overflow-hidden transform transition-transform duration-300 hover:scale-98 hover:cursor-move w-full sm:w-2/3 h-64 sm:h-[35rem]"
+        className="rounded-md border shadow-lg overflow-hidden transform transition-transform duration-300 hover:scale-95 hover:cursor-move w-full sm:w-2/3 h-64 sm:h-[35rem]"
         style={{
           background: "hsl(var(--card-bg))",
           borderColor: "hsl(var(--border))",

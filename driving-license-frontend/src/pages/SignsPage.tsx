@@ -6,6 +6,7 @@ import { Button } from "../components/ui/button";
 import LoadingSpinner from "../components/LoadingSpinner";
 import TypedText from "src/components/TypedText";
 import { ThemeContext } from "../context/ThemeContext";
+import AppHelmet from "src/components/AppHelmet";
 
 // Define the shape of a Road Sign Question
 interface RoadSignQuestion {
@@ -253,6 +254,7 @@ const SignsPage: React.FC = () => {
 
   return (
     <div className="min-h-screen flex flex-col items-center px-4 py-6 bg-[hsl(var(--background))] text-[hsl(var(--foreground))]">
+      <AppHelmet title="DriveReady - Road Signs Practice" description="Test your knowledge of road signs with this interactive quiz. Identify the correct road sign based on the image and options provided." />
       <div className="w-full max-w-xl mb-6 mt-12">
         <div className="h-3 bg-gray-200 rounded-md overflow-hidden">
           <motion.div
