@@ -161,6 +161,30 @@ const LandingPage: React.FC = () => {
     );
   }
 
+  useEffect(() => {
+    const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (event === "PASSWORD_RECOVERY") {
+        const newPassword = prompt("What would you like your new password to be?");
+        if (!newPassword) {
+          alert("Password update cancelled.");
+          return;
+        }
+        
+        const { data, error } = await supabase.auth.updateUser({ password: newPassword });
+        if (data) {
+          alert("Password updated successfully!");
+        }
+        if (error) {
+          alert("The password matches the old one.");
+        }
+      }
+    });
+  
+    return () => {
+      authListener.subscription.unsubscribe();
+    };
+  }, []); 
+
   return (
     <motion.div
       className="bg-[hsl(var(--background))] min-h-screen"
