@@ -233,66 +233,16 @@ function pickWeighted<T extends { weight: number }>(
       });
     }
 
-    //  Find which userAnswers already exist
-    const questionIds = userAnswers.map((ua) => ua.questionId);
-    const existingRecords = await prisma.userAnswer.findMany({
-      where: {
+    const result = await prisma.userAnswer.createMany({
+      data: userAnswers.map((ans) => ({
         userId,
         testId,
-        questionId: { in: questionIds },
-      },
+        questionId: ans.questionId,
+        selected: ans.selected,
+        isCorrect: ans.isCorrect,
+      })),
+      skipDuplicates: true, // Skip records that would violate unique constraints
     });
-    // Map existing questionIds -> userAnswer record
-    const existingMap = new Map<number, typeof existingRecords[number]>();
-    for (const rec of existingRecords) {
-      existingMap.set(rec.questionId, rec);
-    }
-
-    // Separate new vs. existing
-    const newAnswers = [];
-    const updateAnswers = [];
-    for (const ans of userAnswers) {
-      const existing = existingMap.get(ans.questionId);
-      if (existing) {
-        updateAnswers.push(ans);
-      } else {
-        newAnswers.push(ans);
-      }
-    }
-
-    // Create all "new" records at once using createMany
-    if (newAnswers.length > 0) {
-      // createMany in a single query
-      await prisma.userAnswer.createMany({
-        data: newAnswers.map((ans) => ({
-          userId,
-          testId,
-          questionId: ans.questionId,
-          selected: ans.selected,
-          isCorrect: ans.isCorrect,
-        })),
-      });
-    }
-
-    if (updateAnswers.length > 0) {
-      await prisma.$transaction(
-        updateAnswers.map((ans) =>
-          prisma.userAnswer.update({
-            where: {
-              user_question_test_unique: {
-                userId,
-                questionId: ans.questionId,
-                testId,
-              },
-            },
-            data: {
-              selected: ans.selected,
-              isCorrect: ans.isCorrect,
-            },
-          })
-        )
-      );
-    }
 
     const completedTests = await prisma.test.count({ where: { userId } });
     const answeredQuestions = await prisma.userAnswer.count({ where: { userId } });
@@ -303,8 +253,7 @@ function pickWeighted<T extends { weight: number }>(
     return res.json({
       message: 'Test finished!',
       test: updatedTest,
-      createdCount: newAnswers.length,
-      updatedCount: updateAnswers.length,
+      createdCount: result.count,
       badgesAwarded: {
         testBadge,
         questionBadge,
