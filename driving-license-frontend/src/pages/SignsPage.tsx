@@ -278,28 +278,21 @@ const SignsPage: React.FC = () => {
               {currentQuestion.text}
             </motion.h2>
 
-            <AnimatePresence mode="popLayout">
-              {displayedOptions.map((optionText, idx) => {
-                const letter = letters[idx];
-                if (removedLetters.includes(letter)) return null;
+            <div className="w-full">
+              <AnimatePresence mode="popLayout">
+                {displayedOptions.map((optionText, idx) => {
+                  const letter = letters[idx];
+                  if (removedLetters.includes(letter)) return null; // Ensures removed elements remain in the DOM for animation
 
-                const isSelected = letter === selectedLetter;
-                let animateVariant: "idle" | "correct" | "incorrect" = "idle";
-                if (selectedLetter === letter) {
-                  animateVariant = isCorrect ? "correct" : "incorrect";
-                }
+                  const isSelected = letter === selectedLetter;
+                  let animateVariant: "idle" | "correct" | "incorrect" = "idle";
+                  if (selectedLetter === letter) {
+                    animateVariant = isCorrect ? "correct" : "incorrect";
+                  }
 
-                return (
-                  <motion.div
-                    key={`${currentQuestion.id}-${letter}`}
-                    layout
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -10, scale: 0.9 }}
-                    transition={{ duration: 0.6 }}
-                    className="w-full"
-                  >
+                  return (
                     <motion.button
+                      key={`${currentQuestion.id}-${letter}`}
                       onClick={() => handleSelectOption(letter)}
                       disabled={hasAnsweredCorrectly || animationState !== "idle" || isNavigating}
                       className={`block w-full mb-2 p-2 rounded-md border text-left 
@@ -313,16 +306,17 @@ const SignsPage: React.FC = () => {
                       variants={optionVariants}
                       initial="idle"
                       animate={animateVariant}
+                      exit={{ opacity: 0, height: 0, marginBottom: 0, transition: { duration: 0.4 } }}
                       transition={{ duration: 0.5 }}
                       aria-label={`Option ${letter}: ${optionText}`}
                     >
                       <span className="font-bold mr-2">{letter})</span>
                       {optionText}
                     </motion.button>
-                  </motion.div>
-                );
-              })}
-            </AnimatePresence>
+                  );
+                })}
+              </AnimatePresence>
+            </div>
 
             <AnimatePresence>
               {hasAnsweredCorrectly && (
