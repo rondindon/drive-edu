@@ -292,11 +292,11 @@ const SignsPage: React.FC = () => {
                 return (
                   <motion.div
                     key={`${currentQuestion.id}-${letter}`}
-                    layout // Ensures smooth height transition
+                    layout
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -10, scale: 0.9 }}
-                    transition={{ duration: 0.3 }}
+                    transition={{ duration: 0.6 }}
                     className="w-full"
                   >
                     <motion.button
