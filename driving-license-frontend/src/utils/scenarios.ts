@@ -255,7 +255,7 @@ export const scenarios: Scenario[] = [
       },
       {
         type: 'stop',
-        position: { x: 32, y:66 },
+        position: { x: 30, y:66 },
         direction: 'west',
       },
       {
