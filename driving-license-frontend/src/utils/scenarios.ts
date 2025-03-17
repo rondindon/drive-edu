@@ -167,7 +167,7 @@ export const scenarios: Scenario[] = [
       },
       {
         type: 'main-road',
-        position: { x: 32, y:67 },
+        position: { x: 30, y:67 },
         direction: 'west',
       },
       {
