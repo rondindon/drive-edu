@@ -162,12 +162,12 @@ export const scenarios: Scenario[] = [
     signs: [
       {
         type: 'main-road',
-        position: { x: 68, y: 30 },
+        position: { x: 69, y: 31 },
         direction: 'east',
       },
       {
         type: 'main-road',
-        position: { x: 33, y:66 },
+        position: { x: 32, y:67 },
         direction: 'west',
       },
       {
