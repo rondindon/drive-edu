@@ -8,19 +8,17 @@ import TypedText from "src/components/TypedText";
 import { ThemeContext } from "../context/ThemeContext";
 import AppHelmet from "src/components/AppHelmet";
 
-// Define the shape of a Road Sign Question
 interface RoadSignQuestion {
   id: number;
-  text: string;          // Question text
-  options: string[];     // e.g., ["Stop sign", "Yield sign", "Speed limit"]
-  correctAnswer: string; // "A", "B", "C", or "D"
+  text: string;
+  options: string[];
+  correctAnswer: string;
   imageUrl?: string;
   explanation?: string;
 }
 
 type AnimationState = "idle" | "correct" | "incorrect";
 
-// Array of messages to be typed out in the spinner
 const typedMessages = [
   "Checking your license status...",
   "Reviewing your traffic knowledge...",
@@ -29,7 +27,6 @@ const typedMessages = [
 ];
 
 const SignsPage: React.FC = () => {
-  // State for questions and navigation
   const [questions, setQuestions] = useState<RoadSignQuestion[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [selectedLetter, setSelectedLetter] = useState<string | null>(null);
@@ -38,19 +35,15 @@ const SignsPage: React.FC = () => {
   const [hasAnsweredCorrectly, setHasAnsweredCorrectly] = useState(false);
   const [isNavigating, setIsNavigating] = useState(false);
 
-  // Loading and error states
   const [loading, setLoading] = useState(true);
   const [fetchError, setFetchError] = useState<string | null>(null);
   const token = localStorage.getItem("supabaseToken");
 
-  // Theme Context
   const { theme } = useContext(ThemeContext);
 
-  // States for typed messages during loading
   const [typedIndex, setTypedIndex] = useState(0);
   const [showMessage, setShowMessage] = useState<string>(typedMessages[0]);
 
-  // Animation variants for loading spinner
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: { 
@@ -68,7 +61,6 @@ const SignsPage: React.FC = () => {
     },
   };
 
-  // Cycle through typed messages while loading
   useEffect(() => {
     if (!loading) return;
 
@@ -81,17 +73,15 @@ const SignsPage: React.FC = () => {
         setShowMessage(typedMessages[nextIndex]);
         return nextIndex;
       });
-    }, 2200); // Change message every 2.2 seconds
+    }, 2200);
 
     return () => clearInterval(interval);
   }, [loading]);
 
-  // Fetch & shuffle road sign questions from the backend
   useEffect(() => {
     const fetchRoadSigns = async () => {
       try {
         const response = await axios.get("https://drive-edu.onrender.com/api/questions/road-signs");
-        // Optionally shuffle the questions if not already shuffled server-side
         const shuffledQuestions = response.data.sort(() => Math.random() - 0.5);
         setQuestions(shuffledQuestions);
       } catch (err: any) {
@@ -104,18 +94,15 @@ const SignsPage: React.FC = () => {
     fetchRoadSigns();
   }, [token]);
 
-  // Fallback: If there's no image (and thus no onAnimationComplete trigger)
-  // then trigger handleAnimationComplete after the expected animation duration.
   useEffect(() => {
     if (animationState === "incorrect" && !questions[currentIndex]?.imageUrl) {
       const timer = setTimeout(() => {
         handleAnimationComplete();
-      }, 800); // Duration matching the option's incorrect animation
+      }, 800);
       return () => clearTimeout(timer);
     }
   }, [animationState, currentIndex, questions]);
 
-  // Loading state: show spinner with typed messages
   if (loading) {
     return (
       <motion.div
@@ -133,7 +120,6 @@ const SignsPage: React.FC = () => {
     );
   }
 
-  // Error or empty state handling
   if (fetchError) {
     return (
       <div className="min-h-screen flex items-center justify-center text-red-500 bg-[hsl(var(--background))]">
@@ -150,14 +136,12 @@ const SignsPage: React.FC = () => {
     );
   }
 
-  // Current question and progress calculation
   const currentQuestion = questions[currentIndex];
   const isCorrect = selectedLetter === currentQuestion.correctAnswer;
   const progress = Math.round(((currentIndex + 1) / questions.length) * 100);
   const letters = ["A", "B", "C", "D"];
   const displayedOptions = currentQuestion.options.slice(0, letters.length);
 
-  // Handle option selection
   const handleSelectOption = (letter: string) => {
     if (hasAnsweredCorrectly || animationState !== "idle" || isNavigating) return;
 
@@ -171,17 +155,14 @@ const SignsPage: React.FC = () => {
     }
   };
 
-  // Handle animation completion
   const handleAnimationComplete = () => {
     if (animationState === "correct" && !isNavigating) {
       setIsNavigating(true);
-      // Auto-advance to next question after a short delay
       setTimeout(() => {
         handleNext();
         setIsNavigating(false);
       }, 800);
     } else if (animationState === "incorrect") {
-      // Remove the incorrectly selected letter and allow user to choose again
       if (selectedLetter) {
         setRemovedLetters((prev) => [...prev, selectedLetter]);
       }
@@ -190,7 +171,6 @@ const SignsPage: React.FC = () => {
     }
   };
 
-  // Navigation: Move to next or previous question
   const handleNext = () => {
     setCurrentIndex((prev) => (prev + 1) % questions.length);
     resetState();
@@ -201,7 +181,6 @@ const SignsPage: React.FC = () => {
     resetState();
   };
 
-  // Reset states for a new question
   const resetState = () => {
     setRemovedLetters([]);
     setAnimationState("idle");
@@ -209,11 +188,9 @@ const SignsPage: React.FC = () => {
     setSelectedLetter(null);
   };
 
-  // Animation variants for the image
   const imageVariants = {
     idle: { x: 0, rotate: 0, scale: 1 },
     incorrect: {
-      // Shake horizontally
       x: [0, -10, 10, -10, 10, -10, 10, 0],
       transition: { duration: .75 },
     },
@@ -301,8 +278,7 @@ const SignsPage: React.FC = () => {
               {currentQuestion.text}
             </motion.h2>
 
-            {/* Multiple-Choice Options */}
-            <div className="w-full">
+            <AnimatePresence mode="popLayout">
               {displayedOptions.map((optionText, idx) => {
                 const letter = letters[idx];
                 if (removedLetters.includes(letter)) return null;
@@ -314,32 +290,40 @@ const SignsPage: React.FC = () => {
                 }
 
                 return (
-                  <motion.button
+                  <motion.div
                     key={`${currentQuestion.id}-${letter}`}
-                    onClick={() => handleSelectOption(letter)}
-                    disabled={hasAnsweredCorrectly || animationState !== "idle" || isNavigating}
-                    className={`block w-full mb-2 p-2 rounded-md border text-left 
-                      ${
-                        isSelected && !hasAnsweredCorrectly
-                          ? "bg-green-500 text-white"
-                          : "bg-gray-200 dark:bg-gray-600 text-gray-900 dark:text-gray-100"
-                      }
-                      hover:bg-gray-300 dark:hover:bg-gray-500 transition-colors cursor-pointer focus:outline-none
-                    `}
-                    variants={optionVariants}
-                    initial="idle"
-                    animate={animateVariant}
-                    transition={{ duration: 0.5 }}
-                    aria-label={`Option ${letter}: ${optionText}`}
+                    layout // Ensures smooth height transition
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10, scale: 0.9 }}
+                    transition={{ duration: 0.3 }}
+                    className="w-full"
                   >
-                    <span className="font-bold mr-2">{letter})</span>
-                    {optionText}
-                  </motion.button>
+                    <motion.button
+                      onClick={() => handleSelectOption(letter)}
+                      disabled={hasAnsweredCorrectly || animationState !== "idle" || isNavigating}
+                      className={`block w-full mb-2 p-2 rounded-md border text-left 
+                        ${
+                          isSelected && !hasAnsweredCorrectly
+                            ? "bg-green-500 text-white"
+                            : "bg-gray-200 dark:bg-gray-600 text-gray-900 dark:text-gray-100"
+                        }
+                        hover:bg-gray-300 dark:hover:bg-gray-500 transition-colors cursor-pointer focus:outline-none
+                      `}
+                      variants={optionVariants}
+                      initial="idle"
+                      animate={animateVariant}
+                      transition={{ duration: 0.5 }}
+                      aria-label={`Option ${letter}: ${optionText}`}
+                    >
+                      <span className="font-bold mr-2">{letter})</span>
+                      {optionText}
+                    </motion.button>
+                  </motion.div>
                 );
               })}
-            </div>
+            </AnimatePresence>
 
-            {/* Feedback for Correct Answer */}
             <AnimatePresence>
               {hasAnsweredCorrectly && (
                 <motion.div
@@ -362,7 +346,6 @@ const SignsPage: React.FC = () => {
         </motion.div>
       </AnimatePresence>
 
-      {/* Navigation Buttons */}
       <div className="flex space-x-4 mt-6">
         <motion.div whileHover="hover" whileTap="tap" variants={navButtonVariants}>
           <Button
@@ -395,7 +378,6 @@ const SignsPage: React.FC = () => {
         </motion.div>
       </div>
 
-      {/* Question Counter */}
       <p className="mt-2 text-sm text-gray-900 dark:text-gray-100">
         Question {currentIndex + 1} of {questions.length}
       </p>
