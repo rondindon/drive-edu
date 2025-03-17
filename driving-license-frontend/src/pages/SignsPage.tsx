@@ -278,15 +278,15 @@ const SignsPage: React.FC = () => {
               {currentQuestion.text}
             </motion.h2>
 
-            <div className="w-full relative">
+            <div className="w-full">
               <AnimatePresence mode="popLayout">
                 {displayedOptions.map((optionText, idx) => {
                   const letter = letters[idx];
-                  const isSelected = letter === selectedLetter;
-                  const shouldRemove = removedLetters.includes(letter); // Track removed options
+                  if (removedLetters.includes(letter)) return null; // Ensures removed elements remain in the DOM for animation
 
+                  const isSelected = letter === selectedLetter;
                   let animateVariant: "idle" | "correct" | "incorrect" = "idle";
-                  if (isSelected) {
+                  if (selectedLetter === letter) {
                     animateVariant = isCorrect ? "correct" : "incorrect";
                   }
 
@@ -296,20 +296,19 @@ const SignsPage: React.FC = () => {
                       onClick={() => handleSelectOption(letter)}
                       disabled={hasAnsweredCorrectly || animationState !== "idle" || isNavigating}
                       className={`block w-full mb-2 p-2 rounded-md border text-left 
-                        ${isSelected ? "bg-green-500 text-white" : "bg-gray-200 dark:bg-gray-600 text-gray-900 dark:text-gray-100"}
+                        ${
+                          isSelected && !hasAnsweredCorrectly
+                            ? "bg-green-500 text-white"
+                            : "bg-gray-200 dark:bg-gray-600 text-gray-900 dark:text-gray-100"
+                        }
                         hover:bg-gray-300 dark:hover:bg-gray-500 transition-colors cursor-pointer focus:outline-none
                       `}
                       variants={optionVariants}
                       initial="idle"
                       animate={animateVariant}
-                      exit={{
-                        opacity: 0,
-                        scale: 0.9,
-                        transition: { duration: 0.4, ease: "easeInOut" },
-                      }}
+                      exit={{ opacity: 0, height: 0, marginBottom: 0, transition: { duration: 0.4 } }}
                       transition={{ duration: 0.5 }}
                       aria-label={`Option ${letter}: ${optionText}`}
-                      layout // Ensures smooth position shifts after an item is removed
                     >
                       <span className="font-bold mr-2">{letter})</span>
                       {optionText}
