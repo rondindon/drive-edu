@@ -1,5 +1,4 @@
-// src/components/Navbar.tsx
-import React, { useContext } from "react";
+import React, { useContext, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Button } from "./ui/button";
 import {
@@ -20,6 +19,12 @@ const Navbar: React.FC = () => {
   const navigate = useNavigate();
   const { user, role, username, logout } = useAuth();
   const { theme, toggleTheme } = useContext(ThemeContext);
+  
+  // Language state for the controls (English or Slovak)
+  const [language, setLanguage] = useState<"en" | "sk">("en");
+  const toggleLanguage = () => {
+    setLanguage(prev => (prev === "en" ? "sk" : "en"));
+  };
 
   const isActive = (path: string) =>
     location.pathname === path
@@ -39,9 +44,10 @@ const Navbar: React.FC = () => {
 
   return (
     <>
-      <AppHelmet/>
+      <AppHelmet />
       <header className="w-full bg-main-darkBlue shadow-md">
         <nav className="container mx-auto flex items-center justify-between py-4 px-6">
+          {/* Left Section: Logo */}
           <div className="flex-1">
             <a
               href="/"
@@ -51,6 +57,7 @@ const Navbar: React.FC = () => {
             </a>
           </div>
 
+          {/* Center Section: Navigation Links (Visible on md and above) */}
           <div className="hidden md:flex flex-1 justify-center space-x-6">
             <a href="/" className={isActive("/")}>
               Home
@@ -66,6 +73,7 @@ const Navbar: React.FC = () => {
             </a>
           </div>
 
+          {/* Right Section: Profile, Admin, Theme and Language Toggle (md) */}
           <div className="hidden md:flex flex-1 justify-end items-center space-x-4">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -132,25 +140,40 @@ const Navbar: React.FC = () => {
               </Button>
             )}
 
-            <div className="flex items-center space-x-2">
-              <Sun
-                className={`w-5 h-5 ${
-                  theme === "dark" ? "text-gray-500" : "text-yellow-400"
-                } transition-colors`}
-              />
-              <Switch
-                checked={theme === "dark"}
-                onCheckedChange={toggleTheme}
-                className="bg-white border border-gray-300 data-[state=checked]:bg-white"
-              />
-              <Moon
-                className={`w-5 h-5 ${
-                  theme === "light" ? "text-gray-500" : "text-gray-300"
-                } transition-colors`}
-              />
+            <div className="flex items-center space-x-4">
+              {/* Theme Toggle */}
+              <div className="flex items-center space-x-2">
+                <Sun
+                  className={`w-5 h-5 ${
+                    theme === "dark" ? "text-gray-500" : "text-yellow-400"
+                  } transition-colors`}
+                />
+                <Switch
+                  checked={theme === "dark"}
+                  onCheckedChange={toggleTheme}
+                  className="bg-white border border-gray-300 data-[state=checked]:bg-white"
+                />
+                <Moon
+                  className={`w-5 h-5 ${
+                    theme === "light" ? "text-gray-500" : "text-gray-300"
+                  } transition-colors`}
+                />
+              </div>
+
+              {/* Language Toggle */}
+              <div className="flex items-center space-x-1">
+                <span className="text-xs">EN</span>
+                <Switch
+                  checked={language === "sk"}
+                  onCheckedChange={toggleLanguage}
+                  className="w-8 h-4 bg-white border border-gray-300 data-[state=checked]:bg-white"
+                />
+                <span className="text-xs">SK</span>
+              </div>
             </div>
           </div>
 
+          {/* Mobile Menu (below md) */}
           <div className="flex md:hidden flex-1 justify-end">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -253,6 +276,16 @@ const Navbar: React.FC = () => {
                       theme === "light" ? "text-gray-500" : "text-gray-300"
                     } transition-colors`}
                   />
+                  {/* Mobile Language Toggle */}
+                  <div className="flex items-center space-x-1">
+                    <span className="text-xs">EN</span>
+                    <Switch
+                      checked={language === "sk"}
+                      onCheckedChange={toggleLanguage}
+                      className="w-8 h-4 bg-white border border-gray-300 data-[state=checked]:bg-white"
+                    />
+                    <span className="text-xs">SK</span>
+                  </div>
                 </div>
               </DropdownMenuContent>
             </DropdownMenu>
