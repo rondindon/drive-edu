@@ -9,12 +9,22 @@ import {
 } from '../components/ui/select';
 import Viewer from '../components/3DViewer';
 import { Separator } from '../components/ui/separator';
-import { ThemeContext } from '../context/ThemeContext'; 
+import { ThemeContext } from '../context/ThemeContext';
+import { LanguageContext } from '../context/LanguageContext';
 import LoadingSpinner from '../components/LoadingSpinner';
 import TypedText from 'src/components/TypedText';
 import { motion } from 'framer-motion';
 import { supabase } from 'src/services/supabase';
-import { FaCar, FaTruck, FaBus, FaMotorcycle, FaCarSide, FaTruckMoving, FaBusAlt, FaTractor } from 'react-icons/fa';
+import {
+  FaCar,
+  FaTruck,
+  FaBus,
+  FaMotorcycle,
+  FaCarSide,
+  FaTruckMoving,
+  FaBusAlt,
+  FaTractor
+} from 'react-icons/fa';
 
 const typedMessages = [
   "Checking your license status...",
@@ -22,6 +32,23 @@ const typedMessages = [
   "Adjusting your side mirrors...",
   "Ready... Set... Go!",
 ];
+
+const translations = {
+  en: {
+    drivingLicenseTest: "Driving License Test",
+    selectGroup: "Select your group to begin the test:",
+    pleaseSelectGroupToLoad3DViewer: "Please select a group to load the 3D Viewer.",
+    startTest: "Start Test",
+    loginToStart: "Login to Start",
+  },
+  sk: {
+    drivingLicenseTest: "Skúška na vodičský preukaz",
+    selectGroup: "Vyberte si skupinu pre začatie skúšky:",
+    pleaseSelectGroupToLoad3DViewer: "Prosím vyberte si skupinu pre načítanie 3D zobrazenia.",
+    startTest: "Začať skúšku",
+    loginToStart: "Prihlásiť sa pre začatie",
+  },
+};
 
 const groupItems = [
   { group: 'A', description: 'Motorcycles', icon: <FaMotorcycle className="text-4xl" /> },
@@ -63,11 +90,15 @@ const carouselItemVariants = {
 };
 
 const LandingPage: React.FC = () => {
-  const allGroups = ['A', 'B', 'BE', 'C', 'CE', 'D', 'DE', 'T']; 
+  const allGroups = ['A', 'B', 'BE', 'C', 'CE', 'D', 'DE', 'T'];
   const [selectedGroup, setSelectedGroup] = useState<string>('');
   const navigate = useNavigate();
   const token = localStorage.getItem("supabaseToken");
   const { theme } = useContext(ThemeContext);
+  const { language } = useContext(LanguageContext);
+  
+  // Get translations for the current language
+  const t = translations[language];
 
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(!!token);
   
@@ -78,6 +109,7 @@ const LandingPage: React.FC = () => {
     }
     checkAuthStatus();
   }, []);
+
   useEffect(() => {
     const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
       setIsLoggedIn(!!session);
@@ -95,30 +127,6 @@ const LandingPage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [typedIndex, setTypedIndex] = useState(0);
   const [showMessage, setShowMessage] = useState<string>("");
-
-  useEffect(() => {
-    const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (event === "PASSWORD_RECOVERY") {
-        const newPassword = prompt("What would you like your new password to be?");
-        if (!newPassword) {
-          alert("Password update cancelled.");
-          return;
-        }
-        
-        const { data, error } = await supabase.auth.updateUser({ password: newPassword });
-        if (data) {
-          alert("Password updated successfully!");
-        }
-        if (error) {
-          alert("The password matches the old one.");
-        }
-      }
-    });
-  
-    return () => {
-      authListener.subscription.unsubscribe();
-    };
-  }, []); 
 
   useEffect(() => {
     if (!isLoading) return;
@@ -197,7 +205,7 @@ const LandingPage: React.FC = () => {
           className="tracking-wider text-4xl font-bold text-[hsl(var(--primary))] mb-4 font-inclusive pt-6"
           variants={itemVariants}
         >
-          Driving License Test
+          {t.drivingLicenseTest}
         </motion.h1>
 
         <Separator className={`w-full sm:w-1/2 animate-fadeIn ${theme === 'dark' ? "bg-blue-200" : "bg-main-darkBlue"}`}/>
@@ -206,7 +214,7 @@ const LandingPage: React.FC = () => {
           className="text-lg text-[hsl(var(--card-foreground))] transition-opacity duration-500 ease-in-out"
           variants={itemVariants}
         >
-          Select your group to begin the test:
+          {t.selectGroup}
         </motion.p>
 
         {isSmallScreen ? (
@@ -268,7 +276,7 @@ const LandingPage: React.FC = () => {
               className={`${theme === 'dark' ? "text-blue-200" : "text-main-darkBlue"} text-sm italic`}
               variants={itemVariants}
             >
-              Please select a group to load the 3D Viewer.
+              {t.pleaseSelectGroupToLoad3DViewer}
             </motion.div>
           )}
         </motion.div>
@@ -281,7 +289,7 @@ const LandingPage: React.FC = () => {
           whileTap={selectedGroup && isLoggedIn ? { scale: 0.95 } : {}}
           variants={itemVariants}
         >
-          {isLoggedIn ? "Start Test" : "Login to Start"}
+          {isLoggedIn ? t.startTest : t.loginToStart}
         </motion.button>
       </div>
     </motion.div>
