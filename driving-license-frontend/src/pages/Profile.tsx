@@ -4,6 +4,7 @@ import { Edit } from "lucide-react";
 import { motion } from "framer-motion";
 import { useAuth } from "../context/AuthContext";
 import { ThemeContext } from "../context/ThemeContext";
+import { LanguageContext } from "../context/LanguageContext";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Card } from "../components/ui/card";
@@ -26,15 +27,96 @@ import {
   DrawerTitle,
   DrawerDescription,
 } from "../components/ui/drawer";
-
 import ActivityStats from "../components/ActivityStats";
 import CustomCalendar, { TestsPerDay } from "../components/CustomCalendar";
 import { toast } from "react-toastify";
 import FireAnimation from "../components/FireAnimation";
 import AppHelmet from "src/components/AppHelmet";
 
+const translations = {
+  en: {
+    helmetTitle: "DriveReady - Profile",
+    helmetDescription:
+      "View your profile information, test history, and activity statistics.",
+    profileInfoTab: "Profile Info",
+    activityTab: "Activity",
+    historyTab: "History",
+    roleLabel: "Role:",
+    createdAtLabel: "Created At:",
+    usernameLabel: "Username:",
+    notSet: "Not set",
+    editUsername: "Edit Username",
+    enterNewUsername: "Enter new username",
+    confirmUsernameUpdateTitle: "Confirm Username Update",
+    confirmUsernameUpdateDescription: (name: string) =>
+      `Are you sure you want to change your username to "${name}"?`,
+    save: "Save",
+    cancel: "Cancel",
+    loadingSuccessRate: "Loading success rate...",
+    loadingStreak: "Loading streak...",
+    loadingBadges: "Loading badges...",
+    selectProfilePicture: "Select Profile Picture",
+    chooseProfilePicture: "Choose one of the available profile pictures.",
+    close: "Close",
+    profileTabMessage: "Username updated successfully!",
+    loadingCalendar: "Loading calendar...",
+    profileTestHistoryTitle: "My Test History",
+    loadingTestHistory: "Loading test history...",
+    noCompletedTests: "No completed tests found.",
+    groupLabel: "Group:",
+    scoreLabel: "Score:",
+    passed: "Passed",
+    failed: "Failed",
+    timeTakenLabel: "Time Taken:",
+    dateLabel: "Date:",
+    errorUpdatingUsername: "Error updating username. Please try again.",
+  },
+  sk: {
+    helmetTitle: "DriveReady - Profil",
+    helmetDescription:
+      "Zobraziť informácie o profile, históriu skúšok a štatistiky aktivity.",
+    profileInfoTab: "Informácie o Profile",
+    activityTab: "Aktivita",
+    historyTab: "História",
+    roleLabel: "Rola:",
+    createdAtLabel: "Vytvorené:",
+    usernameLabel: "Používateľské meno:",
+    notSet: "Nenastavené",
+    editUsername: "Upraviť používateľské meno",
+    enterNewUsername: "Zadajte nové používateľské meno",
+    confirmUsernameUpdateTitle: "Potvrdiť zmenu používateľského mena",
+    confirmUsernameUpdateDescription: (name: string) =>
+      `Ste si istý, že chcete zmeniť používateľské meno na "${name}"?`,
+    save: "Uložiť",
+    cancel: "Zrušiť",
+    loadingSuccessRate: "Načítava sa miera úspešnosti...",
+    loadingStreak: "Načítava sa séria...",
+    loadingBadges: "Načítavajú sa odznaky...",
+    selectProfilePicture: "Vyberte profilový obrázok",
+    chooseProfilePicture:
+      "Vyberte si jeden z dostupných profilových obrázkov.",
+    close: "Zatvoriť",
+    profileTabMessage: "Používateľské meno bolo úspešne aktualizované!",
+    loadingCalendar: "Načítava sa kalendár...",
+    profileTestHistoryTitle: "Moja História Skúšok",
+    loadingTestHistory: "Načítava sa história skúšok...",
+    noCompletedTests: "Neboli nájdené žiadne dokončené skúšky.",
+    groupLabel: "Skupina:",
+    scoreLabel: "Skóre:",
+    passed: "Splnené",
+    failed: "Neúspešné",
+    timeTakenLabel: "Čas:",
+    dateLabel: "Dátum:",
+    errorUpdatingUsername: "Chyba pri aktualizácii používateľského mena. Skúste to prosím znova.",
+  },
+};
+
 const Profile: React.FC = () => {
   const { user, username, role, updateUsername } = useAuth();
+  const { theme } = useContext(ThemeContext);
+  const { language } = useContext(LanguageContext);
+  const t = translations[language];
+
   const [activeTab, setActiveTab] = useState<"Profile Info" | "Activity" | "History">("Profile Info");
   const [editing, setEditing] = useState(false);
   const [newUsername, setNewUsername] = useState(username || "");
@@ -74,7 +156,6 @@ const Profile: React.FC = () => {
   ];
 
   const token = localStorage.getItem("supabaseToken");
-  const { theme } = useContext(ThemeContext);
 
   const badgeStyles: Record<string, string> = {
     DIAMOND: "bg-gradient-to-r from-blue-500 to-purple-500 text-white border-2 border-purple-700 font-bold",
@@ -90,7 +171,11 @@ const Profile: React.FC = () => {
 
   const handleProfilePicSelect = async (url: string) => {
     setProfilePicture(url);
-    axios.put('https://drive-edu.onrender.com/api/users/updateProfilePicture', { profilePicture: url }, { headers: { Authorization: `Bearer ${token}` } });
+    axios.put(
+      "https://drive-edu.onrender.com/api/users/updateProfilePicture",
+      { profilePicture: url },
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
     setProfilePicDialogOpen(false);
   };
 
@@ -98,9 +183,10 @@ const Profile: React.FC = () => {
     const fetchTestSummary = async () => {
       setTestStatsLoading(true);
       try {
-        const response = await axios.get("https://drive-edu.onrender.com/api/user/stats/test-summary", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        const response = await axios.get(
+          "https://drive-edu.onrender.com/api/user/stats/test-summary",
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
         const { testsTaken, testsPassed } = response.data;
         setTestsTaken(testsTaken ?? 0);
         setTestsPassed(testsPassed ?? 0);
@@ -111,31 +197,32 @@ const Profile: React.FC = () => {
         }
       } catch (error) {
         console.error("Error fetching test summary:", error);
-        setTestStatsError("Failed to load test statistics.");
+        setTestStatsError(t.errorUpdatingUsername);
       } finally {
         setTestStatsLoading(false);
       }
     };
     fetchTestSummary();
-  }, [token]);
+  }, [token, t.errorUpdatingUsername]);
 
   useEffect(() => {
     const fetchTestsPerDay = async () => {
       setTestsPerDayLoading(true);
       try {
-        const response = await axios.get("https://drive-edu.onrender.com/api/user/stats/tests", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        const response = await axios.get(
+          "https://drive-edu.onrender.com/api/user/stats/tests",
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
         setTestsPerDay(response.data.testsOverTimeDay ?? []);
       } catch (error) {
         console.error("Error fetching tests per day:", error);
-        setTestsPerDayError("Failed to load daily test statistics.");
+        setTestsPerDayError(t.loadingCalendar);
       } finally {
         setTestsPerDayLoading(false);
       }
     };
     fetchTestsPerDay();
-  }, [token]);
+  }, [token, t.loadingCalendar]);
 
   useEffect(() => {
     const fetchUserTests = async () => {
@@ -143,45 +230,48 @@ const Profile: React.FC = () => {
       setUserTestsLoading(true);
       setUserTestsError(null);
       try {
-        const response = await axios.get("https://drive-edu.onrender.com/api/user/tests", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        const response = await axios.get(
+          "https://drive-edu.onrender.com/api/user/tests",
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
         setUserTests(response.data);
       } catch (error) {
         console.error("Error fetching user tests:", error);
-        setUserTestsError("Failed to fetch test history.");
+        setUserTestsError(t.loadingTestHistory);
       } finally {
         setUserTestsLoading(false);
       }
     };
     fetchUserTests();
-  }, [activeTab, token]);
+  }, [activeTab, token, t.loadingTestHistory]);
 
   useEffect(() => {
     const fetchStreak = async () => {
       setStreakLoading(true);
       try {
-        const response = await axios.get("https://drive-edu.onrender.com/api/user/stats/streak", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        const response = await axios.get(
+          "https://drive-edu.onrender.com/api/user/stats/streak",
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
         setStreak(response.data.streak);
       } catch (error) {
         console.error("Error fetching streak:", error);
-        setStreakError("Failed to load streak.");
+        setStreakError(t.loadingStreak);
       } finally {
         setStreakLoading(false);
       }
     };
     fetchStreak();
-  }, [token]);
+  }, [token, t.loadingStreak]);
 
   useEffect(() => {
     const fetchBadges = async () => {
       setBadgesLoading(true);
       try {
-        const response = await axios.get("https://drive-edu.onrender.com/api/user/badges", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        const response = await axios.get(
+          "https://drive-edu.onrender.com/api/user/badges",
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
         setBadges(response.data);
       } catch (error) {
         console.error("Error fetching badges:", error);
@@ -194,15 +284,15 @@ const Profile: React.FC = () => {
 
   const handleSave = async () => {
     if (!newUsername.trim()) {
-      alert("Username cannot be empty.");
+      alert(t.enterNewUsername);
       return;
     }
     try {
       await updateUsername(newUsername);
-      toast.success("Username updated successfully!");
+      toast.success(t.profileTabMessage);
       setEditing(false);
     } catch (error) {
-      setMessage("Error updating username. Please try again.");
+      setMessage(t.errorUpdatingUsername);
       console.error(error);
     } finally {
       setDialogOpen(false);
@@ -230,24 +320,22 @@ const Profile: React.FC = () => {
       variants={pageVariants}
       className="p-6 bg-[hsl(var(--background))] min-h-screen flex flex-col items-center text-[hsl(var(--foreground))]"
     >
-      <AppHelmet title="DriveReady - Profile" description="View your profile information, test history, and activity statistics." />
+      <AppHelmet title={t.helmetTitle} description={t.helmetDescription} />
       <div className="max-w-5xl w-full">
         {/* Profile Card with Avatar, Calendar, and Achievements */}
         <Card className="mt-5 py-12 shadow-lg rounded-md flex flex-col md:flex-row justify-between items-start space-y-6 md:space-y-0 md:space-x-6 bg-[hsl(var(--card))] text-[hsl(var(--card-foreground))] items-center justify-around">
-
           <div className="flex flex-col items-center md:items-start space-y-4">
-
             <div onClick={() => setProfilePicDialogOpen(true)} className="cursor-pointer">
               <Avatar className="w-24 h-24">
-                <AvatarImage src={profilePicture} alt={username || "Avatar"} />
+                <AvatarImage src={profilePicture} alt={username || t.notSet} />
                 <AvatarFallback>{username?.charAt(0).toUpperCase() || "U"}</AvatarFallback>
               </Avatar>
             </div>
             <div className="flex flex-col space-y-1 items-center md:items-start">
-              <span className="text-lg font-bold">{username || "Not set"}</span>
+              <span className="text-lg font-bold">{username || t.notSet}</span>
               <span className="text-sm">{user?.email}</span>
               {testStatsLoading ? (
-                <div className="text-gray-500">Loading success rate...</div>
+                <div className="text-gray-500">{t.loadingSuccessRate}</div>
               ) : testStatsError ? (
                 <div className="text-red-500">{testStatsError}</div>
               ) : (
@@ -257,7 +345,7 @@ const Profile: React.FC = () => {
                     <span>- {testsPassed}/{testsTaken}</span>
                   </div>
                   {streakLoading ? (
-                    <div className="text-gray-500">Loading streak...</div>
+                    <div className="text-gray-500">{t.loadingStreak}</div>
                   ) : streakError ? (
                     <div className="text-red-500">{streakError}</div>
                   ) : (
@@ -275,7 +363,7 @@ const Profile: React.FC = () => {
                   <div className="mt-4">
                     <div className="mt-2 flex flex-wrap gap-2">
                       {badgesLoading ? (
-                        <p>Loading badges...</p>
+                        <p>{t.loadingBadges}</p>
                       ) : (
                         badges.map((badge) => (
                           <motion.div
@@ -304,7 +392,7 @@ const Profile: React.FC = () => {
           {/* Calendar Section */}
           <div className="w-full md:w-1/2 flex items-center justify-center">
             {testsPerDayLoading ? (
-              <div className="text-gray-500">Loading calendar...</div>
+              <div className="text-gray-500">{t.loadingCalendar}</div>
             ) : testsPerDayError ? (
               <div className="text-red-500">{testsPerDayError}</div>
             ) : (
@@ -318,9 +406,9 @@ const Profile: React.FC = () => {
           <AlertDialog open={profilePicDialogOpen} onOpenChange={setProfilePicDialogOpen}>
             <AlertDialogContent className="bg-[hsl(var(--popover))] text-[hsl(var(--popover-foreground))]">
               <AlertDialogHeader>
-                <AlertDialogTitle>Select Profile Picture</AlertDialogTitle>
+                <AlertDialogTitle>{t.selectProfilePicture}</AlertDialogTitle>
                 <AlertDialogDescription>
-                  Choose one of the available profile pictures.
+                  {t.chooseProfilePicture}
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <div className="flex justify-around my-4">
@@ -336,7 +424,7 @@ const Profile: React.FC = () => {
                 ))}
               </div>
               <AlertDialogFooter>
-                <Button onClick={() => setProfilePicDialogOpen(false)}>Cancel</Button>
+                <Button onClick={() => setProfilePicDialogOpen(false)}>{t.cancel}</Button>
               </AlertDialogFooter>
             </AlertDialogContent>
           </AlertDialog>
@@ -359,7 +447,7 @@ const Profile: React.FC = () => {
                 <AlertDialogDescription>{selectedBadge.description}</AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
-                <Button onClick={() => setBadgeDialogOpen(false)}>Close</Button>
+                <Button onClick={() => setBadgeDialogOpen(false)}>{t.close}</Button>
               </AlertDialogFooter>
             </AlertDialogContent>
           </AlertDialog>
@@ -376,7 +464,7 @@ const Profile: React.FC = () => {
                   : "text-gray-500 hover:text-[hsl(var(--primary))]"
               }`}
             >
-              Profile Info
+              {t.profileInfoTab}
             </button>
             <button
               onClick={() => setActiveTab("Activity")}
@@ -386,7 +474,7 @@ const Profile: React.FC = () => {
                   : "text-gray-500 hover:text-[hsl(var(--primary))]"
               }`}
             >
-              Activity
+              {t.activityTab}
             </button>
             <button
               onClick={() => setActiveTab("History")}
@@ -396,7 +484,7 @@ const Profile: React.FC = () => {
                   : "text-gray-500 hover:text-[hsl(var(--primary))]"
               }`}
             >
-              History
+              {t.historyTab}
             </button>
           </nav>
         </div>
@@ -406,23 +494,23 @@ const Profile: React.FC = () => {
           <Card className="p-6 shadow-lg rounded-md animate-fadeIn bg-[hsl(var(--card))] text-[hsl(var(--card-foreground))]">
             <div className="space-y-6">
               <div className="flex justify-between items-center">
-                <span className="font-semibold">Role:</span>
+                <span className="font-semibold">{t.roleLabel}</span>
                 <span>{role}</span>
               </div>
               {user?.created_at && (
                 <div className="flex justify-between items-center">
-                  <span className="font-semibold">Created At:</span>
+                  <span className="font-semibold">{t.createdAtLabel}</span>
                   <span>{new Date(user.created_at).toLocaleString()}</span>
                 </div>
               )}
               <div className="flex justify-between items-center">
-                <span className="font-semibold">Username:</span>
+                <span className="font-semibold">{t.usernameLabel}</span>
                 {editing ? (
                   <div className="flex items-center space-x-2">
                     <Input
                       value={newUsername}
                       onChange={(e) => setNewUsername(e.target.value)}
-                      placeholder="Enter new username"
+                      placeholder={t.enterNewUsername}
                       className="bg-[hsl(var(--input))] text-[hsl(var(--foreground))]"
                     />
                     <AlertDialog open={dialogOpen} onOpenChange={setDialogOpen}>
@@ -431,15 +519,14 @@ const Profile: React.FC = () => {
                           size="sm"
                           className="bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] hover:bg-[hsl(var(--primary))]/90"
                         >
-                          Save
+                          {t.save}
                         </Button>
                       </AlertDialogTrigger>
                       <AlertDialogContent className="bg-[hsl(var(--popover))] text-[hsl(var(--popover-foreground))]">
                         <AlertDialogHeader>
-                          <AlertDialogTitle>Confirm Username Update</AlertDialogTitle>
+                          <AlertDialogTitle>{t.confirmUsernameUpdateTitle}</AlertDialogTitle>
                           <AlertDialogDescription>
-                            Are you sure you want to change your username to{" "}
-                            <strong>{newUsername}</strong>?
+                            {t.confirmUsernameUpdateDescription(newUsername)}
                           </AlertDialogDescription>
                         </AlertDialogHeader>
                         <AlertDialogFooter>
@@ -448,13 +535,13 @@ const Profile: React.FC = () => {
                             onClick={() => setDialogOpen(false)}
                             className="bg-[hsl(var(--muted))] text-[hsl(var(--muted-foreground))] hover:bg-[hsl(var(--muted))]/90"
                           >
-                            Cancel
+                            {t.cancel}
                           </Button>
                           <Button
                             onClick={handleSave}
                             className="bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] hover:bg-[hsl(var(--primary))]/90"
                           >
-                            Confirm
+                            {t.save}
                           </Button>
                         </AlertDialogFooter>
                       </AlertDialogContent>
@@ -465,16 +552,16 @@ const Profile: React.FC = () => {
                       onClick={() => setEditing(false)}
                       className="bg-[hsl(var(--muted))] text-[hsl(var(--muted-foreground))] hover:bg-[hsl(var(--muted))]/90"
                     >
-                      Cancel
+                      {t.cancel}
                     </Button>
                   </div>
                 ) : (
                   <div className="flex items-center space-x-2">
-                    <span>{username || "Not set"}</span>
+                    <span>{username || t.notSet}</span>
                     <button
                       onClick={() => setEditing(true)}
                       className="p-1 rounded-full hover:bg-[hsl(var(--muted))] transition-colors"
-                      aria-label="Edit Username"
+                      aria-label={t.editUsername}
                     >
                       <Edit className="w-5 h-5 text-[hsl(var(--accent-foreground))]" />
                     </button>
@@ -492,17 +579,17 @@ const Profile: React.FC = () => {
         {activeTab === "History" && (
           <Card className="p-6 shadow-lg rounded-md animate-fadeIn bg-[hsl(var(--card))] text-black">
             <h2 className="text-xl font-semibold mb-4 text-[hsl(var(--card-foreground))]">
-              My Test History
+              {t.profileTestHistoryTitle}
             </h2>
             {userTestsLoading ? (
               <div className="text-gray-500 text-[hsl(var(--card-foreground))]">
-                Loading test history...
+                {t.loadingTestHistory}
               </div>
             ) : userTestsError ? (
               <div className="text-red-500">{userTestsError}</div>
             ) : userTests.length === 0 ? (
               <div>
-                <p className="text-[hsl(var(--card-foreground))]">No completed tests found.</p>
+                <p className="text-[hsl(var(--card-foreground))]">{t.noCompletedTests}</p>
               </div>
             ) : (
               <motion.div
@@ -537,9 +624,13 @@ const Profile: React.FC = () => {
                             }}
                             transition={{ type: "spring", stiffness: 300 }}
                           >
-                            <p className="font-medium mb-1">Group: {test.group}</p>
-                            <p className="font-semibold">{test.score}/100 points</p>
-                            <p>{passed ? "Passed" : "Failed"}</p>
+                            <p className="font-medium mb-1">
+                              {t.groupLabel} {test.group}
+                            </p>
+                            <p className="font-semibold">
+                              {t.scoreLabel} {test.score}/100
+                            </p>
+                            <p>{passed ? t.passed : t.failed}</p>
                           </motion.div>
                         </DrawerTrigger>
                         <DrawerContent>
@@ -548,24 +639,24 @@ const Profile: React.FC = () => {
                               Test Details
                             </DrawerTitle>
                             <DrawerDescription>
-                              Information about your test
+                              {t.helmetDescription}
                             </DrawerDescription>
                           </DrawerHeader>
                           <div className="py-4 text-[hsl(var(--card-foreground))] flex gap-8 items-center justify-center">
                             <p>
-                              <strong>Group:</strong> {test.group}
+                              <strong>{t.groupLabel}</strong> {test.group}
                             </p>
                             <p>
-                              <strong>Score:</strong> {test.score}/100
+                              <strong>{t.scoreLabel}</strong> {test.score}/100
                             </p>
                             <p>
-                              <strong>Passed:</strong> {passed ? "Yes" : "No"}
+                              <strong>{t.passed}</strong> {passed ? "Yes" : "No"}
                             </p>
                             <p>
-                              <strong>Time Taken:</strong> {test.timeTaken} seconds
+                              <strong>{t.timeTakenLabel}</strong> {test.timeTaken} seconds
                             </p>
                             <p>
-                              <strong>Date:</strong> {new Date(test.createdAt).toLocaleString()}
+                              <strong>{t.dateLabel}</strong> {new Date(test.createdAt).toLocaleString()}
                             </p>
                           </div>
                           <DrawerFooter>{/* Optional footer actions */}</DrawerFooter>

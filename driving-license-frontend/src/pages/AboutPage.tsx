@@ -1,14 +1,39 @@
-// src/pages/AboutPage.tsx
-
-import React from 'react';
+import React, { useContext } from 'react';
 import { Card } from 'src/components/ui/card';
 import { Button } from 'src/components/ui/button';
 import { Avatar } from 'src/components/ui/avatar';
-import { FaGithub, FaLinkedin } from 'react-icons/fa'; // Combined import
-import { motion } from "framer-motion"; // Import framer-motion
+import { FaGithub, FaLinkedin } from 'react-icons/fa';
+import { motion } from "framer-motion";
 import AppHelmet from 'src/components/AppHelmet';
+import { LanguageContext } from 'src/context/LanguageContext';
+
+const translations = {
+  en: {
+    title: "Rondindon",
+    description:
+      "Hi! I'm Rondindon, a passionate developer specializing in building efficient and scalable web applications. I love exploring new technologies and continuously improving my skills.",
+    github: "GitHub",
+    linkedin: "LinkedIn",
+    helmetTitle: "DriveReady - About me",
+    helmetDescription:
+      "Learn more about Rondindon, a passionate developer specializing in building efficient and scalable web applications.",
+  },
+  sk: {
+    title: "Rondindon",
+    description:
+      "Ahoj! Som Rondindon, zanietený vývojár so zameraním na tvorbu efektívnych a škálovateľných webových aplikácií. Rád objavujem nové technológie a neustále sa zdokonaľujem.",
+    github: "GitHub",
+    linkedin: "LinkedIn",
+    helmetTitle: "DriveReady - O mne",
+    helmetDescription:
+      "Zistite viac o Rondindonovi, zanietenom vývojárovi so zameraním na tvorbu efektívnych a škálovateľných webových aplikácií.",
+  },
+};
 
 const AboutPage: React.FC = () => {
+  const { language } = useContext(LanguageContext);
+  const t = translations[language];
+
   // Define animation variants
   const cardVariants = {
     hidden: { opacity: 0, y: 20 },
@@ -18,7 +43,7 @@ const AboutPage: React.FC = () => {
       transition: {
         duration: 0.6,
         ease: "easeOut",
-        staggerChildren: 0.2, // Stagger animations of child elements
+        staggerChildren: 0.2,
       },
     },
   };
@@ -45,7 +70,10 @@ const AboutPage: React.FC = () => {
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-[hsl(var(--background))] text-[hsl(var(--foreground))]">
-    <AppHelmet title="DriveReady - About me" description="Learn more about Rondindon, a passionate developer specializing in building efficient and scalable web applications." />
+      <AppHelmet 
+        title={t.helmetTitle} 
+        description={t.helmetDescription} 
+      />
       <motion.div
         variants={cardVariants}
         initial="hidden"
@@ -85,15 +113,14 @@ const AboutPage: React.FC = () => {
               variants={childVariants}
               className="text-3xl font-bold text-[hsl(var(--foreground))] mb-2"
             >
-              Rondindon
+              {t.title}
             </motion.h1>
 
             <motion.p
               variants={childVariants}
               className="text-center text-[hsl(var(--muted-foreground))] mb-6 leading-relaxed"
             >
-              Hi! I'm Rondindon, a passionate developer specializing in building efficient and scalable web applications.
-              I love exploring new technologies and continuously improving my skills.
+              {t.description}
             </motion.p>
 
             <motion.div
@@ -113,7 +140,7 @@ const AboutPage: React.FC = () => {
                   aria-label="Visit Rondindon's GitHub Profile"
                 >
                   <FaGithub size={20} />
-                  <span>GitHub</span>
+                  <span>{t.github}</span>
                 </a>
               </Button>
 
@@ -130,7 +157,7 @@ const AboutPage: React.FC = () => {
                   aria-label="Visit Rondindon's LinkedIn Profile"
                 >
                   <FaLinkedin size={20} />
-                  <span>LinkedIn</span>
+                  <span>{t.linkedin}</span>
                 </a>
               </Button>
             </motion.div>

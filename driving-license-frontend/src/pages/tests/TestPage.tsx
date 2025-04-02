@@ -1,4 +1,3 @@
-// src/pages/TestPage.tsx
 import React, { useEffect, useState, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Button } from 'src/components/ui/button';

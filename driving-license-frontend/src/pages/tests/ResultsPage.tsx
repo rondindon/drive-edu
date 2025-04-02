@@ -3,6 +3,8 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { Button } from 'src/components/ui/button';
 import { Progress } from 'src/components/ui/progress';
 import { FaPercent, FaQuestionCircle, FaClock } from 'react-icons/fa';
+import AppHelmet from 'src/components/AppHelmet';
+import { LanguageContext } from 'src/context/LanguageContext';
 
 interface Question {
   id: number;
@@ -24,7 +26,39 @@ interface ResultsState {
   questions: Question[];
 }
 
+const translations = {
+  en: {
+    passedHeading: "You Passed!",
+    failedHeading: "You Failed",
+    dateLabel: "Date:",
+    groupLabel: "Group:",
+    overallScoreTitle: "Overall Score",
+    pointsLabel: "Points",
+    successRateLabel: "Success Rate",
+    totalQuestionsLabel: "Total Questions",
+    timeTakenLabel: "Time Taken",
+    homeButton: "Home",
+    questionReviewTitle: "Question Review",
+  },
+  sk: {
+    passedHeading: "Prešli ste!",
+    failedHeading: "Nezvládli ste test",
+    dateLabel: "Dátum:",
+    groupLabel: "Skupina:",
+    overallScoreTitle: "Celkové skóre",
+    pointsLabel: "Body",
+    successRateLabel: "Miera úspešnosti",
+    totalQuestionsLabel: "Celkový počet otázok",
+    timeTakenLabel: "Čas",
+    homeButton: "Domov",
+    questionReviewTitle: "Prehľad otázok",
+  },
+};
+
 const ResultsPage: React.FC = () => {
+  const { language } = React.useContext(LanguageContext);
+  const t = translations[language];
+
   const navigate = useNavigate();
   const { state } = useLocation();
 
@@ -38,7 +72,7 @@ const ResultsPage: React.FC = () => {
     questions = [],
   } = (state || {}) as ResultsState;
 
-  const headingText = isPassed ? 'You Passed!' : 'You Failed';
+  const headingText = isPassed ? t.passedHeading : t.failedHeading;
   const successRate = Math.round(score);
 
   let correctCount = 0;
@@ -47,7 +81,6 @@ const ResultsPage: React.FC = () => {
   });
 
   const progressValue = Math.min(score, 100);
-
   const minutes = Math.floor(timeTaken / 60);
   const seconds = timeTaken % 60;
   const timeDisplay = `${minutes}:${String(seconds).padStart(2, '0')}`;
@@ -69,36 +102,30 @@ const ResultsPage: React.FC = () => {
     <div className="min-h-screen w-full bg-[hsl(var(--background))] text-[hsl(var(--foreground))] animate-fadeIn">
       <div className="max-w-5xl mx-auto px-6 py-10">
         <div className="text-center mb-10">
-          <h1 className="text-3xl font-extrabold mb-4">
-            {headingText}
-          </h1>
+          <h1 className="text-3xl font-extrabold mb-4">{headingText}</h1>
           <div className="space-y-1 text-base text-[hsl(var(--muted-foreground))]">
             <p>
-              <span className="font-semibold">Date:</span> {testDate}
+              <span className="font-semibold">{t.dateLabel}</span> {testDate}
             </p>
             <p>
-              <span className="font-semibold">Group:</span> {group}
+              <span className="font-semibold">{t.groupLabel}</span> {group}
             </p>
           </div>
         </div>
 
         <div className="bg-[hsl(var(--card))] text-[hsl(var(--card-foreground))] rounded-md shadow p-6 mb-8 max-w-xl mx-auto">
-          <h2 className="text-lg font-semibold mb-3 text-center">Overall Score</h2>
+          <h2 className="text-lg font-semibold mb-3 text-center">{t.overallScoreTitle}</h2>
           <Progress
             value={progressValue}
-            className="
-              h-4 w-full
-              bg-[hsl(var(--muted))]
-              data-[state=fill]:bg-[hsl(var(--primary))]
-            "
+            className="h-4 w-full bg-[hsl(var(--muted))] data-[state=fill]:bg-[hsl(var(--primary))]"
           />
-          <p className="text-center text-base mt-2">{score}/100 Points</p>
+          <p className="text-center text-base mt-2">{score}/100 {t.pointsLabel}</p>
         </div>
 
         <div className="flex flex-row gap-12 items-center justify-center mb-10">
           <div className="flex flex-col items-center justify-center">
             <FaPercent className="text-4xl text-[hsl(var(--foreground))] mb-2" />
-            <p className="text-lg text-[hsl(var(--foreground))] font-semibold">Success Rate</p>
+            <p className="text-lg text-[hsl(var(--foreground))] font-semibold">{t.successRateLabel}</p>
             <p className="text-xl bg-[#8884d8]/20 text-[#8884d8] px-3 py-1 mt-1 rounded">
               {successRate}%
             </p>
@@ -106,7 +133,7 @@ const ResultsPage: React.FC = () => {
 
           <div className="flex flex-col items-center justify-center">
             <FaQuestionCircle className="text-4xl text-[hsl(var(--foreground))] mb-2" />
-            <p className="text-lg text-[hsl(var(--foreground))] font-semibold">Total Questions</p>
+            <p className="text-lg text-[hsl(var(--foreground))] font-semibold">{t.totalQuestionsLabel}</p>
             <p className="text-xl bg-[#8884d8]/20 text-[#8884d8] px-3 py-1 mt-1 rounded">
               {correctCount}/{totalQuestions}
             </p>
@@ -114,7 +141,7 @@ const ResultsPage: React.FC = () => {
 
           <div className="flex flex-col items-center justify-center">
             <FaClock className="text-4xl text-[hsl(var(--foreground))] mb-2" />
-            <p className="text-lg text-[hsl(var(--foreground))] font-semibold">Time Taken</p>
+            <p className="text-lg text-[hsl(var(--foreground))] font-semibold">{t.timeTakenLabel}</p>
             <p className="text-xl bg-[#8884d8]/20 text-[#8884d8] px-3 py-1 mt-1 rounded">
               {timeDisplay}
             </p>
@@ -123,7 +150,7 @@ const ResultsPage: React.FC = () => {
 
         <div className="bg-[hsl(var(--card))] text-[hsl(var(--card-foreground))] rounded-md shadow p-6 mb-8 border-solid border-2 border-[#8884d8]/20">
           <h2 className="text-lg font-semibold mb-4 text-[hsl(var(--foreground))]">
-            Question Review
+            {t.questionReviewTitle}
           </h2>
           <div className="flex flex-wrap gap-2 mb-6">
             {questions.map((q, index) => {
@@ -163,7 +190,6 @@ const ResultsPage: React.FC = () => {
                   const letter = ['A', 'B', 'C'][idx];
                   const isCorrectAnswer = letter === selectedQuestion.correctAnswer;
                   const isUserSelected = letter === selectedQuestion.userAnswer;
-
                   let bgClass = 'bg-[hsl(var(--card))]';
                   if (selectedQuestion.userAnswer === selectedQuestion.correctAnswer) {
                     if (isCorrectAnswer) bgClass = 'bg-main-green/80';
@@ -171,7 +197,6 @@ const ResultsPage: React.FC = () => {
                     if (isUserSelected) bgClass = 'bg-[hsl(var(--destructive))]/80';
                     if (isCorrectAnswer) bgClass = 'bg-main-green/80';
                   }
-
                   return (
                     <div key={option} className={`p-2 rounded text-sm ${bgClass}`}>
                       {option}
@@ -187,13 +212,9 @@ const ResultsPage: React.FC = () => {
           <Button
             onClick={goHome}
             variant="outline"
-            className="
-              px-6 py-3 text-base font-medium
-              cursor-pointer
-              hover:bg-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--background))]
-            "
+            className="px-6 py-3 text-base font-medium cursor-pointer hover:bg-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--background))]"
           >
-            Home
+            {t.homeButton}
           </Button>
         </div>
       </div>

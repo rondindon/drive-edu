@@ -1,9 +1,10 @@
-import React, { useState } from "react";
+import React, { useState, useContext } from "react";
 import Crossroad from "../components/Crossroad";
 import { scenarios, Scenario } from "../utils/scenarios";
 import { FaExclamationCircle } from "react-icons/fa";
 import { motion, AnimatePresence } from "framer-motion";
 import AppHelmet from "src/components/AppHelmet";
+import { LanguageContext } from "src/context/LanguageContext";
 
 const randomizeScenarioColors = (scenario: Scenario): Scenario => {
   const colorPalette = [
@@ -24,12 +25,40 @@ const randomizeScenarioColors = (scenario: Scenario): Scenario => {
 };
 
 const CrossroadSimulator: React.FC = () => {
-  const allScenarioIds = scenarios.map((s) => s.id);
+  const { language } = useContext(LanguageContext);
 
+  const translations = {
+    en: {
+      helmetTitle: "DriveReady - Crossroad Simulator",
+      helmetDescription:
+        "Practice your driving skills with the Crossroad Simulator. Click on cars to select the correct order of passing.",
+      selectedOrderLabel: "Selected Order:",
+      resetButton: "Reset",
+      validateButton: "Validate Order",
+      successMessage: "Correct order!",
+      errorMessage: "Incorrect order, please try again.",
+      validationErrorMessage: "Validation error: missing correct order data.",
+    },
+    sk: {
+      helmetTitle: "DriveReady - Krížovka Simulator",
+      helmetDescription:
+        "Precvičte si svoje jazdné schopnosti s pomocou Crossroad Simulator. Kliknite na autá pre výber správneho poradia prechodu.",
+      selectedOrderLabel: "Vybrané poradie:",
+      resetButton: "Resetovať",
+      validateButton: "Overiť poradie",
+      successMessage: "Správne poradie!",
+      errorMessage: "Nesprávne poradie, skúste to prosím znovu.",
+      validationErrorMessage:
+        "Chyba validácie: chýbajúce údaje o správnom poradí.",
+    },
+  };
+
+  const t = translations[language];
+
+  const allScenarioIds = scenarios.map((s) => s.id);
   const [unusedScenarioIds, setUnusedScenarioIds] = useState<string[]>([
     ...allScenarioIds,
   ]);
-
   const [selectedScenario, setSelectedScenario] = useState<Scenario>(
     randomizeScenarioColors(scenarios[0])
   );
@@ -56,8 +85,6 @@ const CrossroadSimulator: React.FC = () => {
 
   const pickRandomScenario = () => {
     setFeedback({ type: null, message: "" });
-
-    // Determine available scenario IDs: unused or all if none left
     let availableIds =
       unusedScenarioIds.length > 0 ? [...unusedScenarioIds] : [...allScenarioIds];
 
@@ -65,7 +92,8 @@ const CrossroadSimulator: React.FC = () => {
       availableIds = availableIds.filter((id) => id !== selectedScenario.id);
     }
 
-    const randomId = availableIds[Math.floor(Math.random() * availableIds.length)];
+    const randomId =
+      availableIds[Math.floor(Math.random() * availableIds.length)];
     const found = scenarios.find((s) => s.id === randomId);
 
     if (found) {
@@ -80,7 +108,7 @@ const CrossroadSimulator: React.FC = () => {
   const handleCorrectOrder = () => {
     setFeedback({
       type: "success",
-      message: "Correct order!",
+      message: t.successMessage,
     });
 
     const usedId = selectedScenario.id;
@@ -100,7 +128,7 @@ const CrossroadSimulator: React.FC = () => {
       } else {
         setFeedback({
           type: "error",
-          message: "Incorrect order, please try again.",
+          message: t.errorMessage,
         });
       }
       return;
@@ -108,26 +136,27 @@ const CrossroadSimulator: React.FC = () => {
 
     if (selectedScenario.correctOrder) {
       const correct =
-        JSON.stringify(selectedOrder) === JSON.stringify(selectedScenario.correctOrder);
+        JSON.stringify(selectedOrder) ===
+        JSON.stringify(selectedScenario.correctOrder);
       if (correct) {
         handleCorrectOrder();
       } else {
         setFeedback({
           type: "error",
-          message: "Incorrect order, please try again.",
+          message: t.errorMessage,
         });
       }
     } else {
       setFeedback({
         type: "error",
-        message: "Validation error: missing correct order data.",
+        message: t.validationErrorMessage,
       });
     }
   };
 
   const canValidate = selectedOrder.length === selectedScenario.cars.length;
 
-  // Called when user selects a scenario from the <select> (development usage)
+  // Called when user selects a scenario from the <select>
   const handleScenarioSelect = (scenarioId: string) => {
     const found = scenarios.find((s) => s.id === scenarioId);
     setSelectedScenario(randomizeScenarioColors(found || scenarios[0]));
@@ -135,7 +164,7 @@ const CrossroadSimulator: React.FC = () => {
   };
 
   const pageVariants = {
-    hidden: { opacity: 0, y: +50 },
+    hidden: { opacity: 0, y: 50 },
     visible: {
       opacity: 1,
       y: 0,
@@ -178,7 +207,7 @@ const CrossroadSimulator: React.FC = () => {
 
   return (
     <AnimatePresence>
-      <AppHelmet title="DriveReady - Crossroad Simulator" description="Practice your driving skills with the Crossroad Simulator. Click on cars to select the correct order of passing." />
+      <AppHelmet title={t.helmetTitle} description={t.helmetDescription} />
       <motion.div
         variants={pageVariants}
         initial="hidden"
@@ -206,7 +235,7 @@ const CrossroadSimulator: React.FC = () => {
           animate={{ opacity: 1 }}
           transition={{ duration: 0.5 }}
         >
-          <h2 className="text-lg font-bold mr-4">Selected Order:</h2>
+          <h2 className="text-lg font-bold mr-4">{t.selectedOrderLabel}</h2>
           <div className="flex gap-2">
             {selectedOrder.map((carId, index) => (
               <motion.div
@@ -264,7 +293,7 @@ const CrossroadSimulator: React.FC = () => {
             "
             onClick={resetOrder}
           >
-            Reset
+            {t.resetButton}
           </motion.button>
           <motion.button
             whileHover={buttonHover}
@@ -278,7 +307,7 @@ const CrossroadSimulator: React.FC = () => {
             "
             onClick={validateOrder}
           >
-            Validate Order
+            {t.validateButton}
           </motion.button>
         </div>
       </motion.div>

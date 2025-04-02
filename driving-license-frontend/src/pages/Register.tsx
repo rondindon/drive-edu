@@ -1,16 +1,58 @@
-// src/pages/Register.tsx
-import React, { useState } from "react";
+import React, { useState, useContext } from "react";
 import { supabase } from "../services/supabase";
 import { AuthError, User } from "@supabase/supabase-js";
 import { Input } from "../components/ui/input";
 import { Button } from "../components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "../components/ui/alert";
-import { FcGoogle } from "react-icons/fc"; // Google icon for styling
+import { FcGoogle } from "react-icons/fc";
 import { useAuth } from "src/context/AuthContext";
 import AppHelmet from "src/components/AppHelmet";
+import { LanguageContext } from "src/context/LanguageContext";
+
+const translations = {
+  en: {
+    helmetTitle: "DriveReady - Register",
+    helmetDescription: "Register for a new account on DriveReady.",
+    registerTitle: "Register",
+    usernameLabel: "Username",
+    enterUsername: "Enter your username",
+    emailLabel: "Email",
+    enterEmail: "Enter your email",
+    passwordLabel: "Password",
+    enterPassword: "Enter your password",
+    registerButton: "Register",
+    registering: "Registering...",
+    or: "OR",
+    googleContinue: "Continue with Google",
+    errorPrefix: "Error:",
+    successMessage: "User registered successfully! Please check your email for verification.",
+    userExistsError: "User already exists.",
+  },
+  sk: {
+    helmetTitle: "DriveReady - Registrácia",
+    helmetDescription: "Zaregistrujte sa pre nový účet na DriveReady.",
+    registerTitle: "Registrácia",
+    usernameLabel: "Používateľské meno",
+    enterUsername: "Zadajte svoje používateľské meno",
+    emailLabel: "Email",
+    enterEmail: "Zadajte svoj email",
+    passwordLabel: "Heslo",
+    enterPassword: "Zadajte svoje heslo",
+    registerButton: "Registrovať sa",
+    registering: "Registrácia...",
+    or: "ALEBO",
+    googleContinue: "Pokračovať cez Google",
+    errorPrefix: "Chyba:",
+    successMessage: "Používateľ bol úspešne zaregistrovaný! Skontrolujte si svoj email pre overenie.",
+    userExistsError: "Používateľ už existuje.",
+  },
+};
 
 const Register: React.FC = () => {
+  const { language } = useContext(LanguageContext);
+  const t = translations[language];
+
   const [email, setEmail] = useState<string>("");
   const [password, setPassword] = useState<string>("");
   const [username, setUsername] = useState<string>("");
@@ -23,16 +65,14 @@ const Register: React.FC = () => {
     setIsSubmitting(true);
 
     try {
-      const {
-        data,
-        error,
-      }: { data: { user: User | null }; error: AuthError | null } = await supabase.auth.signUp({
-        email,
-        password,
-      });
+      const { data, error }: { data: { user: User | null }; error: AuthError | null } =
+        await supabase.auth.signUp({
+          email,
+          password,
+        });
 
       if (error) {
-        setMessage(`Error: ${error.message}`);
+        setMessage(`${t.errorPrefix} ${error.message}`);
         setShowAlert(true);
       } else if (data.user) {
         const response = await fetch("https://drive-edu.onrender.com/api/user", {
@@ -44,14 +84,14 @@ const Register: React.FC = () => {
         });
 
         if (!response.ok) {
-          throw new Error("User already exists.");
-        }else{
-          setMessage("User registered successfully! Please check your email for verification.");
+          throw new Error(t.userExistsError);
+        } else {
+          setMessage(t.successMessage);
           setShowAlert(true);
         }
       }
     } catch (err: any) {
-      setMessage(`Registration failed: ${err.message || err}`);
+      setMessage(`${t.errorPrefix} ${err.message || err}`);
       setShowAlert(true);
     } finally {
       setIsSubmitting(false);
@@ -63,7 +103,7 @@ const Register: React.FC = () => {
     try {
       await supabase.auth.signInWithOAuth({ provider: "google" });
     } catch (err: any) {
-      setMessage(`Google sign-up failed: ${err.message || err}`);
+      setMessage(`${t.errorPrefix} ${err.message || err}`);
       setShowAlert(true);
       setTimeout(() => setShowAlert(false), 5000);
     }
@@ -71,15 +111,15 @@ const Register: React.FC = () => {
 
   return (
     <div className="flex items-center justify-center h-screen bg-[hsl(var(--background))] text-[hsl(var(--foreground))]">
-      <AppHelmet title="DriveReady - Register" description="Register for a new account on DriveReady." />
+      <AppHelmet title={t.helmetTitle} description={t.helmetDescription} />
       <Card className="w-full max-w-md shadow-lg transform hover:scale-105 transition-transform duration-300 bg-[hsl(var(--card))] text-[hsl(var(--card-foreground))]">
         <CardHeader>
           <CardTitle className="text-center text-xl font-semibold text-[hsl(var(--foreground))]">
-            Register
+            {t.registerTitle}
           </CardTitle>
         </CardHeader>
         <CardContent>
-          {/* Alert with animation */}
+          {/* Alert */}
           <div
             className={`mb-4 transition-all duration-500 ease-out ${
               showAlert ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-10 h-0"
@@ -91,13 +131,13 @@ const Register: React.FC = () => {
             {message && (
               <Alert
                 className={`mb-4 ${
-                  message.includes("Error") || message.includes("failed")
+                  message.includes(t.errorPrefix)
                     ? "bg-[hsl(var(--destructive))] text-[hsl(var(--destructive-foreground))] border-[hsl(var(--destructive))]"
                     : "bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] border-[hsl(var(--primary))]"
                 }`}
               >
                 <AlertTitle className="font-bold">
-                  {message.includes("Error") || message.includes("failed") ? "Error" : "Success"}
+                  {message.includes(t.errorPrefix) ? t.errorPrefix : "Success"}
                 </AlertTitle>
                 <AlertDescription>{message}</AlertDescription>
               </Alert>
@@ -108,42 +148,42 @@ const Register: React.FC = () => {
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
               <label htmlFor="username" className="block text-sm font-medium text-[hsl(var(--foreground))]">
-                Username
+                {t.usernameLabel}
               </label>
               <Input
                 id="username"
                 type="text"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
-                placeholder="Enter your username"
+                placeholder={t.enterUsername}
                 required
                 className="transition-colors duration-200 focus:border-[hsl(var(--primary))] focus:ring-[hsl(var(--primary))]"
               />
             </div>
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-[hsl(var(--foreground))]">
-                Email
+                {t.emailLabel}
               </label>
               <Input
                 id="email"
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="Enter your email"
+                placeholder={t.enterEmail}
                 required
                 className="transition-colors duration-200 focus:border-[hsl(var(--primary))] focus:ring-[hsl(var(--primary))]"
               />
             </div>
             <div>
               <label htmlFor="password" className="block text-sm font-medium text-[hsl(var(--foreground))]">
-                Password
+                {t.passwordLabel}
               </label>
               <Input
                 id="password"
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="Enter your password"
+                placeholder={t.enterPassword}
                 required
                 className="transition-colors duration-200 focus:border-[hsl(var(--primary))] focus:ring-[hsl(var(--primary))]"
               />
@@ -160,7 +200,7 @@ const Register: React.FC = () => {
                 disabled:opacity-50 disabled:cursor-not-allowed
               `}
             >
-              {isSubmitting ? "Registering..." : "Register"}
+              {isSubmitting ? t.registering : t.registerButton}
             </Button>
           </form>
 
@@ -170,7 +210,7 @@ const Register: React.FC = () => {
             </div>
             <div className="relative flex justify-center text-sm">
               <span className="px-2 bg-[hsl(var(--card))] text-[hsl(var(--foreground))]">
-                OR
+                {t.or}
               </span>
             </div>
           </div>
@@ -184,7 +224,9 @@ const Register: React.FC = () => {
             "
           >
             <FcGoogle className="w-6 h-6" />
-            <span className="text-[hsl(var(--foreground))] font-semibold">Continue with Google</span>
+            <span className="text-[hsl(var(--foreground))] font-semibold">
+              {t.googleContinue}
+            </span>
           </Button>
         </CardContent>
       </Card>

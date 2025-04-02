@@ -7,6 +7,7 @@ import LoadingSpinner from "../components/LoadingSpinner";
 import TypedText from "src/components/TypedText";
 import { ThemeContext } from "../context/ThemeContext";
 import AppHelmet from "src/components/AppHelmet";
+import { LanguageContext } from "src/context/LanguageContext";
 
 interface RoadSignQuestion {
   id: number;
@@ -26,7 +27,41 @@ const typedMessages = [
   "Ready... Set... Go!",
 ];
 
+const navButtonVariants = {
+  hover: { scale: 1.1 },
+  tap: { scale: 0.95 },
+};
+
+const translations = {
+  en: {
+    helmetTitle: "DriveReady - Road Signs Practice",
+    helmetDescription:
+      "Test your knowledge of road signs with this interactive quiz. Identify the correct road sign based on the image and options provided.",
+    previous: "Previous",
+    next: "Next",
+    questionLabel: "Question",
+    ofLabel: "of",
+    correctMessage: "Correct!",
+    explanationLabel: "Explanation:",
+  },
+  sk: {
+    helmetTitle: "DriveReady - Precvičovanie dopravných značiek",
+    helmetDescription:
+      "Otestujte si svoje znalosti dopravných značiek s touto interaktívnou kvízovou hrou. Identifikujte správnu značku podľa obrázka a ponúkaných možností.",
+    previous: "Predchádzajúca",
+    next: "Ďalšia",
+    questionLabel: "Otázka",
+    ofLabel: "z",
+    correctMessage: "Správne!",
+    explanationLabel: "Vysvetlenie:",
+  },
+};
+
 const SignsPage: React.FC = () => {
+  const { theme } = useContext(ThemeContext);
+  const { language } = useContext(LanguageContext);
+  const t = translations[language];
+
   const [questions, setQuestions] = useState<RoadSignQuestion[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [selectedLetter, setSelectedLetter] = useState<string | null>(null);
@@ -34,39 +69,31 @@ const SignsPage: React.FC = () => {
   const [animationState, setAnimationState] = useState<AnimationState>("idle");
   const [hasAnsweredCorrectly, setHasAnsweredCorrectly] = useState(false);
   const [isNavigating, setIsNavigating] = useState(false);
-
   const [loading, setLoading] = useState(true);
   const [fetchError, setFetchError] = useState<string | null>(null);
   const token = localStorage.getItem("supabaseToken");
-
-  const { theme } = useContext(ThemeContext);
 
   const [typedIndex, setTypedIndex] = useState(0);
   const [showMessage, setShowMessage] = useState<string>(typedMessages[0]);
 
   const containerVariants = {
     hidden: { opacity: 0 },
-    visible: { 
-      opacity: 1,
-      transition: { staggerChildren: 0.3 }
-    },
+    visible: { opacity: 1, transition: { staggerChildren: 0.3 } },
   };
 
   const itemVariants = {
     hidden: { opacity: 0, y: 20 },
-    visible: { 
-      opacity: 1, 
+    visible: {
+      opacity: 1,
       y: 0,
-      transition: { duration: 0.6, ease: "easeOut" }
+      transition: { duration: 0.6, ease: "easeOut" },
     },
   };
 
   useEffect(() => {
     if (!loading) return;
-
     setShowMessage(typedMessages[0]);
     setTypedIndex(0);
-
     const interval = setInterval(() => {
       setTypedIndex((prev) => {
         const nextIndex = (prev + 1) % typedMessages.length;
@@ -74,7 +101,6 @@ const SignsPage: React.FC = () => {
         return nextIndex;
       });
     }, 2200);
-
     return () => clearInterval(interval);
   }, [loading]);
 
@@ -144,9 +170,7 @@ const SignsPage: React.FC = () => {
 
   const handleSelectOption = (letter: string) => {
     if (hasAnsweredCorrectly || animationState !== "idle" || isNavigating) return;
-
     setSelectedLetter(letter);
-
     if (letter === currentQuestion.correctAnswer) {
       setAnimationState("correct");
       setHasAnsweredCorrectly(true);
@@ -192,12 +216,12 @@ const SignsPage: React.FC = () => {
     idle: { x: 0, rotate: 0, scale: 1 },
     incorrect: {
       x: [0, -10, 10, -10, 10, -10, 10, 0],
-      transition: { duration: .75 },
+      transition: { duration: 0.75 },
     },
     correct: {
       y: [0, -10, 0],
       scale: [1, 1.05, 1],
-      transition: { duration: .75 },
+      transition: { duration: 0.75 },
     },
   };
 
@@ -224,14 +248,12 @@ const SignsPage: React.FC = () => {
     exit: { opacity: 0, y: -50, transition: { duration: 0.3 } },
   };
 
-  const navButtonVariants = {
-    hover: { scale: 1.1 },
-    tap: { scale: 0.95 },
-  };
-
   return (
     <div className="min-h-screen flex flex-col items-center px-4 py-6 bg-[hsl(var(--background))] text-[hsl(var(--foreground))]">
-      <AppHelmet title="DriveReady - Road Signs Practice" description="Test your knowledge of road signs with this interactive quiz. Identify the correct road sign based on the image and options provided." />
+      <AppHelmet
+        title={t.helmetTitle}
+        description={t.helmetDescription}
+      />
       <div className="w-full max-w-xl mb-6 mt-12">
         <div className="h-3 bg-gray-200 rounded-md overflow-hidden">
           <motion.div
@@ -242,7 +264,7 @@ const SignsPage: React.FC = () => {
           />
         </div>
         <div className="text-right text-sm text-gray-900 dark:text-gray-100 mt-1">
-          {currentIndex + 1} / {questions.length} ({progress}%)
+          {t.questionLabel} {currentIndex + 1} {t.ofLabel} {questions.length} ({progress}%)
         </div>
       </div>
 
@@ -282,14 +304,12 @@ const SignsPage: React.FC = () => {
               <AnimatePresence mode="popLayout">
                 {displayedOptions.map((optionText, idx) => {
                   const letter = letters[idx];
-                  if (removedLetters.includes(letter)) return null; // Ensures removed elements remain in the DOM for animation
-
+                  if (removedLetters.includes(letter)) return null;
                   const isSelected = letter === selectedLetter;
                   let animateVariant: "idle" | "correct" | "incorrect" = "idle";
                   if (selectedLetter === letter) {
                     animateVariant = isCorrect ? "correct" : "incorrect";
                   }
-
                   return (
                     <motion.button
                       key={`${currentQuestion.id}-${letter}`}
@@ -327,10 +347,10 @@ const SignsPage: React.FC = () => {
                   exit={{ opacity: 0, scale: 0.8 }}
                   transition={{ duration: 0.3 }}
                 >
-                  <p className="font-semibold text-lg text-green-600">Correct!</p>
+                  <p className="font-semibold text-lg text-green-600">{t.correctMessage}</p>
                   {currentQuestion.explanation && (
                     <p className="mt-2 text-sm italic">
-                      Explanation: {currentQuestion.explanation}
+                      {t.explanationLabel} {currentQuestion.explanation}
                     </p>
                   )}
                 </motion.div>
@@ -352,7 +372,7 @@ const SignsPage: React.FC = () => {
             }`}
             aria-label="Previous Question"
           >
-            Previous
+            {t.previous}
           </Button>
         </motion.div>
 
@@ -367,13 +387,13 @@ const SignsPage: React.FC = () => {
             }`}
             aria-label="Next Question"
           >
-            Next
+            {t.next}
           </Button>
         </motion.div>
       </div>
 
       <p className="mt-2 text-sm text-gray-900 dark:text-gray-100">
-        Question {currentIndex + 1} of {questions.length}
+        {t.questionLabel} {currentIndex + 1} {t.ofLabel} {questions.length}
       </p>
     </div>
   );

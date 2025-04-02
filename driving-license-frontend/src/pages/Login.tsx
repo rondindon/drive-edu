@@ -1,5 +1,4 @@
-// src/pages/Login.tsx
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { Input } from "../components/ui/input";
@@ -10,8 +9,65 @@ import { FcGoogle } from "react-icons/fc";
 import { toast } from "react-toastify";
 import { supabase } from "../services/supabase";
 import AppHelmet from "src/components/AppHelmet";
+import { LanguageContext } from "src/context/LanguageContext";
+
+const translations = {
+  en: {
+    helmetTitle: "DriveReady - Sign in",
+    helmetDescription:
+      "Sign in to your DriveReady account to access your driving license tests and resources.",
+    signInTitle: "Sign in",
+    emailLabel: "Email",
+    enterEmailPlaceholder: "Enter your email",
+    passwordLabel: "Password",
+    enterPasswordPlaceholder: "Enter your password",
+    forgotPassword: "Forgot password?",
+    googleSignIn: "Continue with Google",
+    signInSuccess: "Sign in successful!",
+    signInFailed: "Sign in failed:",
+    googleSignInFailed: "Google sign-in failed:",
+    enterEmailForReset: "Please enter your email address first.",
+    passwordResetSuccess:
+      "Password reset email sent! Please check your inbox.",
+    passwordResetError: "Error sending password reset email:",
+    error: "Error",
+    success: "Success",
+    passwordRecoveryPrompt: "What would you like your new password to be?",
+    passwordUpdateCancelled: "Password update cancelled.",
+    passwordUpdatedSuccess: "Password updated successfully!",
+    passwordMatchesOld: "The password matches the old one.",
+  },
+  sk: {
+    helmetTitle: "DriveReady - Prihlásenie",
+    helmetDescription:
+      "Prihláste sa do svojho účtu DriveReady a získajte prístup k testom na vodičský preukaz a zdrojom.",
+    signInTitle: "Prihlásiť sa",
+    emailLabel: "Email",
+    enterEmailPlaceholder: "Zadajte svoj email",
+    passwordLabel: "Heslo",
+    enterPasswordPlaceholder: "Zadajte svoje heslo",
+    forgotPassword: "Zabudli ste heslo?",
+    googleSignIn: "Pokračovať s Google",
+    signInSuccess: "Prihlásenie úspešné!",
+    signInFailed: "Prihlásenie zlyhalo:",
+    googleSignInFailed: "Prihlásenie cez Google zlyhalo:",
+    enterEmailForReset: "Najprv zadajte svoj email.",
+    passwordResetSuccess:
+      "Email na obnovenie hesla odoslaný! Skontrolujte svoj inbox.",
+    passwordResetError: "Chyba pri odosielaní emailu na obnovenie hesla:",
+    error: "Chyba",
+    success: "Úspech",
+    passwordRecoveryPrompt: "Aké by ste chceli mať nové heslo?",
+    passwordUpdateCancelled: "Aktualizácia hesla zrušená.",
+    passwordUpdatedSuccess: "Heslo bolo úspešne aktualizované!",
+    passwordMatchesOld: "Heslo sa zhoduje s predchádzajúcim.",
+  },
+};
 
 const Login: React.FC = () => {
+  const { language } = useContext(LanguageContext);
+  const t = translations[language];
+
   const [email, setEmail] = useState<string>("");
   const [password, setPassword] = useState<string>("");
   const [message, setMessage] = useState<string | null>(null);
@@ -26,36 +82,38 @@ const Login: React.FC = () => {
   }, [user, message, navigate]);
 
   useEffect(() => {
-    const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (event === "PASSWORD_RECOVERY") {
-        const newPassword = prompt("What would you like your new password to be?");
-        if (!newPassword) {
-          alert("Password update cancelled.");
-          return;
-        }
-        
-        const { data, error } = await supabase.auth.updateUser({ password: newPassword });
-        if (data) {
-          alert("Password updated successfully!");
-        }
-        if (error) {
-          alert("The password matches the old one.");
+    const { data: authListener } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        if (event === "PASSWORD_RECOVERY") {
+          const newPassword = prompt(t.passwordRecoveryPrompt);
+          if (!newPassword) {
+            alert(t.passwordUpdateCancelled);
+            return;
+          }
+          const { data, error } = await supabase.auth.updateUser({
+            password: newPassword,
+          });
+          if (data) {
+            alert(t.passwordUpdatedSuccess);
+          }
+          if (error) {
+            alert(t.passwordMatchesOld);
+          }
         }
       }
-    });
-  
+    );
     return () => {
       authListener.subscription.unsubscribe();
     };
-  }, []); 
+  }, [t]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
       await login(email, password);
-      toast.success("Sign in successful!");
+      toast.success(t.signInSuccess);
     } catch (err: any) {
-      setMessage(`Sign in failed: ${err.message}`);
+      setMessage(`${t.signInFailed} ${err.message}`);
       setShowAlert(true);
       setTimeout(() => setShowAlert(false), 2000);
     }
@@ -65,7 +123,7 @@ const Login: React.FC = () => {
     try {
       await loginWithGoogle();
     } catch (err: any) {
-      setMessage(`Google sign-in failed: ${err.message}`);
+      setMessage(`${t.googleSignInFailed} ${err.message}`);
       setShowAlert(true);
       setTimeout(() => setShowAlert(false), 2000);
     }
@@ -73,7 +131,7 @@ const Login: React.FC = () => {
 
   const handleForgotPassword = async () => {
     if (!email) {
-      toast.error("Please enter your email address first.");
+      toast.error(t.enterEmailForReset);
       return;
     }
     try {
@@ -81,20 +139,23 @@ const Login: React.FC = () => {
       const { data, error } = await supabase.auth.resetPasswordForEmail(email);
       console.log("Reset password response:", { data, error });
       if (error) throw error;
-      toast.success("Password reset email sent! Please check your inbox.");
+      toast.success(t.passwordResetSuccess);
     } catch (err: any) {
       console.error("Error sending password reset email:", err);
-      toast.error("Error sending password reset email: " + err.message);
+      toast.error(`${t.passwordResetError} ${err.message}`);
     }
-  };  
+  };
 
   return (
     <div className="flex items-center justify-center h-screen bg-[hsl(var(--background))] text-[hsl(var(--foreground))]">
-      <AppHelmet title="DriveReady - Sign in" description="Sign in to your DriveReady account to access your driving license tests and resources." />
+      <AppHelmet
+        title={t.helmetTitle}
+        description={t.helmetDescription}
+      />
       <Card className="w-full max-w-md shadow-lg transform hover:scale-105 transition-transform duration-300 bg-[hsl(var(--card))] text-[hsl(var(--card-foreground))]">
         <CardHeader>
           <CardTitle className="text-center text-xl font-semibold text-[hsl(var(--foreground))]">
-            Sign in
+            {t.signInTitle}
           </CardTitle>
         </CardHeader>
 
@@ -116,7 +177,7 @@ const Login: React.FC = () => {
                 }`}
               >
                 <AlertTitle className="font-bold">
-                  {message.includes("failed") ? "Error" : "Success"}
+                  {message.includes("failed") ? t.error : t.success}
                 </AlertTitle>
                 <AlertDescription>{message}</AlertDescription>
               </Alert>
@@ -125,15 +186,18 @@ const Login: React.FC = () => {
 
           <form onSubmit={handleLogin} className="space-y-6">
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-[hsl(var(--foreground))]">
-                Email
+              <label
+                htmlFor="email"
+                className="block text-sm font-medium text-[hsl(var(--foreground))]"
+              >
+                {t.emailLabel}
               </label>
               <Input
                 id="email"
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="Enter your email"
+                placeholder={t.enterEmailPlaceholder}
                 required
                 className="
                   transition-colors duration-200
@@ -143,15 +207,18 @@ const Login: React.FC = () => {
               />
             </div>
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-[hsl(var(--foreground))]">
-                Password
+              <label
+                htmlFor="password"
+                className="block text-sm font-medium text-[hsl(var(--foreground))]"
+              >
+                {t.passwordLabel}
               </label>
               <Input
                 id="password"
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="Enter your password"
+                placeholder={t.enterPasswordPlaceholder}
                 required
                 className="
                   transition-colors duration-200
@@ -167,7 +234,7 @@ const Login: React.FC = () => {
                 onClick={handleForgotPassword}
                 className="text-sm text-[hsl(var(--primary))] underline hover:no-underline"
               >
-                Forgot password?
+                {t.forgotPassword}
               </button>
             </div>
 
@@ -182,7 +249,7 @@ const Login: React.FC = () => {
                 transform hover:scale-105
               "
             >
-              Sign in
+              {t.signInTitle}
             </Button>
           </form>
 
@@ -206,7 +273,9 @@ const Login: React.FC = () => {
             "
           >
             <FcGoogle className="w-6 h-6" />
-            <span className="text-[hsl(var(--foreground))] font-semibold">Continue with Google</span>
+            <span className="text-[hsl(var(--foreground))] font-semibold">
+              {t.googleSignIn}
+            </span>
           </Button>
         </CardContent>
       </Card>
