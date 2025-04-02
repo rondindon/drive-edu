@@ -200,7 +200,7 @@ const Navbar: React.FC = () => {
                   onCheckedChange={toggleLanguage}
                   className="w-8 h-4 bg-white border border-gray-300 data-[state=checked]:bg-white"
                 />
-                <span className="text-xs">SK</span>
+                <span className="text-xs color-white">SK</span>
               </div>
             </div>
           </div>
@@ -309,7 +309,7 @@ const Navbar: React.FC = () => {
                     } transition-colors`}
                   />
                   <div className="flex items-center space-x-1">
-                    <span className="text-xs">EN</span>
+                    <span className="text-xs color-white">EN</span>
                     <Switch
                       checked={language === "sk"}
                       onCheckedChange={toggleLanguage}
