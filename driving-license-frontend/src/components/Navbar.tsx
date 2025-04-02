@@ -14,17 +14,49 @@ import { User, Menu, Sun, Moon } from "lucide-react";
 import { toast } from "react-toastify";
 import AppHelmet from "./AppHelmet";
 
+const translations = {
+  en: {
+    home: "Home",
+    about: "About",
+    simulator: "Simulator",
+    signs: "Signs",
+    profile: "Profile",
+    logout: "Logout",
+    signIn: "Sign in",
+    register: "Register",
+    adminPanel: "Admin Panel",
+    role: "Role",
+    signUp: "Sign up",
+  },
+  sk: {
+    home: "Domov",
+    about: "O nás",
+    simulator: "Simulátor",
+    signs: "Značky",
+    profile: "Profil",
+    logout: "Odhlásiť sa",
+    signIn: "Prihlásiť sa",
+    register: "Registrovať sa",
+    adminPanel: "Administrácia",
+    role: "Rola",
+    signUp: "Registrovať sa",
+  },
+};
+
 const Navbar: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { user, role, username, logout } = useAuth();
   const { theme, toggleTheme } = useContext(ThemeContext);
-  
-  // Language state for the controls (English or Slovak)
+
+  // Language state (default to English)
   const [language, setLanguage] = useState<"en" | "sk">("en");
   const toggleLanguage = () => {
     setLanguage(prev => (prev === "en" ? "sk" : "en"));
   };
+
+  // Get current translations
+  const t = translations[language];
 
   const isActive = (path: string) =>
     location.pathname === path
@@ -44,7 +76,7 @@ const Navbar: React.FC = () => {
 
   return (
     <>
-      <AppHelmet />
+      <AppHelmet title="DriveReady - Home" />
       <header className="w-full bg-main-darkBlue shadow-md">
         <nav className="container mx-auto flex items-center justify-between py-4 px-6">
           {/* Left Section: Logo */}
@@ -60,20 +92,20 @@ const Navbar: React.FC = () => {
           {/* Center Section: Navigation Links (Visible on md and above) */}
           <div className="hidden md:flex flex-1 justify-center space-x-6">
             <a href="/" className={isActive("/")}>
-              Home
+              {t.home}
             </a>
             <a href="/about" className={isActive("/about")}>
-              About
+              {t.about}
             </a>
             <a href="/simulator" className={isActive("/simulator")}>
-              Simulator
+              {t.simulator}
             </a>
             <a href="/signs" className={isActive("/signs")}>
-              Signs
+              {t.signs}
             </a>
           </div>
 
-          {/* Right Section: Profile, Admin, Theme and Language Toggle (md) */}
+          {/* Right Section: Profile, Admin, Theme & Language Toggle (md) */}
           <div className="hidden md:flex flex-1 justify-end items-center space-x-4">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -87,7 +119,7 @@ const Navbar: React.FC = () => {
                       <User className="w-4 h-4" />
                     </>
                   ) : (
-                    "Sign up"
+                    t.signUp
                   )}
                 </Button>
               </DropdownMenuTrigger>
@@ -99,31 +131,31 @@ const Navbar: React.FC = () => {
                   <>
                     <DropdownMenuItem className="hover:bg-main-green hover:text-main-darkBlue transition-colors">
                       <a href="/login" className="block w-full">
-                        Sign in
+                        {t.signIn}
                       </a>
                     </DropdownMenuItem>
                     <DropdownMenuItem className="hover:bg-main-green hover:text-main-darkBlue transition-colors">
                       <a href="/register" className="block w-full">
-                        Register
+                        {t.register}
                       </a>
                     </DropdownMenuItem>
                   </>
                 ) : (
                   <>
                     <DropdownMenuItem className="hover:bg-main-green hover:text-main-darkBlue transition-colors">
-                      <span>Role: {role || "User"}</span>
+                      <span>{t.role}: {role || "User"}</span>
                     </DropdownMenuItem>
                     <DropdownMenuItem
                       onClick={() => navigate("/profile")}
                       className="hover:bg-main-green hover:text-main-darkBlue transition-colors cursor-pointer"
                     >
-                      Profile
+                      {t.profile}
                     </DropdownMenuItem>
                     <DropdownMenuItem
                       onClick={handleLogout}
                       className="hover:bg-main-green hover:text-main-darkBlue transition-colors cursor-pointer"
                     >
-                      Logout
+                      {t.logout}
                     </DropdownMenuItem>
                   </>
                 )}
@@ -136,7 +168,7 @@ const Navbar: React.FC = () => {
                 onClick={() => navigate("/admin")}
                 className="bg-main-darkBlue border-main-green text-secondary-lightGray hover:bg-main-green hover:text-main-darkBlue transition-colors"
               >
-                Admin Panel
+                {t.adminPanel}
               </Button>
             )}
 
@@ -193,25 +225,25 @@ const Navbar: React.FC = () => {
                     href="/"
                     className={`block px-2 py-1 rounded ${isActive("/")}`}
                   >
-                    Home
+                    {t.home}
                   </a>
                   <a
                     href="/about"
                     className={`block px-2 py-1 rounded ${isActive("/about")}`}
                   >
-                    About
+                    {t.about}
                   </a>
                   <a
                     href="/simulator"
                     className={`block px-2 py-1 rounded ${isActive("/simulator")}`}
                   >
-                    Simulator
+                    {t.simulator}
                   </a>
                   <a
                     href="/signs"
                     className={`block px-2 py-1 rounded ${isActive("/signs")}`}
                   >
-                    Signs
+                    {t.signs}
                   </a>
                 </div>
 
@@ -222,38 +254,38 @@ const Navbar: React.FC = () => {
                         href="/login"
                         className="block px-2 py-1 rounded hover:bg-main-green hover:text-main-darkBlue transition-colors"
                       >
-                        Sign in
+                        {t.signIn}
                       </a>
                       <a
                         href="/register"
                         className="block px-2 py-1 rounded hover:bg-main-green hover:text-main-darkBlue transition-colors"
                       >
-                        Register
+                        {t.register}
                       </a>
                     </>
                   ) : (
                     <>
                       <div className="block px-2 py-1 rounded">
-                        <span>Role: {role || "User"}</span>
+                        <span>{t.role}: {role || "User"}</span>
                       </div>
                       <button
                         onClick={() => navigate("/profile")}
                         className="w-full text-left px-2 py-1 rounded hover:bg-main-green hover:text-main-darkBlue transition-colors"
                       >
-                        Profile
+                        {t.profile}
                       </button>
                       <button
                         onClick={handleLogout}
                         className="w-full text-left px-2 py-1 rounded hover:bg-main-green hover:text-main-darkBlue transition-colors"
                       >
-                        Logout
+                        {t.logout}
                       </button>
                       {role === "ADMIN" && (
                         <button
                           onClick={() => navigate("/admin")}
                           className="w-full text-left px-2 py-1 rounded hover:bg-main-green hover:text-main-darkBlue transition-colors mt-2"
                         >
-                          Admin Panel
+                          {t.adminPanel}
                         </button>
                       )}
                     </>
@@ -276,7 +308,6 @@ const Navbar: React.FC = () => {
                       theme === "light" ? "text-gray-500" : "text-gray-300"
                     } transition-colors`}
                   />
-                  {/* Mobile Language Toggle */}
                   <div className="flex items-center space-x-1">
                     <span className="text-xs">EN</span>
                     <Switch
