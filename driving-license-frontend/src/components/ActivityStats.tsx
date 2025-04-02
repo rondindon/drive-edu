@@ -1,4 +1,3 @@
-// src/components/ActivityStats.tsx
 import React, { useEffect, useState, useMemo, useContext } from 'react';
 import axios from 'axios';
 import {
@@ -22,6 +21,7 @@ import { addDays, subDays, parseISO } from 'date-fns';
 import { ChevronLeftIcon, ChevronRightIcon } from 'lucide-react';
 import { ThemeContext } from '../context/ThemeContext';
 import { motion } from 'framer-motion';
+import { LanguageContext } from '../context/LanguageContext';
 
 interface TestStat {
   period: string; // 'YYYY-MM-DD'
@@ -71,8 +71,55 @@ interface WorstAccuracyQuestion {
 
 const COLORS = ['#27AE60', '#E74C3C', '#F1C40F', '#2C3E50'];
 
+const translations = {
+  en: {
+    performanceTitle: "Test Performance Over Time",
+    aggregationMonthly: "Monthly",
+    aggregationDaily: "Daily",
+    toggleDaily: "Daily View",
+    toggleMonthly: "Monthly View",
+    testSummary: "Test Summary",
+    averageScore: "Average Score",
+    passRate: "Pass Rate",
+    answerDistribution: "Answer Distribution",
+    noAnswerData: "No answer data available.",
+    performanceByCategory: "Performance by Category",
+    noPerformanceData: "No performance data available.",
+    badgesEarned: "Badges Earned",
+    noBadges: "No badges earned yet.",
+    badgesOverTime: "Badges Earned Over Time",
+    worstAccuracy: "Questions with Worst Accuracy",
+    noWorstData: "No data available for worst accuracy questions.",
+    noStats: "No statistics available at this time.",
+    earnedOn: "Earned on",
+  },
+  sk: {
+    performanceTitle: "Vývoj výkonu testov v priebehu času",
+    aggregationMonthly: "Mesačne",
+    aggregationDaily: "Denne",
+    toggleDaily: "Denný pohľad",
+    toggleMonthly: "Mesačný pohľad",
+    testSummary: "Prehľad testov",
+    averageScore: "Priemerné skóre",
+    passRate: "Miera úspešnosti",
+    answerDistribution: "Rozloženie odpovedí",
+    noAnswerData: "Nie sú k dispozícii žiadne údaje o odpovediach.",
+    performanceByCategory: "Výkon podľa kategórií",
+    noPerformanceData: "Nie sú k dispozícii údaje o výkone.",
+    badgesEarned: "Získané odznaky",
+    noBadges: "Ešte ste nezískali žiadne odznaky.",
+    badgesOverTime: "Odznaky získané v priebehu času",
+    worstAccuracy: "Otázky s najhoršou presnosťou",
+    noWorstData: "Nie sú k dispozícii údaje o najhoršej presnosti otázok.",
+    noStats: "Žiadne štatistiky nie sú momentálne k dispozícii.",
+    earnedOn: "Získané dňa",
+  },
+};
+
 const ActivityStats: React.FC = () => {
   const { theme } = useContext(ThemeContext);
+  const { language } = useContext(LanguageContext);
+  const t = translations[language];
 
   const [testStatsDay, setTestStatsDay] = useState<TestStat[]>([]);
   const [testStatsMonth, setTestStatsMonth] = useState<TestStat[]>([]);
@@ -290,7 +337,7 @@ const ActivityStats: React.FC = () => {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [worstAccuracyQuestions]);
 
-  const containerVariants = {
+  const containerVariantsAnim = {
     hidden: { opacity: 0 },
     visible: {
       opacity: 1,
@@ -300,7 +347,7 @@ const ActivityStats: React.FC = () => {
     },
   };
 
-  const cardVariants = {
+  const cardVariantsAnim = {
     hidden: { opacity: 0, y: 20 },
     visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: 'easeOut' } },
   };
@@ -333,16 +380,8 @@ const ActivityStats: React.FC = () => {
     return (
       <div className="flex items-center justify-center min-h-screen px-4 py-6">
         <p className="text-lg text-center text-[hsl(var(--muted-foreground))]">
-          No statistics available at this time.
+          {t.noStats}
         </p>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="text-center text-red-500 min-h-screen flex items-center justify-center">
-        {error}
       </div>
     );
   }
@@ -352,20 +391,20 @@ const ActivityStats: React.FC = () => {
       className="space-y-6 min-h-screen px-4 py-6"
       initial="hidden"
       animate="visible"
-      variants={containerVariants}
+      variants={containerVariantsAnim}
     >
-      <motion.div variants={cardVariants}>
+      <motion.div variants={cardVariantsAnim}>
         <Card className="p-6 shadow-lg rounded-md bg-[hsl(var(--card))] text-[hsl(var(--card-foreground))]">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-xl font-semibold text-[hsl(var(--primary))]">
-              Test Performance Over Time ({selectedAggregation === 'month' ? 'Monthly' : 'Daily'})
+              {t.performanceTitle} ({selectedAggregation === 'month' ? t.aggregationMonthly : t.aggregationDaily})
             </h2>
             <button
               onClick={toggleAggregation}
               className="bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] px-4 py-2 rounded-md hover:bg-[hsl(var(--primary))]/90 transition-colors"
-              aria-label={`Switch to ${selectedAggregation === 'month' ? 'Daily' : 'Monthly'} View`}
+              aria-label={`Switch to ${selectedAggregation === 'month' ? t.toggleDaily : t.toggleMonthly}`}
             >
-              {selectedAggregation === 'month' ? 'Daily View' : 'Monthly View'}
+              {selectedAggregation === 'month' ? t.toggleDaily : t.toggleMonthly}
             </button>
           </div>
           {paddedTestStats.length > 0 ? (
@@ -373,7 +412,7 @@ const ActivityStats: React.FC = () => {
               <LineChart
                 data={paddedTestStats}
                 margin={{ top: 20, right: 30, left: 20, bottom: 60 }}
-                aria-label={`Test Performance Over Time (${selectedAggregation === 'month' ? 'Monthly' : 'Daily'})`}
+                aria-label={`${t.performanceTitle} (${selectedAggregation === 'month' ? t.aggregationMonthly : t.aggregationDaily})`}
                 role="img"
               >
                 <CartesianGrid stroke={theme === 'dark' ? '#555' : '#ccc'} strokeDasharray="5 5" />
@@ -410,23 +449,23 @@ const ActivityStats: React.FC = () => {
               </LineChart>
             </ResponsiveContainer>
           ) : (
-            <div className="text-[hsl(var(--muted-foreground))]">No test data available.</div>
+            <div className="text-[hsl(var(--muted-foreground))]">{t.noStats}</div>
           )}
         </Card>
       </motion.div>
 
-      <motion.div variants={cardVariants}>
+      <motion.div variants={cardVariantsAnim}>
         <Card className="p-6 shadow-lg rounded-md bg-[hsl(var(--card))] text-[hsl(var(--card-foreground))]">
-          <h2 className="text-xl font-semibold text-[hsl(var(--primary))] mb-4">Test Summary</h2>
+          <h2 className="text-xl font-semibold text-[hsl(var(--primary))] mb-4">{t.testSummary}</h2>
           <div className="flex flex-col md:flex-row md:space-x-6 space-y-4 md:space-y-0">
             <div className="flex-1">
-              <span className="text-[hsl(var(--muted-foreground))]">Average Score</span>
+              <span className="text-[hsl(var(--muted-foreground))]">{t.averageScore}</span>
               <div className="text-3xl font-bold text-[hsl(var(--primary))]">
                 {averageScore !== null ? averageScore.toFixed(2) : 'N/A'}
               </div>
             </div>
             <div className="flex-1">
-              <span className="text-[hsl(var(--muted-foreground))]">Pass Rate</span>
+              <span className="text-[hsl(var(--muted-foreground))]">{t.passRate}</span>
               <div className="text-3xl font-bold text-[hsl(var(--primary))]">
                 {passRate !== null ? passRate.toFixed(2) + '%' : 'N/A'}
               </div>
@@ -435,9 +474,9 @@ const ActivityStats: React.FC = () => {
         </Card>
       </motion.div>
 
-      <motion.div variants={cardVariants}>
+      <motion.div variants={cardVariantsAnim}>
         <Card className="p-6 shadow-lg rounded-md bg-[hsl(var(--card))] text-[hsl(var(--card-foreground))]">
-          <h2 className="text-xl font-semibold text-[hsl(var(--primary))] mb-4">Answer Distribution</h2>
+          <h2 className="text-xl font-semibold text-[hsl(var(--primary))] mb-4">{t.answerDistribution}</h2>
           {answerStats ? (
             <ResponsiveContainer width="100%" height={300}>
               <PieChart>
@@ -471,14 +510,14 @@ const ActivityStats: React.FC = () => {
               </PieChart>
             </ResponsiveContainer>
           ) : (
-            <div className="text-[hsl(var(--muted-foreground))]">No answer data available.</div>
+            <div className="text-[hsl(var(--muted-foreground))]">{t.noAnswerData}</div>
           )}
         </Card>
       </motion.div>
 
-      <motion.div variants={cardVariants}>
+      <motion.div variants={cardVariantsAnim}>
         <Card className="p-6 shadow-lg rounded-md bg-[hsl(var(--card))] text-[hsl(var(--card-foreground))]">
-          <h2 className="text-xl font-semibold text-[hsl(var(--primary))] mb-4">Performance by Category</h2>
+          <h2 className="text-xl font-semibold text-[hsl(var(--primary))] mb-4">{t.performanceByCategory}</h2>
           {answerStats && answerStats.performanceByCategory.length > 0 ? (
             <ResponsiveContainer width="100%" height={300}>
               <BarChart data={answerStats.performanceByCategory}>
@@ -498,14 +537,14 @@ const ActivityStats: React.FC = () => {
               </BarChart>
             </ResponsiveContainer>
           ) : (
-            <div className="text-[hsl(var(--muted-foreground))]">No performance data available.</div>
+            <div className="text-[hsl(var(--muted-foreground))]">{t.noPerformanceData}</div>
           )}
         </Card>
       </motion.div>
 
-      <motion.div variants={cardVariants}>
+      <motion.div variants={cardVariantsAnim}>
         <Card className="p-6 shadow-lg rounded-md bg-[hsl(var(--card))] text-[hsl(var(--card-foreground))]">
-          <h2 className="text-xl font-semibold text-[hsl(var(--primary))] mb-4">Badges Earned</h2>
+          <h2 className="text-xl font-semibold text-[hsl(var(--primary))] mb-4">{t.badgesEarned}</h2>
           {badgeStats && badgeStats.badges.length > 0 ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
               {badgeStats.badges.map((badge, index) => (
@@ -519,9 +558,10 @@ const ActivityStats: React.FC = () => {
                   <div className="text-center">
                     <span className="font-semibold">{badge.title}</span>
                     <div className="text-sm text-[hsl(var(--muted-foreground))]">
-                      Earned on {new Date(badge.createdAt).toLocaleDateString()}
+                      {t.earnedOn} {new Date(badge.createdAt).toLocaleDateString()}
                     </div>
                     <div className="text-xs text-[hsl(var(--muted-foreground))] mt-1">
+                      {/* getBadgeProgression function is reused */}
                       {getBadgeProgression(badge)}
                     </div>
                   </div>
@@ -529,15 +569,15 @@ const ActivityStats: React.FC = () => {
               ))}
             </div>
           ) : (
-            <div className="text-[hsl(var(--muted-foreground))]">No badges earned yet.</div>
+            <div className="text-[hsl(var(--muted-foreground))]">{t.noBadges}</div>
           )}
         </Card>
       </motion.div>
 
       {badgeStats && badgeStats.badgesOverTime.length > 0 && (
-        <motion.div variants={cardVariants}>
+        <motion.div variants={cardVariantsAnim}>
           <Card className="p-6 shadow-lg rounded-md bg-[hsl(var(--card))] text-[hsl(var(--card-foreground))]">
-            <h2 className="text-xl font-semibold text-[hsl(var(--primary))] mb-4">Badges Earned Over Time</h2>
+            <h2 className="text-xl font-semibold text-[hsl(var(--primary))] mb-4">{t.badgesOverTime}</h2>
             <ResponsiveContainer width="100%" height={300}>
               <LineChart
                 data={badgeStats.badgesOverTime}
@@ -586,10 +626,9 @@ const ActivityStats: React.FC = () => {
         </motion.div>
       )}
 
-      {/* Worst Accuracy Questions */}
-      <motion.div variants={cardVariants}>
+      <motion.div variants={cardVariantsAnim}>
         <Card className="p-6 shadow-lg rounded-md bg-[hsl(var(--card))] text-[hsl(var(--card-foreground))]">
-          <h2 className="text-xl font-semibold text-[hsl(var(--primary))] mb-4">Questions with Worst Accuracy</h2>
+          <h2 className="text-xl font-semibold text-[hsl(var(--primary))] mb-4">{t.worstAccuracy}</h2>
           {worstAccuracyQuestions.length > 0 ? (
             <div className="flex flex-col items-center">
               <div
@@ -658,7 +697,7 @@ const ActivityStats: React.FC = () => {
             </div>
           ) : (
             <div className="text-[hsl(var(--muted-foreground))]">
-              No data available for worst accuracy questions.
+              {t.noWorstData}
             </div>
           )}
         </Card>
