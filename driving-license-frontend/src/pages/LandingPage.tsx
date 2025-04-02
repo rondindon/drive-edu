@@ -15,13 +15,39 @@ import TypedText from 'src/components/TypedText';
 import { motion } from 'framer-motion';
 import { supabase } from 'src/services/supabase';
 import { FaCar, FaTruck, FaBus, FaMotorcycle, FaCarSide, FaTruckMoving, FaBusAlt, FaTractor } from 'react-icons/fa';
+import { Switch } from '../components/ui/switch';
 
-const typedMessages = [
-  "Checking your license status...",
-  "Reviewing your traffic knowledge...",
-  "Adjusting your side mirrors...",
-  "Ready... Set... Go!",
-];
+const translations = {
+  en: {
+    header: "Driving License Test",
+    subtitle: "Select your group to begin the test:",
+    startTest: "Start Test",
+    loginToStart: "Login to Start",
+    selectGroupPlaceholder: "Select a group",
+  },
+  sk: {
+    header: "Test vodičského preukazu",
+    subtitle: "Vyberte si skupinu pre začatie testu:",
+    startTest: "Spustiť test",
+    loginToStart: "Prihlásiť sa pre spustenie",
+    selectGroupPlaceholder: "Vyberte skupinu",
+  },
+};
+
+const typedMessagesTranslations = {
+  en: [
+    "Checking your license status...",
+    "Reviewing your traffic knowledge...",
+    "Adjusting your side mirrors...",
+    "Ready... Set... Go!",
+  ],
+  sk: [
+    "Kontrolujem váš stav vodičského preukazu...",
+    "Skúmam vaše dopravné vedomosti...",
+    "Nastavujem zrkadlá...",
+    "Pripravený... Naštartuj... Ideme!",
+  ],
+};
 
 const groupItems = [
   { group: 'A', description: 'Motorcycles', icon: <FaMotorcycle className="text-4xl" /> },
@@ -39,17 +65,17 @@ const containerVariants = {
   visible: { 
     opacity: 1,
     transition: { 
-      staggerChildren: 0.3,
-    },
+      staggerChildren: 0.3 
+    }
   },
 };
 
 const itemVariants = {
   hidden: { opacity: 0, y: 20 },
   visible: { 
-    opacity: 1,
+    opacity: 1, 
     y: 0,
-    transition: { duration: 0.6, ease: 'easeOut' },
+    transition: { duration: 0.6, ease: 'easeOut' }
   },
 };
 
@@ -68,9 +94,12 @@ const LandingPage: React.FC = () => {
   const navigate = useNavigate();
   const token = localStorage.getItem("supabaseToken");
   const { theme } = useContext(ThemeContext);
-
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(!!token);
-  
+
+  // Language state
+  const [language, setLanguage] = useState<"en" | "sk">("en");
+  const toggleLanguage = () => setLanguage(prev => (prev === "en" ? "sk" : "en"));
+
   useEffect(() => {
     async function checkAuthStatus() {
       const { data } = await supabase.auth.getSession();
@@ -78,6 +107,7 @@ const LandingPage: React.FC = () => {
     }
     checkAuthStatus();
   }, []);
+
   useEffect(() => {
     const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
       setIsLoggedIn(!!session);
@@ -104,7 +134,6 @@ const LandingPage: React.FC = () => {
           alert("Password update cancelled.");
           return;
         }
-        
         const { data, error } = await supabase.auth.updateUser({ password: newPassword });
         if (data) {
           alert("Password updated successfully!");
@@ -114,25 +143,23 @@ const LandingPage: React.FC = () => {
         }
       }
     });
-  
-    return () => {
-      authListener.subscription.unsubscribe();
-    };
+    return () => authListener.subscription.unsubscribe();
   }, []); 
 
   useEffect(() => {
     if (!isLoading) return;
-    setShowMessage(typedMessages[0]);
+    const messages = typedMessagesTranslations[language];
+    setShowMessage(messages[0]);
     setTypedIndex(0);
     const interval = setInterval(() => {
       setTypedIndex((prev) => {
-        const nextIndex = (prev + 1) % typedMessages.length;
-        setShowMessage(typedMessages[nextIndex]);
+        const nextIndex = (prev + 1) % messages.length;
+        setShowMessage(messages[nextIndex]);
         return nextIndex;
       });
     }, 2200);
     return () => clearInterval(interval);
-  }, [isLoading]);
+  }, [isLoading, language]);
 
   const handleStartTest = async () => {
     if (!selectedGroup) {
@@ -193,12 +220,23 @@ const LandingPage: React.FC = () => {
       variants={containerVariants}
     >
       <div className="p-5 text-center flex flex-col items-center justify-center space-y-6 animate-fadeIn min-h-screen bg-[hsl(var(--background))] text-[hsl(var(--foreground))]">
+        {/* Header */}
         <motion.h1
           className="tracking-wider text-4xl font-bold text-[hsl(var(--primary))] mb-4 font-inclusive pt-6"
           variants={itemVariants}
         >
-          Driving License Test
+          {translations[language].header}
         </motion.h1>
+        {/* Language Toggle */}
+        <div className="flex items-center space-x-2">
+          <span className="text-xs">EN</span>
+          <Switch
+            checked={language === "sk"}
+            onCheckedChange={toggleLanguage}
+            className="w-8 h-4 bg-white border border-gray-300 data-[state=checked]:bg-white"
+          />
+          <span className="text-xs">SK</span>
+        </div>
 
         <Separator className={`w-full sm:w-1/2 animate-fadeIn ${theme === 'dark' ? "bg-blue-200" : "bg-main-darkBlue"}`}/>
 
@@ -206,14 +244,14 @@ const LandingPage: React.FC = () => {
           className="text-lg text-[hsl(var(--card-foreground))] transition-opacity duration-500 ease-in-out"
           variants={itemVariants}
         >
-          Select your group to begin the test:
+          {translations[language].subtitle}
         </motion.p>
 
         {isSmallScreen ? (
           <motion.div variants={itemVariants}>
             <Select onValueChange={(value) => setSelectedGroup(value)}>
               <SelectTrigger className="w-60 py-1 px-2 transition-all duration-300 hover:py-5 hover:px-4 bg-[hsl(var(--card-bg))] text-[hsl(var(--card-foreground))] border border-[hsl(var(--stroke-color))] rounded-md">
-                <SelectValue placeholder="Select a group" />
+                <SelectValue placeholder={translations[language].selectGroupPlaceholder} />
               </SelectTrigger>
               <SelectContent className="bg-[hsl(var(--card))] text-[hsl(var(--card-foreground))] border border-[hsl(var(--stroke-color))] rounded-md shadow-lg z-20">
                 {allGroups.map((group) => (
@@ -268,7 +306,7 @@ const LandingPage: React.FC = () => {
               className={`${theme === 'dark' ? "text-blue-200" : "text-main-darkBlue"} text-sm italic`}
               variants={itemVariants}
             >
-              Please select a group to load the 3D Viewer.
+              Please select a group to view the 3D Viewer.
             </motion.div>
           )}
         </motion.div>
@@ -281,7 +319,7 @@ const LandingPage: React.FC = () => {
           whileTap={selectedGroup && isLoggedIn ? { scale: 0.95 } : {}}
           variants={itemVariants}
         >
-          {isLoggedIn ? "Start Test" : "Login to Start"}
+          {isLoggedIn ? translations[language].startTest : translations[language].loginToStart}
         </motion.button>
       </div>
     </motion.div>
