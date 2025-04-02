@@ -17,7 +17,6 @@ interface ThemeProviderProps {
 export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
 
-  // On initial load, check for user's preference in localStorage or system preference
   useEffect(() => {
     const storedTheme = localStorage.getItem('theme') as 'light' | 'dark' | null;
     if (storedTheme) {

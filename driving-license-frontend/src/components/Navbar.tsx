@@ -1,4 +1,4 @@
-import React, { useContext, useState } from "react";
+import React, { useContext } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Button } from "./ui/button";
 import {
@@ -10,6 +10,7 @@ import {
 import { Switch } from "./ui/switch";
 import { useAuth } from "../context/AuthContext";
 import { ThemeContext } from "../context/ThemeContext";
+import { LanguageContext } from "../context/LanguageContext";
 import { User, Menu, Sun, Moon } from "lucide-react";
 import { toast } from "react-toastify";
 import AppHelmet from "./AppHelmet";
@@ -48,12 +49,7 @@ const Navbar: React.FC = () => {
   const navigate = useNavigate();
   const { user, role, username, logout } = useAuth();
   const { theme, toggleTheme } = useContext(ThemeContext);
-
-  // Language state (default to English)
-  const [language, setLanguage] = useState<"en" | "sk">("en");
-  const toggleLanguage = () => {
-    setLanguage(prev => (prev === "en" ? "sk" : "en"));
-  };
+  const { language, toggleLanguage } = useContext(LanguageContext);
 
   // Get current translations
   const t = translations[language];
@@ -143,7 +139,9 @@ const Navbar: React.FC = () => {
                 ) : (
                   <>
                     <DropdownMenuItem className="hover:bg-main-green hover:text-main-darkBlue transition-colors">
-                      <span>{t.role}: {role || "User"}</span>
+                      <span>
+                        {t.role}: {role || "User"}
+                      </span>
                     </DropdownMenuItem>
                     <DropdownMenuItem
                       onClick={() => navigate("/profile")}
@@ -266,7 +264,9 @@ const Navbar: React.FC = () => {
                   ) : (
                     <>
                       <div className="block px-2 py-1 rounded">
-                        <span>{t.role}: {role || "User"}</span>
+                        <span>
+                          {t.role}: {role || "User"}
+                        </span>
                       </div>
                       <button
                         onClick={() => navigate("/profile")}
