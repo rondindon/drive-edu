@@ -1,18 +1,19 @@
-Interaktívna webová aplikácia na prípravu na vodičský preukaz.
+Interaktívna webová aplikácia na prípravu pre skúšky na vodičský preukaz.
 
 🌐 **Live demo:** https://www.driveready.site/
 
 ## Čo DriveReady ponúka
 
-- 📋 **Testy podľa kategórií** (A, B, BE, C, …) s časovým limitom  
-- 🚦 **Simulátor dopravných značiek** s animáciami a spätnou väzbou  
+- 📋  **Testy podľa kategórií** (A, B, BE, C, …) s časovým limitom  
+- 🚦  **Simulátor dopravných značiek** s animáciami a spätnou väzbou  
 - 📈 **Štatistiky výkonu**: úspešnosť, počet testov, kalendár aktivít  
 - 🏆 **História a odznaky**: prehľad minulých testov a dosiahnuté odmeny  
 - 🌙 **Tmavý/svetlý režim** a **prepínač jazyka** (SK/EN)
 
 ## Použité technológie
 
-- **Frontend:** React, TypeScript, Tailwind CSS, Framer Motion  
+- **Frontend:** React, TypeScript, Tailwind CSS, Framer Motion
+- **Backend:** Express js, Node js
 - **UI komponenty:** shadcn/ui, lucide-react  
 - **3D modely:** react-three-fiber, drei  
 - **Autentifikácia & dáta:** Supabase, Axios, Prisma  
