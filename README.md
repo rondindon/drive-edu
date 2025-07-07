@@ -5,8 +5,10 @@ Interaktívna webová aplikácia na prípravu pre skúšky na vodičský preukaz
 ## Čo DriveReady ponúka
 
 - 📋  **Testy podľa kategórií** (A, B, BE, C, …) s časovým limitom  
-- 🚦  **Simulátor dopravných značiek** s animáciami a spätnou väzbou  
-- 📈 **Štatistiky výkonu**: úspešnosť, počet testov, kalendár aktivít  
+- 🚦  **Simulátor dopravných značiek** s animáciami a spätnou väzbou
+- 🚥 **Jednoduchý simulátor križovatiek** pre precvičovanie zásad prednosti
+- 📈 **Štatistiky výkonu**: úspešnosť, počet testov, kalendár aktivít, ...
+- 🔧 **Integrovaný admin panel** na správu používateľov, testov, štatistík a ďaľších...  
 - 🏆 **História a odznaky**: prehľad minulých testov a dosiahnuté odmeny  
 - 🌙 **Tmavý/svetlý režim** a **prepínač jazyka** (SK/EN)
 
