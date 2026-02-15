@@ -1,6 +1,6 @@
 Interaktívna webová aplikácia na prípravu pre skúšky na vodičský preukaz.
 
-🌐 **Live demo:** drive-edu.vercel.app
+🌐 **Live demo:** https://drive-edu.vercel.app/
 
 ## Čo DriveReady ponúka
 
